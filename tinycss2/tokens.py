@@ -182,7 +182,7 @@ class NumberToken(NumericToken):
 
 
 class DimensionToken(NumericToken):
-    """A number token.
+    """A dimension token (number followed by an unit.)
 
     .. attribute:: value
 

@@ -44,6 +44,24 @@ def tokenize(css):
         elif _is_ident_start(css, pos):
             result, pos = _consume_ident(css, pos)
             tokens.append(IdentToken(line, column, result))
+        elif c == '@':
+            pos += 1
+            if pos < length and _is_ident_start(css, pos):
+                result, pos = _consume_ident(css, pos)
+                tokens.append(AtKeywordToken(line, column, result))
+            else:
+                tokens.append(LiteralToken(line, column, '@'))
+        elif c == '#':
+            pos += 1
+            if pos < length and (
+                    css[pos] in '0123456789abcdefghijklmnopqrstuvwxyz'
+                                '-_ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                    or (css[pos] == '\\' and pos + 1 < length
+                        and css[pos + 1] != '\n')):
+                result, pos = _consume_ident(css, pos)
+                tokens.append(HashToken(line, column, result))
+            else:
+                tokens.append(LiteralToken(line, column, '#'))
         elif c == '{':
             content = []
             tokens.append(CurlyBracketsBlock(pos, content))
