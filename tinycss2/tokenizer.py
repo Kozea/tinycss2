@@ -4,6 +4,7 @@ import re
 import sys
 
 from .compat import unichr
+from .utils import ascii_lower
 # Some imports are at the bottom of this files.
 
 
@@ -42,8 +43,17 @@ def tokenize(css):
             pos = _NON_WHITESPACE_CHAR_RE.search(css, pos + 1).start()
             tokens.append(WhitespaceToken(line, column))
         elif _is_ident_start(css, pos):
-            result, pos = _consume_ident(css, pos)
-            tokens.append(IdentToken(line, column, result))
+            value, pos = _consume_ident(css, pos)
+            if pos < length and css[pos] == '(':
+                # TODO: if ascii_lower(value) == 'url':
+                arguments = []
+                tokens.append(Function(pos, value, arguments))
+                stack.append((tokens, end_char))
+                end_char = ')'
+                tokens = arguments
+                pos += 1
+            else:
+                tokens.append(IdentToken(line, column, value))
         elif c == '@':
             pos += 1
             if pos < length and _is_ident_start(css, pos):
