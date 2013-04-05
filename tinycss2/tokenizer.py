@@ -43,6 +43,9 @@ def tokenize(css):
             pos = _NON_WHITESPACE_CHAR_RE.search(css, pos + 1).start()
             tokens.append(WhitespaceToken(line, column))
         elif _is_ident_start(css, pos):
+            # TODO: unicode-range
+            #if (c in 'Uu' and pos + 2 < length and css[pos + 1] == '+'
+            #    and css[pos + 2] in '0123456789abcdefABCDEF')
             value, pos = _consume_ident(css, pos)
             if pos < length and css[pos] == '(':
                 # TODO: if ascii_lower(value) == 'url':
@@ -72,6 +75,7 @@ def tokenize(css):
                 tokens.append(HashToken(line, column, value))
             else:
                 tokens.append(LiteralToken(line, column, '#'))
+        # TODO: number, dimension, percentage
         elif c == '{':
             content = []
             tokens.append(CurlyBracketsBlock(pos, content))
