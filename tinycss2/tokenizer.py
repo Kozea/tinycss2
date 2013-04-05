@@ -1,70 +1,66 @@
 from __future__ import unicode_literals
+
 import re
+import sys
 
 from .compat import unichr
 # Some imports are at the bottom of this files.
 
 
 _HEX_ESCAPE_RE = re.compile(r'([0-9A-Fa-f]{1,6})[ \n\t]?')
-_NON_STRING_CHAR_RE = re.compile(r'''["'\\\n]''')
+_NON_WHITESPACE_CHAR_RE = re.compile(r'[^ \n\t]|$')
+_NON_STRING_CHAR_RE = re.compile(r'''["'\\\n]|$''')
+
+# All ASCII characters other than [a-zA-Z0-9_-]
 _NON_NAME_CHAR_RE = re.compile('[%s]' % re.escape(''.join(
     c for c in map(chr, range(128)) if not re.match('[a-zA-Z0-9_-]', c))))
 
 
-def tokenize(input):
+def tokenize(css):
     """The tokenizer.
 
-    :param input: An Unicode string, with any Byte Order Mark removed.
+    :param css: An Unicode string.
     :returns: A list of tokens.
 
     """
-    input = (input.replace('\0', '\uFFFD')
-             .replace('\r\n', '\n').replace('\r', '\n').replace('\f', '\n'))
-    length = len(input)
-    pos = 0
+    css = (css.replace('\0', '\uFFFD')
+           .replace('\r\n', '\n').replace('\r', '\n').replace('\f', '\n'))
+    length = len(css)
+    pos = 0  # Character index in the css source.
+    line = 1  # First line is line 1.
+    last_newline = -1
     root = tokens = []
-    stack = []
-    end_char = None
-
-    def is_ident_start(pos):
-        c = input[pos]
-#        if c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_':
-#            return True  # Fast path XXX
-        if c == '-' and pos + 1 >= length:
-            pos += 1
-            c = input[pos]
-        return (
-            c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'
-            or ord(c) > 0xFF
-            or (c == '\\' and pos + 1 < length and input[pos + 1] != '\n'))
+    end_char = None  # Pop the stack when encountering this character.
+    stack = []  # Stack of nested blocks: (tokens, end_char) tuples.
 
     while pos < length:
-        c = input[pos]
+        # First character in a line is in column 1.
+        column = pos - last_newline
+        token_start_pos = pos
+        c = css[pos]
         if c in ' \n\t':
-            pos += 1
-            while pos < length and input[pos] in ' \n\t':
-                pos += 1
-            tokens.append(WHITESPACE_TOKEN)
-        elif is_ident_start(pos):
-            result, pos = _consume_ident(input, pos)
-            tokens.append(IdentToken(result))
+            pos = _NON_WHITESPACE_CHAR_RE.search(css, pos + 1).start()
+            tokens.append(WhitespaceToken(line, column))
+        elif _is_ident_start(css, pos):
+            result, pos = _consume_ident(css, pos)
+            tokens.append(IdentToken(line, column, result))
         elif c == '{':
             content = []
-            tokens.append(CurlyBracketsBlock(content))
+            tokens.append(CurlyBracketsBlock(pos, content))
             stack.append((tokens, end_char))
             end_char = '}'
             tokens = content
             pos += 1
         elif c == '[':
             content = []
-            tokens.append(SquareBracketsBlock(content))
+            tokens.append(SquareBracketsBlock(pos, content))
             stack.append((tokens, end_char))
             end_char = ']'
             tokens = content
             pos += 1
         elif c == '(':
             content = []
-            tokens.append(ParenthesesBlock(content))
+            tokens.append(ParenthesesBlock(pos, content))
             stack.append((tokens, end_char))
             end_char = ')'
             tokens = content
@@ -73,79 +69,91 @@ def tokenize(input):
             tokens, end_char = stack.pop()
             pos += 1
         elif c in '"\'':
-            result, pos = _consume_quoted_string(input, pos)
-            tokens.append(StringToken(result) if result is not None
-                          else BAD_STRING_TOKEN)
-        elif input.startswith('/*', pos):  # Comment
-            pos = input.find('*/', pos + 2)
+            result, pos = _consume_quoted_string(css, pos)
+            tokens.append(
+                StringToken(line, column, result) if result is not None
+                else BadStringToken(line, column))
+        elif css.startswith('/*', pos):  # Comment
+            pos = css.find('*/', pos + 2)
             if pos == -1:
                 break
             pos += 2
-        elif input.startswith('<!--', pos):
-            tokens.append(CDO_TOKEN)
+        elif css.startswith('<!--', pos):
+            tokens.append(LiteralToken(line, column, '<!--'))
             pos += 4
-        elif input.startswith('-->', pos):
-            tokens.append(CDC_TOKEN)
+        elif css.startswith('-->', pos):
+            tokens.append(LiteralToken(line, column, '-->'))
             pos += 3
         elif c in '~|^$*':
             pos += 1
-            if pos < length and input[pos] == '=':
+            if pos < length and css[pos] == '=':
                 pos += 1
-                tokens.append(ATTRIBUTE_OPERATOR_TOKENS[c])
+                tokens.append(LiteralToken(line, column, c + '='))
             else:
-                tokens.append(LITERAL_TOKENS[c])
+                tokens.append(LiteralToken(line, column, c))
         else:  # Colon, semicolon, comma or delim.
-            tokens.append(LITERAL_TOKENS[c])
+            tokens.append(LiteralToken(line, column, c))
             pos += 1
+
+        newline = css.rfind('\n', token_start_pos, pos)
+        if newline != -1:
+            line += 1 + css.count('\n', token_start_pos, newline)
+            last_newline = newline
     return root
 
 
-def _consume_ident(input, pos):
+def _is_ident_start(css, pos):
+    """Return True if the given position is the start of a CSS identifier."""
+    c = css[pos]
+#    if c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_':
+#        return True  # Fast path XXX
+    if c == '-' and pos + 1 >= length:
+        pos += 1
+        c = css[pos]
+    return (
+        c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'
+        or ord(c) > 0xFF
+        or (c == '\\' and pos + 1 < length and css[pos + 1] != '\n'))
+
+
+def _consume_ident(css, pos):
+    """Return (unescaped_value, new_pos)."""
     chunks = []
-    length = len(input)
+    length = len(css)
     while pos < length:
-        match = _NON_NAME_CHAR_RE.match(input, pos)
-        if not match:
-            chuncks.append(input[pos:])
-            pos = length
-            break
-        new_pos = match.start()
-        chuncks.append(input[pos:new_pos])
+        new_pos = _NON_NAME_CHAR_RE.search(css, pos).start()
+        chuncks.append(css[pos:new_pos])
         pos = new_pos
-        if pos + 1 < length and input[pos] == '\\' and input[pos + 1] != '\n':
-            c, pos = _consume_escape(input, pos + 1)
+        if pos + 1 < length and css[pos] == '\\' and css[pos + 1] != '\n':
+            c, pos = _consume_escape(css, pos + 1)
             chunks.append(c)
         else:
             break
     return ''.join(chunks), pos
 
 
-def _consume_quoted_string(input, pos):
-    quote = input[pos]
+def _consume_quoted_string(css, pos):
+    """Return (unescaped_value, new_pos)."""
+    quote = css[pos]
     assert quote in '"\''
     pos += 1
     chunks = []
-    length = len(input)
+    length = len(css)
     while pos < length:
-        match = _NON_STRING_CHAR_RE.match(input, pos)
-        if not match:
-            chuncks.append(input[pos:])
-            pos = length
-            break
-        new_pos = match.start()
-        chuncks.append(input[pos:new_pos])
+        new_pos = _NON_STRING_CHAR_RE.search(css, pos).start()
+        chuncks.append(css[pos:new_pos])
         pos = new_pos
-        c = input[pos]
+        c = css[pos]
         if c == quote:
             pos += 1
             break
         elif c == '\\':
             pos += 1
             if pos < length:
-                if input[pos] == '\n':  # Ignore escaped newlines
+                if css[pos] == '\n':  # Ignore escaped newlines
                     pos += 1
                 else:
-                    c, pos = _consume_escape(input, pos)
+                    c, pos = _consume_escape(css, pos)
                     chunks.append(c)
             else:  # "Escaped" EOF
                 return None, pos  # bad-string
@@ -157,14 +165,19 @@ def _consume_quoted_string(input, pos):
     return ''.join(chunks), pos
 
 
-def _consume_escape(input, pos):
-    r"""Assumes a valid escape: at least one more char, and it’s not '\n'."""
-    hex_match = _HEX_ESCAPE_RE.match(input, pos)
+def _consume_escape(css, pos):
+    r"""Return (unescaped_char, new_pos).
+
+    Assumes a valid escape:
+    pos is just after '\', there’s at least one more char, and it’s not '\n'.
+
+    """
+    hex_match = _HEX_ESCAPE_RE.match(css, pos)
     if hex_match:
         codepoint = int(hex_match.group(1), 16)
-        return (unichr(codepoint) if codepoint <= 0x10FFFF else '\uFFFE',
+        return (unichr(codepoint) if codepoint <= sys.maxunicode else '\uFFFE',
                 match.end())
-    return input[pos], pos + 1
+    return css[pos], pos + 1
 
 
 # Moved here so that pyflakes can detect naming typos above.

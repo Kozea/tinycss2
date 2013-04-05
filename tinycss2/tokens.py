@@ -20,7 +20,11 @@ from __future__ import unicode_literals
 
 class Token(object):
     """Base class for all tokens."""
-    __slots__ = []
+    __slots__ = ['source_line', 'source_column']
+
+    def __init__(self, line, column):
+        self.source_line = line
+        self.source_column = column
 
 
 class WhitespaceToken(Token):
@@ -44,7 +48,8 @@ class SimpleToken(Token):
     """Base class for tokens with a single ``value`` attribute."""
     __slots__ = ['value']
 
-    def __init__(self, value):
+    def __init__(self, line, column, value):
+        Token.__init__(self, line, column)
         self.value = value
 
 
@@ -148,8 +153,8 @@ class NumericToken(SimpleToken):
     """Base class for tokens with a numeric value."""
     __slots__ = ['representation', 'is_integer']
 
-    def __init__(self, value, representation, is_integer):
-        SimpleToken.__init__(self, value)
+    def __init__(self, line, column, value, representation, is_integer):
+        SimpleToken.__init__(self, line, column, value)
         self.representation = representation
         self.is_integer = is_integer
 
@@ -202,8 +207,9 @@ class DimensionToken(NumericToken):
     __slots__ = ['unit']
     type = 'dimension'
 
-    def __init__(self, value, representation, is_integer, unit):
-        NumericToken.__init__(self, value, representation, is_integer)
+    def __init__(self, line, column, value, representation, is_integer, unit):
+        NumericToken.__init__(
+            self, line, column, value, representation, is_integer)
         self.unit = unit
 
 
@@ -231,7 +237,8 @@ class Block(Token):
     """Base class for (), [] and {} blocks."""
     __slots__ = ['content']
 
-    def __init__(self, content):
+    def __init__(self, line, column, content):
+        Token.__init__(self, line, column)
         self.content = content
 
 
@@ -287,16 +294,7 @@ class Function(Token):
     __slots__ = ['name', 'arguments']
     type = 'function'
 
-    def __init__(self, name, arguments):
+    def __init__(self, line, column, name, arguments):
+        Token.__init__(self, line, column)
         self.name = name
         self.arguments = arguments
-
-
-WHITESPACE_TOKEN = WhitespaceToken()
-BAD_STRING_TOKEN = BadStringToken()
-BAD_URL_TOKEN = BadURLToken()
-CDO_TOKEN = LiteralToken('<--')
-CDC_TOKEN = LiteralToken('-->')
-ATTRIBUTE_OPERATOR_TOKENS = dict((c, LiteralToken(c + '=')) for c in '~|^$*')
-# Not all of these are ever used, but don’t bother.
-DELIM_TOKENS = dict((c, LiteralToken(c)) for c in map(chr, range(128)))
