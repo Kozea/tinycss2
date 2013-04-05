@@ -47,8 +47,8 @@ def tokenize(css):
         elif c == '@':
             pos += 1
             if pos < length and _is_ident_start(css, pos):
-                result, pos = _consume_ident(css, pos)
-                tokens.append(AtKeywordToken(line, column, result))
+                value, pos = _consume_ident(css, pos)
+                tokens.append(AtKeywordToken(line, column, value))
             else:
                 tokens.append(LiteralToken(line, column, '@'))
         elif c == '#':
@@ -58,8 +58,8 @@ def tokenize(css):
                                 '-_ABCDEFGHIJKLMNOPQRSTUVWXYZ'
                     or (css[pos] == '\\' and pos + 1 < length
                         and css[pos + 1] != '\n')):
-                result, pos = _consume_ident(css, pos)
-                tokens.append(HashToken(line, column, result))
+                value, pos = _consume_ident(css, pos)
+                tokens.append(HashToken(line, column, value))
             else:
                 tokens.append(LiteralToken(line, column, '#'))
         elif c == '{':
@@ -84,12 +84,14 @@ def tokenize(css):
             tokens = content
             pos += 1
         elif c == end_char:  # Matching }, ] or )
+            # The top-level end_char is None (never equal to a character),
+            # so we never get here if the stack is empty.
             tokens, end_char = stack.pop()
             pos += 1
         elif c in '"\'':
-            result, pos = _consume_quoted_string(css, pos)
+            value, pos = _consume_quoted_string(css, pos)
             tokens.append(
-                StringToken(line, column, result) if result is not None
+                StringToken(line, column, value) if value is not None
                 else BadStringToken(line, column))
         elif css.startswith('/*', pos):  # Comment
             pos = css.find('*/', pos + 2)
