@@ -37,12 +37,6 @@ class WhitespaceToken(Token):
     __slots__ = []
     type = 'whitespace'
 
-    def __eq__(self, other):
-        return other == ' ' or Token.__eq__(self, other)
-
-    def __ne__(self, other):
-        return not self == other
-
 
 class SimpleToken(Token):
     """Base class for tokens with a single ``value`` attribute."""

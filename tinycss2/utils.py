@@ -11,9 +11,9 @@ def strip_whitespace_tokens(token_list):
 
     """
     for i, token in enumerate(token_list, 1):
-        if token != ' ':
+        if token.type != 'whitespace':
             token_list = token_list[i:]
-            while token_list[-1] == ' ':
+            while token_list[-1].type == 'whitespace':
                 token_list.pop()
             return token_list
     return []
