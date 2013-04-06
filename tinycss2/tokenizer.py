@@ -47,14 +47,19 @@ def tokenize(css):
             #if (c in 'Uu' and pos + 2 < length and css[pos + 1] == '+'
             #    and css[pos + 2] in '0123456789abcdefABCDEF')
             value, pos = _consume_ident(css, pos)
-            if pos < length and css[pos] == '(':
-                # TODO: if ascii_lower(value) == 'url':
-                arguments = []
-                tokens.append(Function(pos, value, arguments))
-                stack.append((tokens, end_char))
-                end_char = ')'
-                tokens = arguments
+            if pos < length and css[pos] == '(':  # Function
                 pos += 1
+                if ascii_lower(value) == 'url':
+                    value, pos = _consume_url(css, pos)
+                    tokens.append(
+                        URLToken(line, column, value) if value is not None
+                        else BadURLToken(line, column))
+                else:
+                    arguments = []
+                    tokens.append(Function(pos, value, arguments))
+                    stack.append((tokens, end_char))
+                    end_char = ')'
+                    tokens = arguments
             else:
                 tokens.append(IdentToken(line, column, value))
         elif c == '@':
@@ -212,6 +217,15 @@ def _consume_escape(css, pos):
         return (unichr(codepoint) if codepoint <= sys.maxunicode else '\uFFFE',
                 match.end())
     return css[pos], pos + 1
+
+
+def _consume_url(css, pos):
+    """Return (unescaped_url, new_pos)
+
+    The given pos is assume to be just after the '(' of 'url('.
+
+    """
+    raise NotImplementedError  # TODO
 
 
 # Moved here so that pyflakes can detect naming typos above.
