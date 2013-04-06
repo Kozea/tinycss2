@@ -17,8 +17,10 @@ Differences with css-syntax:
 
 from __future__ import unicode_literals
 
+from . import ascii_lower
 
-class Token(object):
+
+class _Token(object):
     """Base class for all tokens."""
     __slots__ = ['source_line', 'source_column']
 
@@ -27,7 +29,7 @@ class Token(object):
         self.source_column = column
 
 
-class WhitespaceToken(Token):
+class WhitespaceToken(_Token):
     """The whitespace token.
 
     Has no instance attribute, so a singleton can be used.
@@ -38,18 +40,9 @@ class WhitespaceToken(Token):
     type = 'whitespace'
 
 
-class SimpleToken(Token):
-    """Base class for tokens with a single ``value`` attribute."""
-    __slots__ = ['value']
-
-    def __init__(self, line, column, value):
-        Token.__init__(self, line, column)
-        self.value = value
-
-
 # Delim, colon, semicolon, comma, cdc, cdo,
 # include-match, dash-match, prefix-match, suffix-match, substring-match.
-class LiteralToken(SimpleToken):
+class LiteralToken(_Token):
     r"""Token that reprensents one or more characters as in the CSS source.
 
     .. attribute:: value
@@ -59,101 +52,145 @@ class LiteralToken(SimpleToken):
     Instances compare equal to their value.
 
     """
-    __slots__ = []
+    __slots__ = ['value']
     type = 'literal'
 
+    def __init__(self, line, column, value):
+        _Token.__init__(self, line, column)
+        self.value = value
+
     def __eq__(self, other):
-        return self.value == other or SimpleToken.__eq__(self, other)
+        return self.value == other or _Token.__eq__(self, other)
 
     def __ne__(self, other):
         return not self == other
 
 
-class IdentToken(SimpleToken):
+class IdentToken(_Token):
     """A CSS identifier token.
 
     .. attribute:: value
 
-        The unescaped string, as an Unicode string.
+        The unescaped value, as an Unicode string.
+        Normalized to *ASCII lower case*; see :func:`~tinycss2.ascii_lower`.
+
+    .. attribute:: case_sensitive_value
+
+        Same as :attr:`value`, but with the original casing preserved.
 
     """
-    __slots__ = []
+    __slots__ = ['value', 'case_sensitive_value']
     type = 'ident'
 
+    def __init__(self, line, column, value):
+        _Token.__init__(self, line, column)
+        self.value = ascii_lower(value)
+        self.case_sensitive_value = value
 
-class AtKeywordToken(SimpleToken):
+
+class AtKeywordToken(_Token):
     """A CSS at-keyword token.
 
     .. attribute:: value
 
-        The unescaped string, as an Unicode string, without the ``@`` symbol.
+        The unescaped value, as an Unicode string, without the ``@`` symbol.
+        Normalized to *ASCII lower case*; see :func:`~tinycss2.ascii_lower`.
+
+    .. attribute:: case_sensitive_value
+
+        Same as :attr:`value`, but with the original casing preserved.
 
     """
-    __slots__ = []
+    __slots__ = ['value', 'case_sensitive_value']
     type = 'at-keyword'
 
+    def __init__(self, line, column, value):
+        _Token.__init__(self, line, column)
+        self.value = ascii_lower(value)
+        self.case_sensitive_value = value
 
-class HashToken(SimpleToken):
+
+class HashToken(_Token):
     """A CSS hash token.
 
     .. attribute:: value
 
         The unescaped string, as an Unicode string, without the ``#`` symbol.
+        The original casing is preserved.
 
     """
-    __slots__ = []
+    __slots__ = ['value']
     type = 'hash'
 
+    def __init__(self, line, column, value):
+        _Token.__init__(self, line, column)
+        self.value = value
 
-class StringToken(SimpleToken):
+
+class StringToken(_Token):
     """A quoted string token.
 
     .. attribute:: value
 
         The unescaped string, as an Unicode string, without the quotes.
+        The original casing is preserved.
 
     """
-    __slots__ = []
+    __slots__ = ['value']
     type = 'string'
 
+    def __init__(self, line, column, value):
+        _Token.__init__(self, line, column)
+        self.value = value
 
-class URLToken(SimpleToken):
+
+class URLToken(_Token):
     """A CSS url() token.
 
     .. attribute:: value
 
         The unescaped URL, as an Unicode string,
         without the ``url(`` and ``)`` markers or the optional quotes.
+        The original casing is preserved.
 
     """
-    __slots__ = []
+    __slots__ = ['value']
     type = 'url'
 
+    def __init__(self, line, column, value):
+        _Token.__init__(self, line, column)
+        self.value = value
 
-class UnicodeRangeToken(SimpleToken):
+
+class UnicodeRangeToken(_Token):
     """An unicode-range token. Represents a range of characters.
 
-    .. attribute:: value
+    .. attribute:: range
 
         A ``(start, end)`` inclusive tuple of (integer) codepoints,
         or ``None`` for empty ranges.
 
     """
-    __slots__ = []
+    __slots__ = ['range']
     type = 'unicode-range'
 
+    def __init__(self, line, column, range_):
+        _Token.__init__(self, line, column)
+        self.range = range_
 
-class NumericToken(SimpleToken):
+
+class _NumericToken(_Token):
     """Base class for tokens with a numeric value."""
-    __slots__ = ['representation', 'is_integer']
+    __slots__ = ['value', 'representation', 'is_integer']
 
     def __init__(self, line, column, value, representation, is_integer):
-        SimpleToken.__init__(self, line, column, value)
+        _Token.__init__(self, line, column)
+        self.value = value
         self.representation = representation
         self.is_integer = is_integer
 
 
-class NumberToken(NumericToken):
+class NumberToken(_NumericToken):
     """A number token.
 
     .. attribute:: value
@@ -175,7 +212,7 @@ class NumberToken(NumericToken):
     type = 'number'
 
 
-class DimensionToken(NumericToken):
+class DimensionToken(_NumericToken):
     """A dimension token (number followed by an unit.)
 
     .. attribute:: value
@@ -196,18 +233,24 @@ class DimensionToken(NumericToken):
 
         The unescaped unit, as an Unicode string.
         Either ``%`` or an identifier such as ``px``.
+        Normalized to *ASCII lower case*; see :func:`~tinycss2.ascii_lower`.
+
+    .. attribute:: case_sensitive_unit
+
+        Same as :attr:`unit`, but with the original casing preserved.
 
     """
-    __slots__ = ['unit']
+    __slots__ = ['unit', 'case_sensitive_unit']
     type = 'dimension'
 
     def __init__(self, line, column, value, representation, is_integer, unit):
-        NumericToken.__init__(
+        _NumericToken.__init__(
             self, line, column, value, representation, is_integer)
-        self.unit = unit
+        self.unit = ascii_lower(unit)
+        self.case_sensitive_unit = unit
 
 
-class BadStringToken(Token):
+class BadStringToken(_Token):
     """The bad-string token.
 
     Has no instance attribute, so a singleton can be used.
@@ -217,7 +260,7 @@ class BadStringToken(Token):
     type = 'bad-string'
 
 
-class BadURLToken(Token):
+class BadURLToken(_Token):
     """The bad-url token.
 
     Has no instance attribute, so a singleton can be used.
@@ -227,16 +270,16 @@ class BadURLToken(Token):
     type = 'bad-url'
 
 
-class Block(Token):
+class _Block(_Token):
     """Base class for (), [] and {} blocks."""
     __slots__ = ['content']
 
     def __init__(self, line, column, content):
-        Token.__init__(self, line, column)
+        _Token.__init__(self, line, column)
         self.content = content
 
 
-class ParenthesesBlock(Block):
+class ParenthesesBlock(_Block):
     """A () block.
 
     .. attribute:: content
@@ -248,7 +291,7 @@ class ParenthesesBlock(Block):
     type = '() block'
 
 
-class SquareBracketsBlock(Block):
+class SquareBracketsBlock(_Block):
     """A [] block.
 
     .. attribute:: content
@@ -260,7 +303,7 @@ class SquareBracketsBlock(Block):
     type = '[] block'
 
 
-class CurlyBracketsBlock(Block):
+class CurlyBracketsBlock(_Block):
     """A {} block.
 
     .. attribute:: content
@@ -272,12 +315,17 @@ class CurlyBracketsBlock(Block):
     type = '{} block'
 
 
-class Function(Token):
+class Function(_Token):
     """A CSS function.
 
     .. attribute:: name
 
         The unescaped name of the function, as an Unicode string.
+        Normalized to *ASCII lower case*; see :func:`~tinycss2.ascii_lower`.
+
+    .. attribute:: case_sensitive_name
+
+        Same as :attr:`name`, but with the original casing preserved.
 
     .. attribute:: content
 
@@ -285,10 +333,11 @@ class Function(Token):
         The ``(`` and ``)`` markers themselves are not represented in the list.
 
     """
-    __slots__ = ['name', 'arguments']
+    __slots__ = ['name', 'case_sensitive_name', 'arguments']
     type = 'function'
 
     def __init__(self, line, column, name, arguments):
-        Token.__init__(self, line, column)
-        self.name = name
+        _Token.__init__(self, line, column)
+        self.name = ascii_lower(name)
+        self.case_sensitive_name = name
         self.arguments = arguments
