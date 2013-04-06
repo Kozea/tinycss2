@@ -167,7 +167,7 @@ class UnicodeRangeToken(_Token):
 
     .. attribute:: range
 
-        A ``(start, end)`` inclusive tuple of (integer) codepoints,
+        A ``(start, end)`` tuple of Unicode characters for an inclusive range,
         or ``None`` for empty ranges.
 
     """

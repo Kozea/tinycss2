@@ -42,10 +42,11 @@ def tokenize(css):
         if c in ' \n\t':
             pos = _NON_WHITESPACE_CHAR_RE.search(css, pos + 1).start()
             tokens.append(WhitespaceToken(line, column))
+        elif (c in 'Uu' and pos + 2 < length and css[pos + 1] == '+'
+                and css[pos + 2] in '0123456789abcdefABCDEF?'):
+            value, pos = _consume_unicode_range(css, pos + 2)
+            tokens.append(UnicodeRangeToken(line, column, value))
         elif _is_ident_start(css, pos):
-            # TODO: unicode-range
-            #if (c in 'Uu' and pos + 2 < length and css[pos + 1] == '+'
-            #    and css[pos + 2] in '0123456789abcdefABCDEF')
             value, pos = _consume_ident(css, pos)
             if pos < length and css[pos] == '(':  # Function
                 pos += 1
@@ -74,6 +75,7 @@ def tokenize(css):
             if pos < length and (
                     css[pos] in '0123456789abcdefghijklmnopqrstuvwxyz'
                                 '-_ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                    # Valid escape:
                     or (css[pos] == '\\' and pos + 1 < length
                         and css[pos + 1] != '\n')):
                 value, pos = _consume_ident(css, pos)
@@ -144,26 +146,34 @@ def tokenize(css):
 def _is_ident_start(css, pos):
     """Return True if the given position is the start of a CSS identifier."""
     c = css[pos]
+    length = len(css)
 #    if c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_':
 #        return True  # Fast path XXX
-    if c == '-' and pos + 1 >= length:
+    if c == '-' and pos + 1 < length:
         pos += 1
         c = css[pos]
     return (
         c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'
-        or ord(c) > 0xFF
+        or ord(c) > 0xFF  # Non-ASCII
+        # Valid escape:
         or (c == '\\' and pos + 1 < length and css[pos + 1] != '\n'))
 
 
 def _consume_ident(css, pos):
-    """Return (unescaped_value, new_pos)."""
+    """Return (unescaped_value, new_pos).
+
+    Assumes pos starts at a valid identifier. See :func:`_is_ident_start`.
+
+    """
+    # http://dev.w3.org/csswg/css-syntax/#ident-state
     chunks = []
     length = len(css)
     while pos < length:
-        new_pos = _NON_NAME_CHAR_RE.search(css, pos).start()
-        chuncks.append(css[pos:new_pos])
-        pos = new_pos
+        start_pos = pos
+        pos = _NON_NAME_CHAR_RE.search(css, pos).start()
+        chuncks.append(css[start_pos:pos])
         if pos + 1 < length and css[pos] == '\\' and css[pos + 1] != '\n':
+            # Valid escape
             c, pos = _consume_escape(css, pos + 1)
             chunks.append(c)
         else:
@@ -173,15 +183,17 @@ def _consume_ident(css, pos):
 
 def _consume_quoted_string(css, pos):
     """Return (unescaped_value, new_pos)."""
+    # http://dev.w3.org/csswg/css-syntax/#double-quote-string-state
+    # http://dev.w3.org/csswg/css-syntax/#single-quote-string-state
     quote = css[pos]
     assert quote in '"\''
     pos += 1
     chunks = []
     length = len(css)
     while pos < length:
-        new_pos = _NON_STRING_CHAR_RE.search(css, pos).start()
-        chuncks.append(css[pos:new_pos])
-        pos = new_pos
+        start_pos = pos
+        pos = _NON_STRING_CHAR_RE.search(css, pos).start()
+        chuncks.append(css[start_pos:pos])
         c = css[pos]
         if c == quote:
             pos += 1
@@ -211,6 +223,7 @@ def _consume_escape(css, pos):
     pos is just after '\', there’s at least one more char, and it’s not '\n'.
 
     """
+    # http://dev.w3.org/csswg/css-syntax/#consume-an-escaped-character
     hex_match = _HEX_ESCAPE_RE.match(css, pos)
     if hex_match:
         codepoint = int(hex_match.group(1), 16)
@@ -226,6 +239,48 @@ def _consume_url(css, pos):
 
     """
     raise NotImplementedError  # TODO
+
+
+def _consume_unicode_range(css, pos):
+    """Return (range, new_pos)
+
+    The given pos is assume to be just after the '+' of 'U+' or 'u+'.
+
+    """
+    # http://dev.w3.org/csswg/css-syntax/#unicode-range-state0
+    length = len(css)
+    start_pos = pos
+    max_pos = min(pos + 6, length)
+    while pos < max_pos and css[pos] in '0123456789abcdefABCDEF':
+        pos += 1
+    hex_1 = css[start_pos:pos]
+
+    start_pos = pos
+    max_pos = min(pos + 6 - len(hex_1), length)
+    while pos < max_pos and css[pos] == '?':
+        pos += 1
+    question_marks = pos - start_pos
+
+    if question_marks:
+        hex_2 = hex_1 + 'F' * question_marks
+        hex_1 += '0' * question_marks
+    elif (pos + 1 < length and css[pos] == '-'
+            and css[pos + 1] in '0123456789abcdefABCDEF'):
+        start_pos = pos
+        max_pos = min(pos + 6, length)
+        while pos < max_pos and css[pos] in '0123456789abcdefABCDEF':
+            pos += 1
+        hex_2 = css[start_pos:pos]
+    else:
+        hex_2 = hex_1
+    start = int(hex_1, 16)
+    end = int(hex_2, 16)
+
+    # http://dev.w3.org/csswg/css-syntax/#set-the-unicode-range-tokens-range0
+    if start > sys.maxunicode or end < start:
+        return None, pos
+    else:
+        return (unichr(start), unichr(min(end, sys.maxunicode))), pos
 
 
 # Moved here so that pyflakes can detect naming typos above.
