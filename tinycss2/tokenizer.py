@@ -8,6 +8,8 @@ from .utils import ascii_lower
 # Some imports are at the bottom of this files.
 
 
+_NUMBER_RE = re.compile(r'[-+]?([0-9]*\.)?[0-9]+')
+_SCIENTIFIC_NOTATION_RE = re.compile('[eE][+-]?[0-9]+')
 _HEX_ESCAPE_RE = re.compile(r'([0-9A-Fa-f]{1,6})[ \n\t]?')
 _NON_WHITESPACE_CHAR_RE = re.compile(r'[^ \n\t]|$')
 _NON_STRING_CHAR_RE = re.compile(r'''["'\\\n]|$''')
@@ -27,7 +29,7 @@ def tokenize(css):
     css = (css.replace('\0', '\uFFFD')
            .replace('\r\n', '\n').replace('\r', '\n').replace('\f', '\n'))
     length = len(css)
-    pos = 0  # Character index in the css source.
+    token_start_pos = pos = 0  # Character index in the css source.
     line = 1  # First line is line 1.
     last_newline = -1
     root = tokens = []
@@ -35,34 +37,68 @@ def tokenize(css):
     stack = []  # Stack of nested blocks: (tokens, end_char) tuples.
 
     while pos < length:
+        newline = css.rfind('\n', token_start_pos, pos)
+        if newline != -1:
+            line += 1 + css.count('\n', token_start_pos, newline)
+            last_newline = newline
         # First character in a line is in column 1.
         column = pos - last_newline
         token_start_pos = pos
         c = css[pos]
+
         if c in ' \n\t':
             pos = _NON_WHITESPACE_CHAR_RE.search(css, pos + 1).start()
             tokens.append(WhitespaceToken(line, column))
+            continue
         elif (c in 'Uu' and pos + 2 < length and css[pos + 1] == '+'
                 and css[pos + 2] in '0123456789abcdefABCDEF?'):
             value, pos = _consume_unicode_range(css, pos + 2)
             tokens.append(UnicodeRangeToken(line, column, value))
+            continue
         elif _is_ident_start(css, pos):
             value, pos = _consume_ident(css, pos)
-            if pos < length and css[pos] == '(':  # Function
-                pos += 1
-                if ascii_lower(value) == 'url':
-                    value, pos = _consume_url(css, pos)
-                    tokens.append(
-                        URLToken(line, column, value) if value is not None
-                        else BadURLToken(line, column))
-                else:
-                    arguments = []
-                    tokens.append(Function(pos, value, arguments))
-                    stack.append((tokens, end_char))
-                    end_char = ')'
-                    tokens = arguments
-            else:
+            if not (pos < length and css[pos] == '('):  # Not a function
                 tokens.append(IdentToken(line, column, value))
+                continue
+            pos += 1  # Skip the '('
+            if ascii_lower(value) == 'url':
+                value, pos = _consume_url(css, pos)
+                tokens.append(
+                    URLToken(line, column, value) if value is not None
+                    else BadURLToken(line, column))
+                continue
+            arguments = []
+            tokens.append(Function(pos, value, arguments))
+            stack.append((tokens, end_char))
+            end_char = ')'
+            tokens = arguments
+            continue
+
+        match = _NUMBER_RE.match(css, pos)
+        if match:
+            is_integer = match.group(1) is None
+            pos = match.end()
+            if pos < length and css[pos] == '%':
+                representation = css[token_start_pos:pos]
+                value = (int if is_integer else float)(representation)
+                tokens.append(DimensionToken(
+                    line, column, value, representation, is_integer, '%'))
+                pos += 1
+                continue
+            match = _SCIENTIFIC_NOTATION_RE.match(css, pos)
+            if match:
+                pos = match.end()
+            elif _is_ident_start(css, pos):
+                representation = css[token_start_pos:pos]
+                value = (int if is_integer else float)(representation)
+                unit, pos = _consume_ident(css, pos)
+                tokens.append(DimensionToken(
+                    line, column, value, representation, is_integer, unit))
+                continue
+            representation = css[token_start_pos:pos]
+            value = (int if is_integer else float)(representation)
+            tokens.append(NumberToken(
+                line, column, value, representation, is_integer))
         elif c == '@':
             pos += 1
             if pos < length and _is_ident_start(css, pos):
@@ -82,7 +118,6 @@ def tokenize(css):
                 tokens.append(HashToken(line, column, value))
             else:
                 tokens.append(LiteralToken(line, column, '#'))
-        # TODO: number, dimension, percentage
         elif c == '{':
             content = []
             tokens.append(CurlyBracketsBlock(pos, content))
@@ -135,11 +170,6 @@ def tokenize(css):
         else:  # Colon, semicolon, comma or delim.
             tokens.append(LiteralToken(line, column, c))
             pos += 1
-
-        newline = css.rfind('\n', token_start_pos, pos)
-        if newline != -1:
-            line += 1 + css.count('\n', token_start_pos, newline)
-            last_newline = newline
     return root
 
 

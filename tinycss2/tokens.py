@@ -30,12 +30,7 @@ class _Token(object):
 
 
 class WhitespaceToken(_Token):
-    """The whitespace token.
-
-    Has no instance attribute, so a singleton can be used.
-    Instances compare equal to the  ``' '`` string made of exactly one space.
-
-    """
+    """A whitespace token."""
     __slots__ = []
     type = 'whitespace'
 
@@ -222,7 +217,8 @@ class DimensionToken(_NumericToken):
 
     .. attribute:: representation
 
-        The CSS representation of the value, as an Unicode string.
+        The CSS representation of the value without the unit,
+        as an Unicode string.
 
     .. attribute:: is_integer
 
@@ -251,21 +247,13 @@ class DimensionToken(_NumericToken):
 
 
 class BadStringToken(_Token):
-    """The bad-string token.
-
-    Has no instance attribute, so a singleton can be used.
-
-    """
+    """A bad-string token. Always a parse error."""
     __slots__ = []
     type = 'bad-string'
 
 
 class BadURLToken(_Token):
-    """The bad-url token.
-
-    Has no instance attribute, so a singleton can be used.
-
-    """
+    """A bad-url token. Always a parse error."""
     __slots__ = []
     type = 'bad-url'
 
