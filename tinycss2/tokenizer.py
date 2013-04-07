@@ -13,6 +13,8 @@ _SCIENTIFIC_NOTATION_RE = re.compile('[eE][+-]?[0-9]+')
 _HEX_ESCAPE_RE = re.compile(r'([0-9A-Fa-f]{1,6})[ \n\t]?')
 _NON_WHITESPACE_CHAR_RE = re.compile(r'[^ \n\t]|$')
 _NON_STRING_CHAR_RE = re.compile(r'''["'\\\n]|$''')
+_NON_UNQUOTED_URL_CHAR_RE = re.compile(
+    r'''[) \\\n"'(\x00-\t\x0E-\x1F\x7F-\x9F]|$''')
 
 # All ASCII characters other than [a-zA-Z0-9_-]
 _NON_NAME_CHAR_RE = re.compile('[%s]' % re.escape(''.join(
@@ -268,7 +270,50 @@ def _consume_url(css, pos):
     The given pos is assume to be just after the '(' of 'url('.
 
     """
-    raise NotImplementedError  # TODO
+    length = len(css)
+    # http://dev.w3.org/csswg/css-syntax/#url-state
+    # Skip whitespace
+    pos = _NON_WHITESPACE_CHAR_RE.search(css, pos).start()
+    if pos >= length:  # EOF
+        return None, pos  # bad-url
+    c = css[pos]
+    if c in '"\'':
+        # http://dev.w3.org/csswg/css-syntax/#url-double-quote-state0
+        # http://dev.w3.org/csswg/css-syntax/#url-single-quote-state0
+        value, pos = _consume_quoted_string()
+    elif c == ')':
+        return '', pos + 1
+    else:
+        # http://dev.w3.org/csswg/css-syntax/#url-unquoted-state0
+        chunks = []
+        while 1:
+            start_pos = pos
+            pos = _NON_UNQUOTED_URL_CHAR_RE.search(css, pos).start()
+            chuncks.append(css[start_pos:pos])
+            if pos >= length:  # EOF
+                return ''.join(chunks), pos
+            c = css[pos]
+            pos += 1
+            if c == ')':
+                return ''.join(chunks), pos
+            elif c in ' \n':
+                value = ''.join(chunks)
+                break
+            elif c == '\\' and pos < length and css[pos] != '\n':
+                # Valid escape
+                c, pos = _consume_escape(css, pos)
+                chunks.append(c)
+            else:
+                value = None
+                break
+
+    if value is not None:
+        # http://dev.w3.org/csswg/css-syntax/#url-end-state0
+        pos = _NON_WHITESPACE_CHAR_RE.search(css, pos).start()
+        if pos >= length or css[pos] == ')':
+            return value, pos
+    # http://dev.w3.org/csswg/css-syntax/#bad-url-state0
+    return None, (css.find(')', pos) + 1) or length  # bad-url
 
 
 def _consume_unicode_range(css, pos):
