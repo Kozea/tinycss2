@@ -12,6 +12,21 @@ class _Node(object):
         self.source_column = column
 
 
+class ParseError(object):
+    """Base class for all nodes.
+
+    They have different name and categorization,
+    but nodes and tokens have the same attributes.
+
+    """
+    __slots__ = ['message']
+    type = 'error'
+
+    def __init__(self, line, column, message):
+        _Node.__init__(self, line, column)
+        self.message = message
+
+
 class Declaration(_Node):
     """A CSS (property or descriptor) declaration.
 
