@@ -162,6 +162,9 @@ def tokenize(css):
         elif css.startswith('-->', pos):
             tokens.append(LiteralToken(line, column, '-->'))
             pos += 3
+        elif css.startswith('||', pos):
+            tokens.append(LiteralToken(line, column, '||'))
+            pos += 2
         elif c in '~|^$*':
             pos += 1
             if pos < length and css[pos] == '=':
