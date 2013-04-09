@@ -110,14 +110,15 @@ def tokenize(css):
                 tokens.append(LiteralToken(line, column, '@'))
         elif c == '#':
             pos += 1
-            if pos < length and (
+            is_identifier = _is_ident_start(css, pos)
+            if is_identifier or (pos < length and (
                     css[pos] in '0123456789abcdefghijklmnopqrstuvwxyz'
                                 '-_ABCDEFGHIJKLMNOPQRSTUVWXYZ'
                     # Valid escape:
                     or (css[pos] == '\\' and pos + 1 < length
-                        and css[pos + 1] != '\n')):
+                        and css[pos + 1] != '\n'))):
                 value, pos = _consume_ident(css, pos)
-                tokens.append(HashToken(line, column, value))
+                tokens.append(HashToken(line, column, value, is_identifier))
             else:
                 tokens.append(LiteralToken(line, column, '#'))
         elif c == '{':

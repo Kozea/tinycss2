@@ -106,20 +106,30 @@ class AtKeywordToken(_Token):
 
 
 class HashToken(_Token):
-    """A CSS hash token.
+    r"""A CSS hash token.
 
     .. attribute:: value
 
         The unescaped string, as an Unicode string, without the ``#`` symbol.
         The original casing is preserved.
 
+    .. attribute:: is_identifier
+
+        Boolean. True if the source for this hash token was
+        a ``#`` followed by a valid identifier.
+        This is required for ID selectors.
+        For example, ``#1`` is not a valid ID selector
+        (:attr:`is_identifier` is false) but ``#\31`` is,
+        although both hash tokens have the same unescaped :attr:`value`.
+
     """
-    __slots__ = ['value']
+    __slots__ = ['value', 'is_identifier']
     type = 'hash'
 
-    def __init__(self, line, column, value):
-        _Token.__init__(self, line, column)
+    def __init__(self, line, column, value, is_identifier):
+        _Token.__init__(self, line, column, is_identifier)
         self.value = value
+        self.is_identifier = is_identifier
 
 
 class StringToken(_Token):
