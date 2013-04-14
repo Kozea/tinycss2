@@ -2,11 +2,13 @@ from .nodes import ParseError, Declaration, AtRule, QualifiedRule
 
 
 def check_bad_tokens(tokens):
-    """
+    """Check for bad tokens:
+    bad-string, bad-url, unmatched ')', unmatched ']', and unmatched '}'.
+
     :param tokens: An iterable of tokens.
     :returns:
         A :class:`~tinycss2.nodes.ParseError` if :obj:`tokens` (recursively)
-        contains a bad-string or bad-url token, otherwise :obj:`None`.
+        contains a bad token, otherwise :obj:`None`.
 
     """
     for token in tokens:
@@ -18,9 +20,14 @@ def check_bad_tokens(tokens):
             error = check_bad_tokens(token.arguments)
             if error:
                 return error
-        elif token.type in ('bad-url', 'bad-string'):
+        elif token.type == 'bad-url':
+            return ParseError(token.line, token.column, 'Bad url() syntax.')
+        elif token.type == 'bad-string':
             return ParseError(
-                token.line, token.column, 'Got a %s token.' % token.type)
+                token.line, token.column, 'Bad quoted string syntax.')
+        elif token in ('}', ')', ']'):
+            return ParseError(
+                token.line, token.column, 'Unmatched %s token.' % token.value)
 
 
 def parse_one_declaration(tokens):
@@ -155,12 +162,8 @@ def parse_rules(tokens, is_top_level=True):
         head = [token]
         for token in tokens:
             if token.type == '{} block':
-                error = check_bad_tokens(head) or check_bad_tokens(token)
-                if error:
-                    yield error
-                else:
-                    yield QualifiedRule(first_head_token.line,
-                                        first_head_token.column, head, token)
+                yield QualifiedRule(first_head_token.line,
+                                    first_head_token.column, head, token)
                 break
             else:
                 head.append(token)
@@ -182,23 +185,14 @@ def _parse_at_rule_internal(at_keyword, tokens):
     for token in tokens:
         if token.type == '{} block':
             body = token
-            error = check_bad_tokens(head) or check_bad_tokens(body)
-            if error:
-                return error
             break
         elif token == ';':
             body = None
-            error = check_bad_tokens(head)
-            if error:
-                return error
             break
         else:
             head.append(token)
     else:
         body = None
-        error = check_bad_tokens(head)
-        if error:
-            return error
     return AtRule(
         at_keyword.line, at_keyword.column,
         at_keyword.value, at_keyword.case_sensitive_value, head, body)
