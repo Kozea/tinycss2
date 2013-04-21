@@ -1,10 +1,5 @@
 class _Node(object):
-    """Base class for all nodes.
-
-    They have different name and categorization,
-    but nodes and tokens have the same attributes.
-
-    """
+    """Base class for all nodes."""
     __slots__ = ['source_line', 'source_column']
 
     def __init__(self, line, column):
@@ -13,10 +8,19 @@ class _Node(object):
 
 
 class ParseError(object):
-    """Base class for all nodes.
+    """Replace a syntactically invalid rule or a declaration.
 
-    They have different name and categorization,
-    but nodes and tokens have the same attributes.
+    .. attribute:: line
+
+        The line number of the error in the CSS source.
+
+    .. attribute:: column
+
+        The column number within :attr:`line` of the error in the CSS source.
+
+    .. attribute:: message
+
+        Human-readable explanation of the error.
 
     """
     __slots__ = ['message']
@@ -32,6 +36,15 @@ class Declaration(_Node):
 
     Syntax:
     ``<ident> <whitespace>* ':' <token>* ( '!' <ident("important")> )?``
+
+    .. attribute:: line
+
+        The line number of the start of the declaration in the CSS source.
+
+    .. attribute:: column
+
+        The column number within :attr:`line` of the start of the declaration
+        in the CSS source.
 
     .. attribute:: name
 
@@ -77,6 +90,15 @@ class QualifiedRule(_Node):
     Syntax:
     ``<token except {} block>* <{} block>``
 
+    .. attribute:: line
+
+        The line number of the start of the rule in the CSS source.
+
+    .. attribute:: column
+
+        The column number within :attr:`line` of the start of the rule
+        in the CSS source.
+
     .. attribute:: head
 
         The rule’s head, the part before the {} block, as a list of tokens.
@@ -104,6 +126,15 @@ class AtRule(_Node):
 
     Syntax:
     ``<at-keyword> <token except {} block>* ( <{} block> | ';' )``
+
+    .. attribute:: line
+
+        The line number of the start of the rule in the CSS source.
+
+    .. attribute:: column
+
+        The column number within :attr:`line` of the start of the rule
+        in the CSS source.
 
     .. attribute:: at_keyword
 

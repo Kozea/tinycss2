@@ -20,6 +20,7 @@ def ascii_lower(string):
         >>> assert ascii_lower(keyword) != 'background'
 
     """
+    # This turns out to be faster than unicode.translate()
     return string.encode('utf8').lower().decode('utf8')
 
 

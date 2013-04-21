@@ -30,7 +30,18 @@ class _Token(object):
 
 
 class WhitespaceToken(_Token):
-    """A whitespace token."""
+    """A whitespace token.
+
+    .. attribute:: line
+
+        The line number of the start of the token in the CSS source.
+
+    .. attribute:: column
+
+        The column number within :attr:`line` of the start of the token
+        in the CSS source.
+
+    """
     __slots__ = []
     type = 'whitespace'
 
@@ -39,6 +50,15 @@ class WhitespaceToken(_Token):
 # include-match, dash-match, prefix-match, suffix-match, substring-match.
 class LiteralToken(_Token):
     r"""Token that reprensents one or more characters as in the CSS source.
+
+    .. attribute:: line
+
+        The line number of the start of the token in the CSS source.
+
+    .. attribute:: column
+
+        The column number within :attr:`line` of the start of the token
+        in the CSS source.
 
     .. attribute:: value
 
@@ -64,6 +84,15 @@ class LiteralToken(_Token):
 class IdentToken(_Token):
     """A CSS identifier token.
 
+    .. attribute:: line
+
+        The line number of the start of the token in the CSS source.
+
+    .. attribute:: column
+
+        The column number within :attr:`line` of the start of the token
+        in the CSS source.
+
     .. attribute:: value
 
         The unescaped value, as an Unicode string.
@@ -86,6 +115,15 @@ class IdentToken(_Token):
 class AtKeywordToken(_Token):
     """A CSS at-keyword token.
 
+    .. attribute:: line
+
+        The line number of the start of the token in the CSS source.
+
+    .. attribute:: column
+
+        The column number within :attr:`line` of the start of the token
+        in the CSS source.
+
     .. attribute:: value
 
         The unescaped value, as an Unicode string, without the ``@`` symbol.
@@ -107,6 +145,15 @@ class AtKeywordToken(_Token):
 
 class HashToken(_Token):
     r"""A CSS hash token.
+
+    .. attribute:: line
+
+        The line number of the start of the token in the CSS source.
+
+    .. attribute:: column
+
+        The column number within :attr:`line` of the start of the token
+        in the CSS source.
 
     .. attribute:: value
 
@@ -135,6 +182,15 @@ class HashToken(_Token):
 class StringToken(_Token):
     """A quoted string token.
 
+    .. attribute:: line
+
+        The line number of the start of the token in the CSS source.
+
+    .. attribute:: column
+
+        The column number within :attr:`line` of the start of the token
+        in the CSS source.
+
     .. attribute:: value
 
         The unescaped string, as an Unicode string, without the quotes.
@@ -151,6 +207,15 @@ class StringToken(_Token):
 
 class URLToken(_Token):
     """A CSS url() token.
+
+    .. attribute:: line
+
+        The line number of the start of the token in the CSS source.
+
+    .. attribute:: column
+
+        The column number within :attr:`line` of the start of the token
+        in the CSS source.
 
     .. attribute:: value
 
@@ -169,6 +234,15 @@ class URLToken(_Token):
 
 class UnicodeRangeToken(_Token):
     """An unicode-range token. Represents a range of characters.
+
+    .. attribute:: line
+
+        The line number of the start of the token in the CSS source.
+
+    .. attribute:: column
+
+        The column number within :attr:`line` of the start of the token
+        in the CSS source.
 
     .. attribute:: range
 
@@ -198,6 +272,15 @@ class _NumericToken(_Token):
 class NumberToken(_NumericToken):
     """A number token.
 
+    .. attribute:: line
+
+        The line number of the start of the token in the CSS source.
+
+    .. attribute:: column
+
+        The column number within :attr:`line` of the start of the token
+        in the CSS source.
+
     .. attribute:: value
 
         The value as an :class:`int` if :attr:`is_integer` is true,
@@ -219,6 +302,15 @@ class NumberToken(_NumericToken):
 
 class DimensionToken(_NumericToken):
     """A dimension token (number followed by an unit.)
+
+    .. attribute:: line
+
+        The line number of the start of the token in the CSS source.
+
+    .. attribute:: column
+
+        The column number within :attr:`line` of the start of the token
+        in the CSS source.
 
     .. attribute:: value
 
@@ -257,13 +349,35 @@ class DimensionToken(_NumericToken):
 
 
 class BadStringToken(_Token):
-    """A bad-string token. Always a parse error."""
+    """A bad-string token. Always a parse error.
+
+    .. attribute:: line
+
+        The line number of the start of the token in the CSS source.
+
+    .. attribute:: column
+
+        The column number within :attr:`line` of the start of the token
+        in the CSS source.
+
+    """
     __slots__ = []
     type = 'bad-string'
 
 
 class BadURLToken(_Token):
-    """A bad-url token. Always a parse error."""
+    """A bad-url token. Always a parse error.
+
+    .. attribute:: line
+
+        The line number of the start of the token in the CSS source.
+
+    .. attribute:: column
+
+        The column number within :attr:`line` of the start of the token
+        in the CSS source.
+
+    """
     __slots__ = []
     type = 'bad-url'
 
@@ -280,6 +394,15 @@ class _Block(_Token):
 class ParenthesesBlock(_Block):
     """A () block.
 
+    .. attribute:: line
+
+        The line number of the start of the block in the CSS source.
+
+    .. attribute:: column
+
+        The column number within :attr:`line` of the start of the block
+        in the CSS source.
+
     .. attribute:: content
 
         The content of the block, as list of tokens.
@@ -291,6 +414,15 @@ class ParenthesesBlock(_Block):
 
 class SquareBracketsBlock(_Block):
     """A [] block.
+
+    .. attribute:: line
+
+        The line number of the start of the block in the CSS source.
+
+    .. attribute:: column
+
+        The column number within :attr:`line` of the start of the block
+        in the CSS source.
 
     .. attribute:: content
 
@@ -304,6 +436,15 @@ class SquareBracketsBlock(_Block):
 class CurlyBracketsBlock(_Block):
     """A {} block.
 
+    .. attribute:: line
+
+        The line number of the start of the block in the CSS source.
+
+    .. attribute:: column
+
+        The column number within :attr:`line` of the start of the block
+        in the CSS source.
+
     .. attribute:: content
 
         The content of the block, as list of tokens.
@@ -315,6 +456,15 @@ class CurlyBracketsBlock(_Block):
 
 class Function(_Token):
     """A CSS function.
+
+    .. attribute:: line
+
+        The line number of the start of the function in the CSS source.
+
+    .. attribute:: column
+
+        The column number within :attr:`line` of the start of the function
+        in the CSS source.
 
     .. attribute:: name
 

@@ -29,6 +29,7 @@ def tokenize(css):
 
     """
     css = (css.replace('\0', '\uFFFD')
+           # This turns out to be faster than a regexp:
            .replace('\r\n', '\n').replace('\r', '\n').replace('\f', '\n'))
     length = len(css)
     token_start_pos = pos = 0  # Character index in the css source.
