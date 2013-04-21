@@ -1,35 +1,6 @@
 from .nodes import ParseError, Declaration, AtRule, QualifiedRule
 
 
-def check_bad_tokens(tokens):
-    """Check for bad tokens:
-    bad-string, bad-url, unmatched ')', unmatched ']', and unmatched '}'.
-
-    :param tokens: An iterable of tokens.
-    :returns:
-        A :class:`~tinycss2.nodes.ParseError` if :obj:`tokens` (recursively)
-        contains a bad token, otherwise :obj:`None`.
-
-    """
-    for token in tokens:
-        if token.type in ('{} block', '() block', '[] block'):
-            error = check_bad_tokens(token.content)
-            if error:
-                return error
-        elif token.type == 'function':
-            error = check_bad_tokens(token.arguments)
-            if error:
-                return error
-        elif token.type == 'bad-url':
-            return ParseError(token.line, token.column, 'Bad url() syntax.')
-        elif token.type == 'bad-string':
-            return ParseError(
-                token.line, token.column, 'Bad quoted string syntax.')
-        elif token in ('}', ')', ']'):
-            return ParseError(
-                token.line, token.column, 'Unmatched %s token.' % token.value)
-
-
 def parse_one_declaration(tokens):
     """
     :param tokens: An iterable of tokens.
@@ -63,9 +34,6 @@ def parse_one_declaration(tokens):
             None, None, "Expected ':' after declaration name, found EOF")
 
     value = list(tokens)
-    error = check_bad_tokens(value)
-    if error:
-        return error
 
     important = False
     reversed_value = iter(enumerate(reversed(value), 1))
