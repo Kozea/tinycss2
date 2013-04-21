@@ -1,4 +1,51 @@
+import webencodings
+
+
 VERSION = '0.1'
+
+
+def decode_css_bytes(css_bytes, protocol_encoding=None, link_encoding=None,
+                     document_encoding=None):
+    """Determine the character encoding and decode a CSS stylesheet.
+
+    :param css_bytes: The stylesheet as a byte string.
+    :param protocol_encoding:
+        The encoding label, if any, defined by HTTP or equivalent protocol.
+        (e.g. via the ``charset`` parameter of the ``Content-Type`` header.)
+    :param link_encoding:
+        The encoding label, if any, defined by the stylesheet linking mechanism
+        (e.g. ``charset`` attribute on the ``<link>`` element or
+        ``<?xml-stylesheet?>`` processing instruction
+        that caused the style sheet to be included.)
+    :param protocol_encoding:
+        The encoding label, if any, of the referring stylesheet or document.
+    :returns:
+        An Unicode string.
+        The ``@charset`` rule is still part of the string,
+        but any Byte Order Mark is not.
+
+    """
+    # http://dev.w3.org/csswg/css-syntax/#the-input-byte-stream
+    fallback = webencodings.lookup(protocol_encoding)
+    if fallback:
+        return webencodings.decode(css_bytes, fallback)
+    if css_bytes.startswith(b'@charset "'):
+        # 10 is len(b'@charset "')
+        # 100 is abitrary so that no encoding label is more than 100-10 bytes.
+        end_quote = css_bytes.find('"', 10, 100)
+        if end_quote != -1 and css_bytes[end_quote:end_quote + 2] == b'";':
+            fallback = webencodings.lookup(css_bytes[10:end_quote])
+            if fallback:
+                if fallback.name in ('utf-16be', 'utf-16le'):
+                    return webencodings.decode(css_bytes, webencodings.UTF8)
+                return webencodings.decode(css_bytes, fallback)
+    fallback = webencodings.lookup(link_encoding)
+    if fallback:
+        return webencodings.decode(css_bytes, fallback)
+    fallback = webencodings.lookup(document_encoding)
+    if fallback:
+        return webencodings.decode(css_bytes, fallback)
+    return webencodings.decode(css_bytes, webencodings.UTF8)
 
 
 def ascii_lower(string):
