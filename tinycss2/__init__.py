@@ -1,3 +1,6 @@
+VERSION = '0.1'
+
+
 def ascii_lower(string):
     r"""Transform (only) ASCII letters to lower case: A-Z is mapped to a-z.
 
