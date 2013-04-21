@@ -1,3 +1,4 @@
+from .tokens import _Token
 from .nodes import ParseError, Declaration, AtRule, QualifiedRule
 
 
@@ -9,29 +10,30 @@ def parse_one_declaration(tokens):
         or :class:`~tinycss2.nodes.ParseError`.
 
     """
+    token = _Token(1, 1)  # For the error case if `tokens` is empty.
     tokens = iter(tokens)
     for token in tokens:
         if token.type == 'ident':
             name = token
             break
         elif token.type != 'whitespace':
-            return ParseError(
-                token.line, token.column,
-                'Expected ident for declaration name, got %s.' % token.type)
+            return ParseError(token.line, token.column,
+                              'Expected ident for declaration name, got %s.'
+                              % token.type)
     else:
-        return ParseError(
-            None, None, 'Expected ident for declaration name, found EOF')
+        return ParseError(token.line, token.column,
+                          'Expected ident for declaration name, got EOF')
 
     for token in tokens:
         if token == ':':
             break
         elif token.type != 'whitespace':
-            return ParseError(
-                token.line, token.column,
-                "Expected ':' after declaration name, got %s." % token.type)
+            return ParseError(token.line, token.column,
+                              "Expected ':' after declaration name, got %s."
+                              % token.type)
     else:
-        return ParseError(
-            None, None, "Expected ':' after declaration name, found EOF")
+        return ParseError(token.line, token.column,
+                          "Expected ':' after declaration name, got EOF")
 
     value = list(tokens)
 
@@ -96,13 +98,15 @@ def parse_one_rule(tokens, is_top_level=True):
     rules = parse_rules(tokens, is_top_level)
     first = next(rules, None)
     if first is None:
-        return ParseError(None, None, 'Expected a rule, got EOF')
+        return ParseError(1, 1, 'Expected a rule, got EOF')
     elif first.type == 'error':
         return first
     second = next(rules, None)
     if second is not None:
-        return ParseError(None, None, 'Expected a single rule, '
-                          'got %s after the first rule.' % second.type)
+        return ParseError(
+            second.line, second.column,
+            'Expected a single rule, got %s after the first rule.'
+            % second.type)
     return first
 
 
@@ -126,6 +130,9 @@ def parse_rules(tokens, is_top_level=True):
         elif token.type == 'at-keyword':
             yield _parse_at_rule_internal(token, tokens)
             continue
+        elif token.type == '{} block':
+            yield QualifiedRule(token.line, token.column, [], token)
+            continue
         first_head_token = token
         head = [token]
         for token in tokens:
@@ -136,8 +143,8 @@ def parse_rules(tokens, is_top_level=True):
             else:
                 head.append(token)
         else:
-            yield ParseError(
-                None, None, 'Expected qualified rule body, got EOF.')
+            yield ParseError(head[-1].line, head[-1].column,
+                             'Expected qualified rule body, got EOF.')
 
 
 def _parse_at_rule_internal(at_keyword, tokens):
