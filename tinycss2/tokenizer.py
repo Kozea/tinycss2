@@ -8,20 +8,11 @@ from .utils import ascii_lower
 # Some imports are at the bottom of this files.
 
 
-_NUMBER_RE = re.compile(r'[-+]?([0-9]*\.)?[0-9]+')
-_SCIENTIFIC_NOTATION_RE = re.compile('[eE][+-]?[0-9]+')
+_NUMBER_RE = re.compile(r'[-+]?([0-9]*\.)?[0-9]+([eE][+-]?[0-9]+)')
 _HEX_ESCAPE_RE = re.compile(r'([0-9A-Fa-f]{1,6})[ \n\t]?')
-_NON_WHITESPACE_CHAR_RE = re.compile(r'[^ \n\t]|$')
-_NON_STRING_CHAR_RE = re.compile(r'''["'\\\n]|$''')
-_NON_UNQUOTED_URL_CHAR_RE = re.compile(
-    r'''[) \\\n"'(\x00-\t\x0E-\x1F\x7F-\x9F]|$''')
-
-# All ASCII characters other than [a-zA-Z0-9_-]
-_NON_NAME_CHAR_RE = re.compile('[%s]' % re.escape(''.join(
-    c for c in map(chr, range(128)) if not re.match('[a-zA-Z0-9_-]', c))))
 
 
-def tokenize(css):
+def tokenize(css, preserve_comments=False):
     """The tokenizer.
 
     :param css: An Unicode string.
@@ -50,7 +41,9 @@ def tokenize(css):
         c = css[pos]
 
         if c in ' \n\t':
-            pos = _NON_WHITESPACE_CHAR_RE.search(css, pos + 1).start()
+            pos += 1
+            while css.startswith((' ', '\n', '\t'), pos):
+                pos += 1
             tokens.append(WhitespaceToken(line, column))
             continue
         elif (c in 'Uu' and pos + 2 < length and css[pos + 1] == '+'
@@ -60,7 +53,7 @@ def tokenize(css):
             continue
         elif _is_ident_start(css, pos):
             value, pos = _consume_ident(css, pos)
-            if not (pos < length and css[pos] == '('):  # Not a function
+            if not css.startswith('(', pos):  # Not a function
                 tokens.append(IdentToken(line, column, value))
                 continue
             pos += 1  # Skip the '('
@@ -68,7 +61,7 @@ def tokenize(css):
                 value, pos = _consume_url(css, pos)
                 tokens.append(
                     URLToken(line, column, value) if value is not None
-                    else BadURLToken(line, column))
+                    else CSSSyntaxError(line, column, 'bad URL token'))
                 continue
             arguments = []
             tokens.append(Function(pos, value, arguments))
@@ -79,29 +72,21 @@ def tokenize(css):
 
         match = _NUMBER_RE.match(css, pos)
         if match:
-            is_integer = match.group(1) is None
             pos = match.end()
-            if pos < length and css[pos] == '%':
-                representation = css[token_start_pos:pos]
-                value = (int if is_integer else float)(representation)
-                tokens.append(DimensionToken(
-                    line, column, value, representation, is_integer, '%'))
-                pos += 1
-                continue
-            match = _SCIENTIFIC_NOTATION_RE.match(css, pos)
-            if match:
-                pos = match.end()
-            elif _is_ident_start(css, pos):
-                representation = css[token_start_pos:pos]
-                value = (int if is_integer else float)(representation)
+            repr_ = css[token_start_pos:pos]
+            value = float(repr_)
+            int_value = int(repr_) if not any(match.groups()) else None
+            if _is_ident_start(css, pos):
                 unit, pos = _consume_ident(css, pos)
                 tokens.append(DimensionToken(
-                    line, column, value, representation, is_integer, unit))
-                continue
-            representation = css[token_start_pos:pos]
-            value = (int if is_integer else float)(representation)
-            tokens.append(NumberToken(
-                line, column, value, representation, is_integer))
+                    line, column, value, int_value, repr_, unit))
+            elif css.startswith('%', pos):
+                pos += 1
+                tokens.append(DimensionToken(
+                    line, column, value, int_value, repr_, '%'))
+            else:
+                tokens.append(NumberToken(
+                    line, column, value, int_value, repr_))
         elif c == '@':
             pos += 1
             if pos < length and _is_ident_start(css, pos):
@@ -111,13 +96,12 @@ def tokenize(css):
                 tokens.append(LiteralToken(line, column, '@'))
         elif c == '#':
             pos += 1
-            is_identifier = _is_ident_start(css, pos)
-            if is_identifier or (pos < length and (
+            if pos < length and (
                     css[pos] in '0123456789abcdefghijklmnopqrstuvwxyz'
                                 '-_ABCDEFGHIJKLMNOPQRSTUVWXYZ'
                     # Valid escape:
-                    or (css[pos] == '\\' and pos + 1 < length
-                        and css[pos + 1] != '\n'))):
+                    or (css[pos] == '\\' and not css.startswith('\\\n', pos))):
+                is_identifier = _is_ident_start(css, pos)
                 value, pos = _consume_ident(css, pos)
                 tokens.append(HashToken(line, column, value, is_identifier))
             else:
@@ -148,15 +132,24 @@ def tokenize(css):
             # so we never get here if the stack is empty.
             tokens, end_char = stack.pop()
             pos += 1
+        elif c in '}])':
+            tokens.append(CSSSyntaxError(line, column, 'Unmatched ' + c))
+            pos += 1
         elif c in '"\'':
             value, pos = _consume_quoted_string(css, pos)
             tokens.append(
                 StringToken(line, column, value) if value is not None
-                else BadStringToken(line, column))
+                else CSSSyntaxError(line, column, 'bad string token'))
         elif css.startswith('/*', pos):  # Comment
             pos = css.find('*/', pos + 2)
             if pos == -1:
+                if preserve_comments:
+                    tokens.append(
+                        Comment(line, column, css[token_start_pos + 2:]))
                 break
+            if preserve_comments:
+                tokens.append(
+                    Comment(line, column, css[token_start_pos + 2:pos]))
             pos += 2
         elif css.startswith('<!--', pos):
             tokens.append(LiteralToken(line, column, '<!--'))
@@ -169,12 +162,12 @@ def tokenize(css):
             pos += 2
         elif c in '~|^$*':
             pos += 1
-            if pos < length and css[pos] == '=':
+            if css.startswith('=', pos):
                 pos += 1
                 tokens.append(LiteralToken(line, column, c + '='))
             else:
                 tokens.append(LiteralToken(line, column, c))
-        else:  # Colon, semicolon, comma or delim.
+        else:
             tokens.append(LiteralToken(line, column, c))
             pos += 1
     return root
@@ -193,7 +186,7 @@ def _is_ident_start(css, pos):
         c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'
         or ord(c) > 0xFF  # Non-ASCII
         # Valid escape:
-        or (c == '\\' and pos + 1 < length and css[pos + 1] != '\n'))
+        or (c == '\\' and not css.startswith('\\\n', pos)))
 
 
 def _consume_ident(css, pos):
@@ -205,37 +198,41 @@ def _consume_ident(css, pos):
     # http://dev.w3.org/csswg/css-syntax/#ident-state
     chunks = []
     length = len(css)
+    start_pos = pos
     while pos < length:
-        start_pos = pos
-        pos = _NON_NAME_CHAR_RE.search(css, pos).start()
-        chuncks.append(css[start_pos:pos])
-        if pos + 1 < length and css[pos] == '\\' and css[pos + 1] != '\n':
+        c = css[pos]
+        if c in ('abcdefghijklmnopqrstuvwxyz-_0123456789'
+                 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') or ord(c) > 0xFF:
+            pos += 1
+        elif c == '\\' and not css.startswith('\\\n', pos):
             # Valid escape
+            chuncks.append(css[start_pos:pos])
             c, pos = _consume_escape(css, pos + 1)
             chunks.append(c)
+            start_pos = pos
         else:
             break
+    chuncks.append(css[start_pos:pos])
     return ''.join(chunks), pos
 
 
 def _consume_quoted_string(css, pos):
     """Return (unescaped_value, new_pos)."""
-    # http://dev.w3.org/csswg/css-syntax/#double-quote-string-state
-    # http://dev.w3.org/csswg/css-syntax/#single-quote-string-state
+    # http://dev.w3.org/csswg/css-syntax/#consume-a-string-token0
     quote = css[pos]
-    assert quote in '"\''
+    assert quote in ('"', "'")
     pos += 1
     chunks = []
     length = len(css)
+    start_pos = pos
     while pos < length:
-        start_pos = pos
-        pos = _NON_STRING_CHAR_RE.search(css, pos).start()
-        chuncks.append(css[start_pos:pos])
         c = css[pos]
         if c == quote:
+            chuncks.append(css[start_pos:pos])
             pos += 1
             break
         elif c == '\\':
+            chuncks.append(css[start_pos:pos])
             pos += 1
             if pos < length:
                 if css[pos] == '\n':  # Ignore escaped newlines
@@ -243,21 +240,21 @@ def _consume_quoted_string(css, pos):
                 else:
                     c, pos = _consume_escape(css, pos)
                     chunks.append(c)
-            else:  # "Escaped" EOF
-                return None, pos  # bad-string
+            # else: Escaped EOF, do nothing
+            start_pos = pos
         elif c == '\n':  # Unescaped newline
-            return None, pos  # bad-string
-        else:  # The other quote
+            return None, pos + 1  # bad-string
+        else:
             pos += 1
-            chunks.append(c)
+    else:
+        chuncks.append(css[start_pos:pos])
     return ''.join(chunks), pos
 
 
 def _consume_escape(css, pos):
     r"""Return (unescaped_char, new_pos).
 
-    Assumes a valid escape:
-    pos is just after '\', there’s at least one more char, and it’s not '\n'.
+    Assumes a valid escape: pos is just after '\' and not followed by '\n'.
 
     """
     # http://dev.w3.org/csswg/css-syntax/#consume-an-escaped-character
@@ -266,59 +263,84 @@ def _consume_escape(css, pos):
         codepoint = int(hex_match.group(1), 16)
         return (unichr(codepoint) if codepoint <= sys.maxunicode else '\uFFFE',
                 match.end())
-    return css[pos], pos + 1
+    elif pos < len(css):
+        return css[pos], pos + 1
+    else:
+        return '\uFFFD', pos
 
 
 def _consume_url(css, pos):
     """Return (unescaped_url, new_pos)
 
-    The given pos is assume to be just after the '(' of 'url('.
+    The given pos is assumed to be just after the '(' of 'url('.
 
     """
     length = len(css)
-    # http://dev.w3.org/csswg/css-syntax/#url-state
+    # http://dev.w3.org/csswg/css-syntax/#consume-a-url-token
     # Skip whitespace
-    pos = _NON_WHITESPACE_CHAR_RE.search(css, pos).start()
+    while css.startswith((' ', '\n', '\t'), pos):
+        pos += 1
     if pos >= length:  # EOF
         return None, pos  # bad-url
     c = css[pos]
-    if c in '"\'':
-        # http://dev.w3.org/csswg/css-syntax/#url-double-quote-state0
-        # http://dev.w3.org/csswg/css-syntax/#url-single-quote-state0
+    if c in ('"', "'"):
         value, pos = _consume_quoted_string()
+        if value is None:
+            1/0
     elif c == ')':
         return '', pos + 1
     else:
         # http://dev.w3.org/csswg/css-syntax/#url-unquoted-state0
         chunks = []
+        start_pos = pos
         while 1:
-            start_pos = pos
-            pos = _NON_UNQUOTED_URL_CHAR_RE.search(css, pos).start()
-            chuncks.append(css[start_pos:pos])
             if pos >= length:  # EOF
+                chuncks.append(css[start_pos:pos])
                 return ''.join(chunks), pos
             c = css[pos]
-            pos += 1
             if c == ')':
+                chuncks.append(css[start_pos:pos])
+                pos += 1
                 return ''.join(chunks), pos
-            elif c in ' \n':
+            elif c in ' \n\t':
+                chuncks.append(css[start_pos:pos])
                 value = ''.join(chunks)
+                pos += 1
                 break
-            elif c == '\\' and pos < length and css[pos] != '\n':
+            elif c == '\\' and not css.startswith('\\\n', pos):
                 # Valid escape
-                c, pos = _consume_escape(css, pos)
+                chuncks.append(css[start_pos:pos])
+                c, pos = _consume_escape(css, pos + 1)
                 chunks.append(c)
-            else:
-                value = None
+                start_pos = pos
+            elif (c in
+                  '"\'('
+                  # http://dev.w3.org/csswg/css-syntax/#non-printable-character
+                  '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x0b\x0e'
+                  '\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19'
+                  '\x1a\x1b\x1c\x1d\x1e\x1f\x7f'):
+                value = None  # Parse error
+                pos += 1
                 break
+            else:
+                pos += 1
 
     if value is not None:
-        # http://dev.w3.org/csswg/css-syntax/#url-end-state0
-        pos = _NON_WHITESPACE_CHAR_RE.search(css, pos).start()
-        if pos >= length or css[pos] == ')':
+        while css.startswith((' ', '\n', '\t'), pos):
+            pos += 1
+        if pos < length:
+            if css[pos] == ')':
+                return value, pos + 1
+        else:
             return value, pos
-    # http://dev.w3.org/csswg/css-syntax/#bad-url-state0
-    return None, (css.find(')', pos) + 1) or length  # bad-url
+
+    # http://dev.w3.org/csswg/css-syntax/#consume-the-remnants-of-a-bad-url0
+    while pos < length and css[pos] != ')':
+        if css.startswith(r'\)'):
+            pos += 2
+        else:
+            pos += 1
+    return None, pos  # bad-url
 
 
 def _consume_unicode_range(css, pos):
@@ -364,4 +386,4 @@ def _consume_unicode_range(css, pos):
 
 
 # Moved here so that pyflakes can detect naming typos above.
-from .tokens import *
+from .ast import *

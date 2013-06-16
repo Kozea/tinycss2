@@ -1,5 +1,4 @@
-from .tokens import _Token
-from .nodes import ParseError, Declaration, AtRule, QualifiedRule
+from .ast import Node, ParseError, Declaration, AtRule, QualifiedRule
 
 
 def parse_one_declaration(tokens):
@@ -10,7 +9,7 @@ def parse_one_declaration(tokens):
         or :class:`~tinycss2.nodes.ParseError`.
 
     """
-    token = _Token(1, 1)  # For the error case if `tokens` is empty.
+    token = Node(1, 1)  # For the error case if `tokens` is empty.
     tokens = iter(tokens)
     for token in tokens:
         if token.type == 'ident':
