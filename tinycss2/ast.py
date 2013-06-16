@@ -43,16 +43,23 @@ class Node(object):
 class ParseError(Node):
     """A syntax error of some sort.
 
+    .. attribute:: kind
+
+        Machine-readable string indicating the type of error.
+        Example: ``'bad-url'``.
+
     .. attribute:: message
 
-        Human-readable explanation of the error.
+        Human-readable explanation of the error, as a string.
+        Could be translated, expanded to include details, etc.
 
     """
-    __slots__ = ['message']
+    __slots__ = ['kind', 'message']
     type = 'error'
 
-    def __init__(self, line, column, message):
+    def __init__(self, line, column, kind, message):
         Node.__init__(self, line, column)
+        self.kind = kind
         self.message = message
 
 
