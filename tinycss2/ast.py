@@ -40,7 +40,7 @@ class Node(object):
         self.source_column = source_column
 
 
-class CSSSyntaxError(Node):
+class ParseError(Node):
     """A syntax error of some sort.
 
     .. attribute:: message
@@ -418,7 +418,7 @@ class QualifiedRule(Node):
 
     Qulified rules are often style rules,
     where the prelude is parsed as a selector list
-    and the body as a declaration list.
+    and the content as a declaration list.
 
     Syntax:
     ``<token except {} block>* <{} block>``
@@ -428,19 +428,19 @@ class QualifiedRule(Node):
         The rule’s prelude, the part before the {} block,
         as a list of :class:`Node` objects.
 
-    .. attribute:: body
+    .. attribute:: content
 
-        The rule’s body, the part inside the {} block,
+        The rule’s content, the part inside the {} block,
         as a list of :class:`Node` objects.
 
     """
-    __slots__ = ['prelude', 'body']
+    __slots__ = ['prelude', 'content']
     type = 'qualified-rule'
 
-    def __init__(self, line, column, prelude, body):
+    def __init__(self, line, column, prelude, content):
         Node.__init__(self, line, column)
         self.prelude = prelude
-        self.body = body
+        self.content = content
 
 
 class AtRule(Node):
@@ -469,21 +469,21 @@ class AtRule(Node):
         The rule’s prelude, the part before the {} block or semicolon,
         as a list of :class:`Node` objects.
 
-    .. attribute:: body
+    .. attribute:: content
 
-        The rule’s body, if any.
+        The rule’s content, if any.
         The block’s content as a list of :class:`Node` objects
         for at-rules with a {} block,
         or :obj:`None` for at-rules ending with a semicolon.
 
     """
-    __slots__ = ['at_keyword', 'lower_at_keyword', 'prelude', 'body']
+    __slots__ = ['at_keyword', 'lower_at_keyword', 'prelude', 'content']
     type = 'at-rule'
 
     def __init__(self, line, column,
-                 at_keyword, lower_at_keyword, prelude, body):
+                 at_keyword, lower_at_keyword, prelude, content):
         Node.__init__(self, line, column)
         self.at_keyword = at_keyword
         self.lower_at_keyword = lower_at_keyword
         self.prelude = prelude
-        self.body = body
+        self.content = content

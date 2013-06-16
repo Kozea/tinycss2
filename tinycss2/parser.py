@@ -5,8 +5,8 @@ def parse_one_declaration(tokens):
     """
     :param tokens: An iterable of tokens.
     :returns:
-        A :class:`~tinycss2.nodes.Declaration`
-        or :class:`~tinycss2.nodes.ParseError`.
+        A :class:`~tinycss2.ast.Declaration`
+        or :class:`~tinycss2.ast.ParseError`.
 
     """
     token = Node(1, 1)  # For the error case if `tokens` is empty.
@@ -49,8 +49,8 @@ def parse_one_declaration(tokens):
         elif token.type != 'whitespace':
             break
 
-    return Declaration(name.line, name.column,
-                       name.value, name.case_sensitive_value, value, important)
+    return Declaration(
+        name.line, name.column, name.value, name.lower_value, value, important)
 
 
 def parse_declarations(tokens, with_at_rules=False):
@@ -60,9 +60,9 @@ def parse_declarations(tokens, with_at_rules=False):
     :param with_at_rules: Whether to allow at-rules mixed with declarations.
     :returns:
         A generator that yields either
-        :class:`~tinycss2.nodes.Declaration`,
-        :class:`~tinycss2.nodes.ParseError`,
-        or (if :obj:`with_at_rules` is true) :class:`~tinycss2.nodes.AtRule`.
+        :class:`~tinycss2.ast.Declaration`,
+        :class:`~tinycss2.ast.ParseError`,
+        or (if :obj:`with_at_rules` is true) :class:`~tinycss2.ast.AtRule`.
 
     """
     tokens = iter(tokens)
@@ -87,11 +87,12 @@ def parse_one_rule(tokens, is_top_level=True):
     """
 
     :param tokens: An iterable of tokens.
-    :param is_top_level: False is :obj:`tokens` is eg. the body of an at-rule.
+    :param is_top_level:
+        False is :obj:`tokens` is eg. the content of an at-rule.
     :returns:
-        A :class:`~tinycss2.nodes.QualifiedRule`,
-        :class:`~tinycss2.nodes.AtRule`,
-        or :class:`~tinycss2.nodes.ParseError`.
+        A :class:`~tinycss2.ast.QualifiedRule`,
+        :class:`~tinycss2.ast.AtRule`,
+        or :class:`~tinycss2.ast.ParseError`.
 
     """
     rules = parse_rules(tokens, is_top_level)
@@ -113,12 +114,13 @@ def parse_rules(tokens, is_top_level=True):
     """
 
     :param tokens: An iterable of tokens.
-    :param is_top_level: False is :obj:`tokens` is eg. the body of an at-rule.
+    :param is_top_level:
+        False is :obj:`tokens` is eg. the content of an at-rule.
     :returns:
         A generator that yields either
-        :class:`~tinycss2.nodes.QualifiedRule`,
-        :class:`~tinycss2.nodes.AtRule`,
-        or :class:`~tinycss2.nodes.ParseError`.
+        :class:`~tinycss2.ast.QualifiedRule`,
+        :class:`~tinycss2.ast.AtRule`,
+        or :class:`~tinycss2.ast.ParseError`.
 
     """
     tokens = iter(tokens)
@@ -130,20 +132,19 @@ def parse_rules(tokens, is_top_level=True):
             yield _parse_at_rule_internal(token, tokens)
             continue
         elif token.type == '{} block':
-            yield QualifiedRule(token.line, token.column, [], token)
+            yield QualifiedRule(token.line, token.column, [], token.content)
             continue
-        first_head_token = token
         head = [token]
         for token in tokens:
             if token.type == '{} block':
-                yield QualifiedRule(first_head_token.line,
-                                    first_head_token.column, head, token)
+                yield QualifiedRule(head[0].line, head[0].column,
+                                    head, token.content)
                 break
             else:
                 head.append(token)
         else:
             yield ParseError(head[-1].line, head[-1].column,
-                             'Expected qualified rule body, got EOF.')
+                             'Expected qualified rule content, got EOF.')
 
 
 def _parse_at_rule_internal(at_keyword, tokens):
@@ -151,22 +152,21 @@ def _parse_at_rule_internal(at_keyword, tokens):
     :param at_keyword: A token of at-keyword type.
     :param tokens: An **iterator** of tokens, only consumed for this at-rule.
     :returns:
-        A :class:`~tinycss2.nodes.AtRule`,
-        or :class:`~tinycss2.nodes.ParseError`.
+        A :class:`~tinycss2.ast.AtRule`,
+        or :class:`~tinycss2.ast.ParseError`.
 
     """
     head = []
     for token in tokens:
         if token.type == '{} block':
-            body = token
+            content = token.content
             break
         elif token == ';':
-            body = None
+            content = None
             break
         else:
             head.append(token)
     else:
-        body = None
-    return AtRule(
-        at_keyword.line, at_keyword.column,
-        at_keyword.value, at_keyword.case_sensitive_value, head, body)
+        content = None
+    return AtRule(at_keyword.line, at_keyword.column,
+                  at_keyword.value, at_keyword.lower_value, head, content)

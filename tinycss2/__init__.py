@@ -33,7 +33,7 @@ def decode_css_bytes(css_bytes, protocol_encoding=None, link_encoding=None,
         # 10 is len(b'@charset "')
         # 100 is abitrary so that no encoding label is more than 100-10 bytes.
         end_quote = css_bytes.find('"', 10, 100)
-        if end_quote != -1 and css_bytes[end_quote:end_quote + 2] == b'";':
+        if end_quote != -1 and css_bytes.startswith('";', end_quote):
             fallback = webencodings.lookup(css_bytes[10:end_quote])
             if fallback:
                 if fallback.name in ('utf-16be', 'utf-16le'):
