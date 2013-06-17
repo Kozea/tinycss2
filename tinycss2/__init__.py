@@ -17,7 +17,7 @@ def decode_css_bytes(css_bytes, protocol_encoding=None, link_encoding=None,
         (e.g. ``charset`` attribute on the ``<link>`` element or
         ``<?xml-stylesheet?>`` processing instruction
         that caused the style sheet to be included.)
-    :param protocol_encoding:
+    :param document_encoding:
         The encoding label, if any, of the referring stylesheet or document.
     :returns:
         An Unicode string.

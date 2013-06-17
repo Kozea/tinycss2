@@ -12,7 +12,7 @@ from .ast import (
     UnicodeRangeToken, WhitespaceToken)
 
 
-_NUMBER_RE = re.compile(r'[-+]?([0-9]*\.)?[0-9]+([eE][+-]?[0-9]+)')
+_NUMBER_RE = re.compile(r'[-+]?([0-9]*\.)?[0-9]+([eE][+-]?[0-9]+)?')
 _HEX_ESCAPE_RE = re.compile(r'([0-9A-Fa-f]{1,6})[ \n\t]?')
 
 
@@ -68,7 +68,7 @@ def tokenize(css, preserve_comments=False):
                     else ParseError(line, column, 'bad URL token'))
                 continue
             arguments = []
-            tokens.append(Function(pos, value, arguments))
+            tokens.append(Function(line, column, value, arguments))
             stack.append((tokens, end_char))
             end_char = ')'
             tokens = arguments
@@ -112,21 +112,21 @@ def tokenize(css, preserve_comments=False):
                 tokens.append(LiteralToken(line, column, '#'))
         elif c == '{':
             content = []
-            tokens.append(CurlyBracketsBlock(pos, content))
+            tokens.append(CurlyBracketsBlock(line, column, content))
             stack.append((tokens, end_char))
             end_char = '}'
             tokens = content
             pos += 1
         elif c == '[':
             content = []
-            tokens.append(SquareBracketsBlock(pos, content))
+            tokens.append(SquareBracketsBlock(line, column, content))
             stack.append((tokens, end_char))
             end_char = ']'
             tokens = content
             pos += 1
         elif c == '(':
             content = []
-            tokens.append(ParenthesesBlock(pos, content))
+            tokens.append(ParenthesesBlock(line, column, content))
             stack.append((tokens, end_char))
             end_char = ')'
             tokens = content

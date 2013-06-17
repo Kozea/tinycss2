@@ -1,4 +1,4 @@
 try:
-    unichr
+    unichr = unichr
 except NameError:
     unichr = chr
