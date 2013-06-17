@@ -370,13 +370,13 @@ class Function(Node):
         in the list.
 
     """
-    __slots__ = ['name', 'case_sensitive_name', 'arguments']
+    __slots__ = ['name', 'lower_name', 'arguments']
     type = 'function'
 
     def __init__(self, line, column, name, arguments):
         Node.__init__(self, line, column)
-        self.name = ascii_lower(name)
-        self.case_sensitive_name = name
+        self.name = name
+        self.lower_name = ascii_lower(name)
         self.arguments = arguments
 
 

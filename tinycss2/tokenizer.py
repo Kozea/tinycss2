@@ -65,7 +65,7 @@ def tokenize(css, preserve_comments=False):
                 value, pos = _consume_url(css, pos)
                 tokens.append(
                     URLToken(line, column, value) if value is not None
-                    else ParseError(line, column, 'bad URL token'))
+                    else ParseError(line, column, 'bad-url', 'bad URL token'))
                 continue
             arguments = []
             tokens.append(Function(line, column, value, arguments))
@@ -137,13 +137,14 @@ def tokenize(css, preserve_comments=False):
             tokens, end_char = stack.pop()
             pos += 1
         elif c in '}])':
-            tokens.append(ParseError(line, column, 'Unmatched ' + c))
+            tokens.append(ParseError(line, column, c, 'Unmatched ' + c))
             pos += 1
-        elif c in '"\'':
+        elif c in ('"', "'"):
             value, pos = _consume_quoted_string(css, pos)
             tokens.append(
                 StringToken(line, column, value) if value is not None
-                else ParseError(line, column, 'bad string token'))
+                else ParseError(line, column, 'bad-string',
+                                'bad string token'))
         elif css.startswith('/*', pos):  # Comment
             pos = css.find('*/', pos + 2)
             if pos == -1:
@@ -172,6 +173,9 @@ def tokenize(css, preserve_comments=False):
             else:
                 tokens.append(LiteralToken(line, column, c))
         else:
+            if c == '\\':
+                tokens.append(ParseError(line, column, 'bad-escape',
+                                         'Invalid backslash-escape'))
             tokens.append(LiteralToken(line, column, c))
             pos += 1
     return root
@@ -188,7 +192,7 @@ def _is_ident_start(css, pos):
         c = css[pos]
     return (
         c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'
-        or ord(c) > 0xFF  # Non-ASCII
+        or ord(c) > 0x7F  # Non-ASCII
         # Valid escape:
         or (c == '\\' and not css.startswith('\\\n', pos)))
 
@@ -206,7 +210,7 @@ def _consume_ident(css, pos):
     while pos < length:
         c = css[pos]
         if c in ('abcdefghijklmnopqrstuvwxyz-_0123456789'
-                 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') or ord(c) > 0xFF:
+                 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') or ord(c) > 0x7F:
             pos += 1
         elif c == '\\' and not css.startswith('\\\n', pos):
             # Valid escape

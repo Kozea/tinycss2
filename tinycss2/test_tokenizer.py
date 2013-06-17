@@ -1,6 +1,7 @@
 import os.path
 import json
 import functools
+import pprint
 
 import pytest
 
@@ -59,4 +60,7 @@ def load_json(filename):
 @pytest.mark.parametrize(('css', 'expected'),
                          load_json('component_value_list.json'))
 def test_tokenizer(css, expected):
-    assert [component_value_to_json(t) for t in tokenize(css)] == expected
+    values = [component_value_to_json(t) for t in tokenize(css)]
+    if values != expected:
+        pprint.pprint(values)
+        assert values == expected
