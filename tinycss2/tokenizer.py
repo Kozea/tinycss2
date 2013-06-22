@@ -8,7 +8,7 @@ from .compat import unichr
 from .ast import (
     AtKeywordToken, Comment, CurlyBracketsBlock, DimensionToken, Function,
     HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
-    ParseError, SquareBracketsBlock, StringToken, URLToken,
+    ParseError, PercentageToken, SquareBracketsBlock, StringToken, URLToken,
     UnicodeRangeToken, WhitespaceToken)
 
 
@@ -80,14 +80,14 @@ def tokenize(css, preserve_comments=False):
             repr_ = css[token_start_pos:pos]
             value = float(repr_)
             int_value = int(repr_) if not any(match.groups()) else None
-            if _is_ident_start(css, pos):
+            if pos < length and _is_ident_start(css, pos):
                 unit, pos = _consume_ident(css, pos)
                 tokens.append(DimensionToken(
                     line, column, value, int_value, repr_, unit))
             elif css.startswith('%', pos):
                 pos += 1
-                tokens.append(DimensionToken(
-                    line, column, value, int_value, repr_, '%'))
+                tokens.append(PercentageToken(
+                    line, column, value, int_value, repr_))
             else:
                 tokens.append(NumberToken(
                     line, column, value, int_value, repr_))
@@ -251,7 +251,7 @@ def _consume_quoted_string(css, pos):
             # else: Escaped EOF, do nothing
             start_pos = pos
         elif c == '\n':  # Unescaped newline
-            return None, pos + 1  # bad-string
+            return None, pos  # bad-string
         else:
             pos += 1
     else:
@@ -269,8 +269,9 @@ def _consume_escape(css, pos):
     hex_match = _HEX_ESCAPE_RE.match(css, pos)
     if hex_match:
         codepoint = int(hex_match.group(1), 16)
-        return (unichr(codepoint) if codepoint <= sys.maxunicode else '\uFFFE',
-                hex_match.end())
+        return (
+            unichr(codepoint) if 0 < codepoint <= sys.maxunicode else '\uFFFD',
+            hex_match.end())
     elif pos < len(css):
         return css[pos], pos + 1
     else:
@@ -289,12 +290,10 @@ def _consume_url(css, pos):
     while css.startswith((' ', '\n', '\t'), pos):
         pos += 1
     if pos >= length:  # EOF
-        return None, pos  # bad-url
+        return '', pos
     c = css[pos]
     if c in ('"', "'"):
-        value, pos = _consume_quoted_string()
-        if value is None:
-            1/0
+        value, pos = _consume_quoted_string(css, pos)
     elif c == ')':
         return '', pos + 1
     else:
@@ -342,9 +341,12 @@ def _consume_url(css, pos):
             return value, pos
 
     # http://dev.w3.org/csswg/css-syntax/#consume-the-remnants-of-a-bad-url0
-    while pos < length and css[pos] != ')':
-        if css.startswith(r'\)'):
+    while pos < length:
+        if css.startswith('\\)', pos):
             pos += 2
+        elif css[pos] == ')':
+            pos += 1
+            break
         else:
             pos += 1
     return None, pos  # bad-url

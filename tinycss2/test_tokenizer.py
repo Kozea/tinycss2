@@ -9,7 +9,7 @@ from .tokenizer import tokenize
 from .ast import (
     AtKeywordToken, CurlyBracketsBlock, DimensionToken, Function,
     HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
-    ParseError, SquareBracketsBlock, StringToken, URLToken,
+    ParseError, PercentageToken, SquareBracketsBlock, StringToken, URLToken,
     UnicodeRangeToken, WhitespaceToken)
 
 
@@ -39,9 +39,8 @@ def component_value_to_json():
         StringToken: lambda t: ['string', t.value],
         URLToken: lambda t: ['url', t.value],
         NumberToken: lambda t: ['number'] + numeric(t),
-        DimensionToken: lambda t: (['dimension'] + numeric(t) + [t.unit]
-                                   if t.unit != '%' else
-                                   ['percentage'] + numeric(t)),
+        PercentageToken: lambda t: ['percentage'] + numeric(t),
+        DimensionToken: lambda t: ['dimension'] + numeric(t) + [t.unit],
         UnicodeRangeToken: lambda t: ['unicode-range',
                                       list(t.range) if t.range else None],
         CurlyBracketsBlock: lambda t: ['{}'] + nested(t.content),
@@ -61,6 +60,6 @@ def load_json(filename):
                          load_json('component_value_list.json'))
 def test_tokenizer(css, expected):
     values = [component_value_to_json(t) for t in tokenize(css)]
-    if values != expected:
+    if values != expected:  # pragma: no cover
         pprint.pprint(values)
         assert values == expected

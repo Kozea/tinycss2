@@ -5,8 +5,6 @@ Data structures for the CSS abstract syntax tree.
 
 Differences with css-syntax:
 
-* :class:`DimensionToken` also includes percentage tokens,
-  which have ``'%'`` as their :attr:`~DimensionToken.unit` attribute.
 * :class:`LiteralToken` regroups
   colon ``:``, semicolon ``;``, comma ``,``, cdo ``<!--``, cdc ``-->``,
   include-match ``~=``, dash-match ``|=``,
@@ -256,8 +254,37 @@ class NumberToken(Node):
         self.representation = representation
 
 
+class PercentageToken(Node):
+    """A <percentage> token.
+
+    .. attribute:: value
+
+        The value numeric as a :class:`float`.
+
+    .. attribute:: int_value
+
+        The numeric value as an :class:`int`
+        if the token was syntactically an integer,
+        or :obj:`None`.
+
+    .. attribute:: representation
+
+        The CSS representation of the value without the unit,
+        as an Unicode string.
+
+    """
+    __slots__ = ['value', 'int_value', 'representation']
+    type = 'percentage'
+
+    def __init__(self, line, column, value, int_value, representation):
+        Node.__init__(self, line, column)
+        self.value = value
+        self.int_value = int_value
+        self.representation = representation
+
+
 class DimensionToken(Node):
-    """A <dimension> or <percentage> token.
+    """A <dimension> token.
 
     .. attribute:: value
 
@@ -277,7 +304,6 @@ class DimensionToken(Node):
     .. attribute:: unit
 
         The unescaped unit, as an Unicode string.
-        Either ``%`` for a percentage or an identifier such as ``px``.
 
     .. attribute:: lower_unit
 
