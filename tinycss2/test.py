@@ -5,7 +5,7 @@ import pprint
 
 import pytest
 
-from .tokenizer import parse_component_value_list
+from . import parse_component_value_list
 from .ast import (
     AtKeywordToken, CurlyBracketsBlock, DimensionToken, Function,
     HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,

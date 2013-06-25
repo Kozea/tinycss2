@@ -1,38 +1,80 @@
-from .ast import Node, ParseError, Declaration, AtRule, QualifiedRule
+from .tokenizer import parse_component_value_list
+from .ast import ParseError, Declaration, AtRule, QualifiedRule
+from ._compat import basestring
 
 
-def parse_one_declaration(tokens):
+def _to_token_iterator(input):
     """
-    :param tokens: An iterable of tokens.
+
+    :param input: A string or an iterable yielding :ref:`component values`.
+    :returns: A iterator yielding :ref:`component values`.
+
+    """
+    # Accept ASCII-only byte strings on Python 2, with implicit conversion.
+    if isinstance(input, basestring):
+        input = parse_component_value_list(input)
+    return iter(input)
+
+
+def _next_non_whitespace(tokens):
+    """Return the next non-<whitespace> token.
+
+    :param tokens: An *iterator* yielding :ref:`component values`.
+    :returns: A :ref:`component value`, or :obj:`None`.
+
+    """
+    for token in tokens:
+        if token.type != 'whitespace':
+            return token
+
+
+def parse_one_component_value(input):
+    """Parse a single component value.
+
+    :param input:
+        A :ref:`string`, or an iterable yielding :ref:`component values`.
+    :returns: A :ref:`component value`, or a :class:`~tinycss2.ast.ParseError`.
+
+    """
+    tokens = _to_token_iterator(input)
+    first = _next_non_whitespace(tokens)
+    second = _next_non_whitespace(tokens)
+    if first is None:
+        return ParseError(1, 1, 'empty', 'Input is empty')
+    if second is not None:
+        return ParseError(second.line, second.column, 'extra-input',
+                          'Got more than one token')
+    else:
+        return first
+
+
+def parse_one_declaration(input):
+    """Parse a single declaration.
+
+    :param input:
+        A :ref:`string`, or an iterable yielding :ref:`component values`.
     :returns:
         A :class:`~tinycss2.ast.Declaration`
         or :class:`~tinycss2.ast.ParseError`.
 
     """
-    token = Node(1, 1)  # For the error case if `tokens` is empty.
-    tokens = iter(tokens)
-    for token in tokens:
-        if token.type == 'ident':
-            name = token
-            break
-        elif token.type != 'whitespace':
-            return ParseError(token.line, token.column,
-                              'Expected ident for declaration name, got %s.'
-                              % token.type)
-    else:
-        return ParseError(token.line, token.column,
-                          'Expected ident for declaration name, got EOF')
+    tokens = _to_token_iterator(input)
+    name = _next_non_whitespace(tokens)
+    if name is None:
+        return ParseError(1, 1, 'invalid', 'Input is empty')
+    if name.type != 'ident':
+        return ParseError(name.line, name.column, 'invalid',
+                          'Expected <ident> for declaration name, got %s.'
+                          % name.type)
 
-    for token in tokens:
-        if token == ':':
-            break
-        elif token.type != 'whitespace':
-            return ParseError(token.line, token.column,
-                              "Expected ':' after declaration name, got %s."
-                              % token.type)
-    else:
-        return ParseError(token.line, token.column,
+    colon = _next_non_whitespace(tokens)
+    if colon is None:
+        return ParseError(name.line, name.column, 'invalid',
                           "Expected ':' after declaration name, got EOF")
+    elif colon != ':':
+        return ParseError(colon.line, colon.column, 'invalid',
+                          "Expected ':' after declaration name, got %s."
+                          % colon.type)
 
     value = list(tokens)
 
@@ -53,69 +95,64 @@ def parse_one_declaration(tokens):
         name.line, name.column, name.value, name.lower_value, value, important)
 
 
-def parse_declarations(tokens, with_at_rules=False):
-    """
+def parse_declaration_list(input):
+    """Parse a mixed list of declarations and at-rules.
 
-    :param tokens: An iterable of tokens.
-    :param with_at_rules: Whether to allow at-rules mixed with declarations.
+    :param input: A string or an iterable yielding :ref:`component values`.
     :returns:
-        A generator that yields either
+        A generator that yields
         :class:`~tinycss2.ast.Declaration`,
         :class:`~tinycss2.ast.ParseError`,
-        or (if :obj:`with_at_rules` is true) :class:`~tinycss2.ast.AtRule`.
+        or :class:`~tinycss2.ast.AtRule` objects.
 
     """
-    tokens = iter(tokens)
+    tokens = _to_token_iterator(input)
+    result = []
     for token in tokens:
-        if token.type == 'whitespace':
-            continue
-        elif with_at_rules and token.type == 'at-keyword':
-            yield _parse_at_rule_internal(token, tokens)
-            continue
-        declaration_tokens = [token]
-        for token in tokens:
-            if token == ';':
-                yield parse_one_declaration(declaration_tokens)
-                break
-            else:
+        if token.type == 'at-keyword':
+            result.append(_parse_at_rule(token, tokens))
+        elif token.type != 'whitespace':
+            declaration_tokens = [token]
+            for token in tokens:
+                if token == ';':
+                    break
                 declaration_tokens.append(token)
-        else:
-            yield parse_one_declaration(declaration_tokens)
+            result.append(parse_one_declaration(declaration_tokens))
+    return result
 
 
-def parse_one_rule(tokens, is_top_level=True):
-    """
+def parse_one_rule(input):
+    """Parse a single qualified rule or at-rule.
 
-    :param tokens: An iterable of tokens.
-    :param is_top_level:
-        False is :obj:`tokens` is eg. the content of an at-rule.
+    :param input: A string or an iterable yielding :ref:`component values`.
     :returns:
         A :class:`~tinycss2.ast.QualifiedRule`,
         :class:`~tinycss2.ast.AtRule`,
         or :class:`~tinycss2.ast.ParseError`.
 
     """
-    rules = parse_rules(tokens, is_top_level)
-    first = next(rules, None)
+    tokens = _to_token_iterator(input)
+    first = _next_non_whitespace(tokens)
     if first is None:
-        return ParseError(1, 1, 'Expected a rule, got EOF')
-    elif first.type == 'error':
-        return first
-    second = next(rules, None)
-    if second is not None:
+        return ParseError(1, 1, 'empty', 'Input is empty')
+
+    rule = _parse_rule(first, tokens)
+    next = _next_non_whitespace(tokens)
+    if next is not None:
         return ParseError(
-            second.line, second.column,
-            'Expected a single rule, got %s after the first rule.'
-            % second.type)
-    return first
+            next.line, next.column, 'extra-input',
+            'Expected a single rule, got %s after the first rule.' % next.type)
+    return rule
 
 
-def parse_rules(tokens, is_top_level=True):
-    """
+def parse_rule_list(input):
+    """Parse a mixed list of qualified rules and at-rules.
 
-    :param tokens: An iterable of tokens.
-    :param is_top_level:
-        False is :obj:`tokens` is eg. the content of an at-rule.
+    This is meant for parsing eg. the content of an ``@media`` rule.
+    This differs from :func:`parse_stylesheet` in that
+    top-level ``<!--`` and ``-->`` tokens are not ignored.
+
+    :param input: A string or an iterable yielding :ref:`component values`.
     :returns:
         A generator that yields either
         :class:`~tinycss2.ast.QualifiedRule`,
@@ -123,50 +160,83 @@ def parse_rules(tokens, is_top_level=True):
         or :class:`~tinycss2.ast.ParseError`.
 
     """
-    tokens = iter(tokens)
-    for token in tokens:
-        if token.type == 'whitespace' or (
-                is_top_level and token in ('<!--', '-->')):
-            continue
-        elif token.type == 'at-keyword':
-            yield _parse_at_rule_internal(token, tokens)
-            continue
-        elif token.type == '{} block':
-            yield QualifiedRule(token.line, token.column, [], token.content)
-            continue
-        head = [token]
-        for token in tokens:
-            if token.type == '{} block':
-                yield QualifiedRule(head[0].line, head[0].column,
-                                    head, token.content)
-                break
-            else:
-                head.append(token)
-        else:
-            yield ParseError(head[-1].line, head[-1].column,
-                             'Expected qualified rule content, got EOF.')
+    tokens = _to_token_iterator(input)
+    return [_parse_rule(token, tokens) for token in tokens
+            if token.type != 'whitespace']
 
 
-def _parse_at_rule_internal(at_keyword, tokens):
-    """
-    :param at_keyword: A token of at-keyword type.
-    :param tokens: An **iterator** of tokens, only consumed for this at-rule.
+def parse_stylesheet(input):
+    """Parse stylesheet: a mixed list of qualified rules and at-rules.
+
+    This differs from :func:`parse_rule_list` in that
+    top-level ``<!--`` and ``-->`` tokens are ignored.
+
+    :param input: A string or an iterable yielding :ref:`component values`.
     :returns:
-        A :class:`~tinycss2.ast.AtRule`,
+        A generator that yields either
+        :class:`~tinycss2.ast.QualifiedRule`,
+        :class:`~tinycss2.ast.AtRule`,
         or :class:`~tinycss2.ast.ParseError`.
 
     """
-    head = []
+    tokens = _to_token_iterator(input)
+    return [_parse_rule(token, tokens) for token in tokens
+            if token.type != 'whitespace' and token not in ('<!--', '-->')]
+
+
+def _parse_rule(first_token, tokens):
+    """Parse a qualified rule or at-rule.
+
+    Consume just enough of :obj:`tokens` for this rule.
+
+    :param first_token: The first :ref:`component value` of the rule.
+    :param tokens: An *iterator* yielding :ref:`component values`.
+    :returns:
+        A :class:`~tinycss2.ast.QualifiedRule`,
+        :class:`~tinycss2.ast.AtRule`,
+        or :class:`~tinycss2.ast.ParseError`.
+
+    """
+    if first_token.type == 'at-keyword':
+        return _parse_at_rule(first_token, tokens)
+    if first_token.type == '{} block':
+        prelude = []
+        block = first_token
+    else:
+        prelude = [first_token]
+        for token in tokens:
+            if token.type == '{} block':
+                block = token
+                break
+            prelude.append(token)
+        else:
+            return ParseError(
+                prelude[-1].line, prelude[-1].column,
+                'EOF reached before {} block for a qualified rule.')
+    return QualifiedRule(first_token.line, first_token.column,
+                         prelude, block.content)
+
+
+def _parse_at_rule(at_keyword, tokens):
+    """Parse an at-rule.
+
+    Consume just enough of :obj:`tokens` for this rule.
+
+    :param at_keyword: The :class:`AtKeywordToken` object starting this rule.
+    :param tokens: An *iterator* yielding :ref:`component values`.
+    :returns:
+        A :class:`~tinycss2.ast.QualifiedRule`,
+        or :class:`~tinycss2.ast.ParseError`.
+
+    """
+    prelude = []
+    content = None
     for token in tokens:
         if token.type == '{} block':
             content = token.content
             break
         elif token == ';':
-            content = None
             break
-        else:
-            head.append(token)
-    else:
-        content = None
+        prelude.append(token)
     return AtRule(at_keyword.line, at_keyword.column,
-                  at_keyword.value, at_keyword.lower_value, head, content)
+                  at_keyword.value, at_keyword.lower_value, prelude, content)
