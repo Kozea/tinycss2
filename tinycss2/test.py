@@ -5,7 +5,7 @@ import pprint
 
 import pytest
 
-from .tokenizer import tokenize
+from .tokenizer import parse_component_value_list
 from .ast import (
     AtKeywordToken, CurlyBracketsBlock, DimensionToken, Function,
     HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
@@ -58,8 +58,9 @@ def load_json(filename):
 
 @pytest.mark.parametrize(('css', 'expected'),
                          load_json('component_value_list.json'))
-def test_tokenizer(css, expected):
-    values = [component_value_to_json(t) for t in tokenize(css)]
+def test_component_value_list(css, expected):
+    values = [component_value_to_json(t)
+              for t in parse_component_value_list(css)]
     if values != expected:  # pragma: no cover
         pprint.pprint(values)
         assert values == expected

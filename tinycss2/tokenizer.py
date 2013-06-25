@@ -4,7 +4,7 @@ import re
 import sys
 
 from . import ascii_lower
-from .compat import unichr
+from ._compat import unichr
 from .ast import (
     AtKeywordToken, Comment, CurlyBracketsBlock, DimensionToken, Function,
     HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
@@ -16,11 +16,11 @@ _NUMBER_RE = re.compile(r'[-+]?([0-9]*\.)?[0-9]+([eE][+-]?[0-9]+)?')
 _HEX_ESCAPE_RE = re.compile(r'([0-9A-Fa-f]{1,6})[ \n\t]?')
 
 
-def tokenize(css, preserve_comments=False):
-    """The tokenizer.
+def parse_component_value_list(css, preserve_comments=False):
+    """The tokenizer and block/function parser.
 
-    :param css: An Unicode string.
-    :returns: A list of tokens.
+    :param css: A :ref:`string`.
+    :returns: A list of :ref:`component values`.
 
     """
     css = (css.replace('\0', '\uFFFD')
