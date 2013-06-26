@@ -42,8 +42,9 @@ def parse_one_component_value(input):
     if first is None:
         return ParseError(1, 1, 'empty', 'Input is empty')
     if second is not None:
-        return ParseError(second.line, second.column, 'extra-input',
-                          'Got more than one token')
+        return ParseError(
+            second.source_line, second.source_column, 'extra-input',
+            'Got more than one token')
     else:
         return first
 
@@ -63,16 +64,16 @@ def parse_one_declaration(input):
     if name is None:
         return ParseError(1, 1, 'invalid', 'Input is empty')
     if name.type != 'ident':
-        return ParseError(name.line, name.column, 'invalid',
+        return ParseError(name.source_line, name.source_column, 'invalid',
                           'Expected <ident> for declaration name, got %s.'
                           % name.type)
 
     colon = _next_non_whitespace(tokens)
     if colon is None:
-        return ParseError(name.line, name.column, 'invalid',
+        return ParseError(name.source_line, name.source_column, 'invalid',
                           "Expected ':' after declaration name, got EOF")
     elif colon != ':':
-        return ParseError(colon.line, colon.column, 'invalid',
+        return ParseError(colon.source_line, colon.source_column, 'invalid',
                           "Expected ':' after declaration name, got %s."
                           % colon.type)
 
@@ -91,8 +92,8 @@ def parse_one_declaration(input):
         elif token.type != 'whitespace':
             break
 
-    return Declaration(
-        name.line, name.column, name.value, name.lower_value, value, important)
+    return Declaration(name.source_line, name.source_column, name.value,
+                       name.lower_value, value, important)
 
 
 def parse_declaration_list(input):
@@ -140,7 +141,7 @@ def parse_one_rule(input):
     next = _next_non_whitespace(tokens)
     if next is not None:
         return ParseError(
-            next.line, next.column, 'extra-input',
+            next.source_line, next.source_column, 'extra-input',
             'Expected a single rule, got %s after the first rule.' % next.type)
     return rule
 
@@ -211,9 +212,9 @@ def _parse_rule(first_token, tokens):
             prelude.append(token)
         else:
             return ParseError(
-                prelude[-1].line, prelude[-1].column,
+                prelude[-1].source_line, prelude[-1].source_column,
                 'EOF reached before {} block for a qualified rule.')
-    return QualifiedRule(first_token.line, first_token.column,
+    return QualifiedRule(first_token.source_line, first_token.source_column,
                          prelude, block.content)
 
 
@@ -238,5 +239,5 @@ def _parse_at_rule(at_keyword, tokens):
         elif token == ';':
             break
         prelude.append(token)
-    return AtRule(at_keyword.line, at_keyword.column,
+    return AtRule(at_keyword.source_line, at_keyword.source_column,
                   at_keyword.value, at_keyword.lower_value, prelude, content)

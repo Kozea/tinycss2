@@ -5,7 +5,7 @@ import pprint
 
 import pytest
 
-from . import parse_component_value_list
+from . import parse_component_value_list, parse_one_component_value
 from .ast import (
     AtKeywordToken, CurlyBracketsBlock, DimensionToken, Function,
     HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
@@ -50,17 +50,28 @@ def component_value_to_json():
     }
 
 
-def load_json(filename):
-    loaded = json.load(open(os.path.join(
-        os.path.dirname(__file__), 'tests', filename)))
-    return list(zip(loaded[::2], loaded[1::2]))
+def json_test(filename):
+    def decorator(function):
+        json_data = json.load(open(os.path.join(
+            os.path.dirname(__file__), 'tests', filename)))
+        json_data = list(zip(json_data[::2], json_data[1::2]))
+
+        @pytest.mark.parametrize(('css', 'expected'), json_data)
+        def test(css, expected):
+            value = function(css)
+            if value != expected:  # pragma: no cover
+                pprint.pprint(value)
+                assert value == expected
+        return test
+    return decorator
 
 
-@pytest.mark.parametrize(('css', 'expected'),
-                         load_json('component_value_list.json'))
-def test_component_value_list(css, expected):
-    values = [component_value_to_json(t)
-              for t in parse_component_value_list(css)]
-    if values != expected:  # pragma: no cover
-        pprint.pprint(values)
-        assert values == expected
+@json_test('component_value_list.json')
+def test_component_value_list(css):
+    return [component_value_to_json(t)
+            for t in parse_component_value_list(css)]
+
+
+@json_test('one_component_value.json')
+def test_one_component_value(css):
+    return component_value_to_json(parse_one_component_value(css))
