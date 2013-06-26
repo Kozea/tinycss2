@@ -100,10 +100,10 @@ def parse_declaration_list(input):
 
     :param input: A string or an iterable yielding :ref:`component values`.
     :returns:
-        A generator that yields
+        A list of
         :class:`~tinycss2.ast.Declaration`,
-        :class:`~tinycss2.ast.ParseError`,
-        or :class:`~tinycss2.ast.AtRule` objects.
+        :class:`~tinycss2.ast.AtRule`,
+        and :class:`~tinycss2.ast.ParseError` objects
 
     """
     tokens = _to_token_iterator(input)
@@ -128,7 +128,7 @@ def parse_one_rule(input):
     :returns:
         A :class:`~tinycss2.ast.QualifiedRule`,
         :class:`~tinycss2.ast.AtRule`,
-        or :class:`~tinycss2.ast.ParseError`.
+        or :class:`~tinycss2.ast.ParseError` objects.
 
     """
     tokens = _to_token_iterator(input)
@@ -154,10 +154,10 @@ def parse_rule_list(input):
 
     :param input: A string or an iterable yielding :ref:`component values`.
     :returns:
-        A generator that yields either
+        A list of
         :class:`~tinycss2.ast.QualifiedRule`,
         :class:`~tinycss2.ast.AtRule`,
-        or :class:`~tinycss2.ast.ParseError`.
+        and :class:`~tinycss2.ast.ParseError` objects.
 
     """
     tokens = _to_token_iterator(input)
@@ -173,10 +173,10 @@ def parse_stylesheet(input):
 
     :param input: A string or an iterable yielding :ref:`component values`.
     :returns:
-        A generator that yields either
+        A list of
         :class:`~tinycss2.ast.QualifiedRule`,
         :class:`~tinycss2.ast.AtRule`,
-        or :class:`~tinycss2.ast.ParseError`.
+        and :class:`~tinycss2.ast.ParseError` objects.
 
     """
     tokens = _to_token_iterator(input)

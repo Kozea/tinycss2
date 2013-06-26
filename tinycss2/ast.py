@@ -16,7 +16,7 @@ Differences with css-syntax:
 
 from __future__ import unicode_literals
 
-from . import ascii_lower
+from .utils import ascii_lower
 
 
 class Node(object):

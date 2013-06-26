@@ -3,13 +3,13 @@ from __future__ import unicode_literals
 import re
 import sys
 
-from . import ascii_lower
-from ._compat import unichr
+from .utils import ascii_lower
 from .ast import (
     AtKeywordToken, Comment, CurlyBracketsBlock, DimensionToken, Function,
     HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
     ParseError, PercentageToken, SquareBracketsBlock, StringToken, URLToken,
     UnicodeRangeToken, WhitespaceToken)
+from ._compat import unichr
 
 
 _NUMBER_RE = re.compile(r'[-+]?([0-9]*\.)?[0-9]+([eE][+-]?[0-9]+)?')
