@@ -1,4 +1,5 @@
-if str is bytes:  # Python 2
+if str is bytes:  # pragma: no cover
+    # Python 2
     unichr = unichr
     basestring = basestring
 else:

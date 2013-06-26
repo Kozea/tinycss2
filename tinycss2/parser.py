@@ -82,7 +82,7 @@ def parse_one_declaration(input):
     important = False
     reversed_value = iter(enumerate(reversed(value), 1))
     for i, token in reversed_value:
-        if token.type == 'ident' and token.value == 'important':
+        if token.type == 'ident' and token.lower_value == 'important':
             for i, token in reversed_value:
                 if token == '!':
                     important = True

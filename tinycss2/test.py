@@ -5,12 +5,14 @@ import pprint
 
 import pytest
 
-from . import parse_component_value_list, parse_one_component_value
+from . import (
+    parse_component_value_list, parse_one_component_value,
+    parse_one_declaration)
 from .ast import (
     AtKeywordToken, CurlyBracketsBlock, DimensionToken, Function,
     HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
     ParseError, PercentageToken, SquareBracketsBlock, StringToken, URLToken,
-    UnicodeRangeToken, WhitespaceToken)
+    UnicodeRangeToken, WhitespaceToken, Declaration)
 
 
 def generic(func):
@@ -23,13 +25,14 @@ def generic(func):
 
 
 @generic
-def component_value_to_json():
+def to_json():
     numeric = lambda t: [
         t.representation, t.value,
         'integer' if t.int_value is not None else 'number']
-    nested = lambda values: [component_value_to_json(v) for v in values]
     return {
+        list: lambda l: [to_json(el) for el in l],
         ParseError: lambda e: ['error', e.kind],
+
         WhitespaceToken: lambda t: ' ',
         LiteralToken: lambda t: t.value,
         IdentToken: lambda t: ['ident', t.value],
@@ -43,10 +46,13 @@ def component_value_to_json():
         DimensionToken: lambda t: ['dimension'] + numeric(t) + [t.unit],
         UnicodeRangeToken: lambda t: ['unicode-range',
                                       list(t.range) if t.range else None],
-        CurlyBracketsBlock: lambda t: ['{}'] + nested(t.content),
-        SquareBracketsBlock: lambda t: ['[]'] + nested(t.content),
-        ParenthesesBlock: lambda t: ['()'] + nested(t.content),
-        Function: lambda t: ['function', t.name] + nested(t.arguments),
+
+        CurlyBracketsBlock: lambda t: ['{}'] + to_json(t.content),
+        SquareBracketsBlock: lambda t: ['[]'] + to_json(t.content),
+        ParenthesesBlock: lambda t: ['()'] + to_json(t.content),
+        Function: lambda t: ['function', t.name] + to_json(t.arguments),
+
+        Declaration: lambda d: [d.name, to_json(d.value), d.important],
     }
 
 
@@ -68,10 +74,14 @@ def json_test(filename):
 
 @json_test('component_value_list.json')
 def test_component_value_list(css):
-    return [component_value_to_json(t)
-            for t in parse_component_value_list(css)]
+    return [to_json(t) for t in parse_component_value_list(css)]
 
 
 @json_test('one_component_value.json')
 def test_one_component_value(css):
-    return component_value_to_json(parse_one_component_value(css))
+    return to_json(parse_one_component_value(css))
+
+
+@json_test('one_declaration.json')
+def test_one_declaration(css):
+    return to_json(parse_one_declaration(css))

@@ -329,7 +329,7 @@ class ParenthesesBlock(Node):
 
     .. attribute:: content
 
-        The content of the block, as list of nodes.
+        The content of the block, as list of :ref:`component values`.
         The ``(`` and ``)`` markers themselves are not represented in the list.
 
     """
@@ -346,7 +346,7 @@ class SquareBracketsBlock(Node):
 
     .. attribute:: content
 
-        The content of the block, as list of :class:`Node` objects.
+        The content of the block, as list of :ref:`component values`.
         The ``[`` and ``]`` markers themselves are not represented in the list.
 
     """
@@ -363,7 +363,7 @@ class CurlyBracketsBlock(Node):
 
     .. attribute:: content
 
-        The content of the block, as list of :class:`Node` objects.
+        The content of the block, as list of :ref:`component values`.
         The ``[`` and ``]`` markers themselves are not represented in the list.
 
     """
@@ -390,7 +390,7 @@ class Function(Node):
 
     .. attribute:: arguments
 
-        The arguments of the function, as list of :class:`Node` objects.
+        The arguments of the function, as list of :ref:`component values`.
         The ``(`` and ``)`` markers themselves are not represented in the list.
         Commas are not special, but represented as :obj:`LiteralToken` objects
         in the list.
@@ -425,7 +425,7 @@ class Declaration(Node):
 
     .. attribute:: value
 
-        The declaration value as a list of :class:`Node` objects:
+        The declaration value as a list of :ref:`component values`:
         anything between ``:`` and
         the end of the declaration, or ``!important``.
 
@@ -460,12 +460,12 @@ class QualifiedRule(Node):
     .. attribute:: prelude
 
         The rule’s prelude, the part before the {} block,
-        as a list of :class:`Node` objects.
+        as a list of :ref:`component values`.
 
     .. attribute:: content
 
         The rule’s content, the part inside the {} block,
-        as a list of :class:`Node` objects.
+        as a list of :ref:`component values`.
 
     """
     __slots__ = ['prelude', 'content']
@@ -501,12 +501,12 @@ class AtRule(Node):
     .. attribute:: prelude
 
         The rule’s prelude, the part before the {} block or semicolon,
-        as a list of :class:`Node` objects.
+        as a list of :ref:`component values`.
 
     .. attribute:: content
 
         The rule’s content, if any.
-        The block’s content as a list of :class:`Node` objects
+        The block’s content as a list of :ref:`component values`
         for at-rules with a {} block,
         or :obj:`None` for at-rules ending with a semicolon.
 
