@@ -112,7 +112,7 @@ def parse_declaration_list(input):
     for token in tokens:
         if token.type == 'at-keyword':
             result.append(_parse_at_rule(token, tokens))
-        elif token.type != 'whitespace':
+        elif token.type != 'whitespace' and token != ';':
             declaration_tokens = [token]
             for token in tokens:
                 if token == ';':

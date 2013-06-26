@@ -7,12 +7,12 @@ import pytest
 
 from . import (
     parse_component_value_list, parse_one_component_value,
-    parse_one_declaration)
+    parse_one_declaration, parse_declaration_list)
 from .ast import (
     AtKeywordToken, CurlyBracketsBlock, DimensionToken, Function,
     HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
     ParseError, PercentageToken, SquareBracketsBlock, StringToken, URLToken,
-    UnicodeRangeToken, WhitespaceToken, Declaration)
+    UnicodeRangeToken, WhitespaceToken, Declaration, AtRule, QualifiedRule)
 
 
 def generic(func):
@@ -30,6 +30,7 @@ def to_json():
         t.representation, t.value,
         'integer' if t.int_value is not None else 'number']
     return {
+        type(None): lambda _: None,
         list: lambda l: [to_json(el) for el in l],
         ParseError: lambda e: ['error', e.kind],
 
@@ -52,7 +53,12 @@ def to_json():
         ParenthesesBlock: lambda t: ['()'] + to_json(t.content),
         Function: lambda t: ['function', t.name] + to_json(t.arguments),
 
-        Declaration: lambda d: [d.name, to_json(d.value), d.important],
+        Declaration: lambda d: ['declaration', d.name,
+                                to_json(d.value), d.important],
+        AtRule: lambda r: ['at-rule', r.at_keyword, to_json(r.prelude),
+                           to_json(r.content)],
+        QualifiedRule: lambda r: ['qualified rule', to_json(r.prelude),
+                                  to_json(r.content)],
     }
 
 
@@ -85,3 +91,8 @@ def test_one_component_value(css):
 @json_test('one_declaration.json')
 def test_one_declaration(css):
     return to_json(parse_one_declaration(css))
+
+
+@json_test('declaration_list.json')
+def test_declaration_list(css):
+    return to_json(parse_declaration_list(css))
