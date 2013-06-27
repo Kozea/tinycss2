@@ -101,7 +101,7 @@ class LiteralToken(Node):
         self.value = value
 
     def __eq__(self, other):
-        return self.value == other or Node.__eq__(self, other)
+        return self.value == other or self is other
 
     def __ne__(self, other):
         return not self == other

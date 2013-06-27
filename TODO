@@ -3,3 +3,7 @@ Test preserve_comments=True
 Test <unicode-range>
 Test declaration corner cases: top-level ! and ;
     … once that is all figured out in the spec
+
+Test parse_stylesheet_bytes
+    Use http://encoding.spec.whatwg.org/#x-user-defined
+    to store the input bytes in JSON’s Unicode?
