@@ -7,7 +7,8 @@ import pytest
 
 from . import (
     parse_component_value_list, parse_one_component_value,
-    parse_one_declaration, parse_declaration_list)
+    parse_declaration_list, parse_one_declaration,
+    parse_rule_list, parse_one_rule, parse_stylesheet)
 from .ast import (
     AtKeywordToken, CurlyBracketsBlock, DimensionToken, Function,
     HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
@@ -62,37 +63,25 @@ def to_json():
     }
 
 
-def json_test(filename):
-    def decorator(function):
-        json_data = json.load(open(os.path.join(
-            os.path.dirname(__file__), 'tests', filename)))
-        json_data = list(zip(json_data[::2], json_data[1::2]))
+def json_test(function):
+    json_data = json.load(open(os.path.join(
+        os.path.dirname(__file__), 'tests',
+        function.__name__.replace('parse_', '') + '.json')))
+    json_data = list(zip(json_data[::2], json_data[1::2]))
 
-        @pytest.mark.parametrize(('css', 'expected'), json_data)
-        def test(css, expected):
-            value = function(css)
-            if value != expected:  # pragma: no cover
-                pprint.pprint(value)
-                assert value == expected
-        return test
-    return decorator
-
-
-@json_test('component_value_list.json')
-def test_component_value_list(css):
-    return [to_json(t) for t in parse_component_value_list(css)]
+    @pytest.mark.parametrize(('css', 'expected'), json_data)
+    def test(css, expected):
+        value = to_json(function(css))
+        if value != expected:  # pragma: no cover
+            pprint.pprint(value)
+            assert value == expected
+    return test
 
 
-@json_test('one_component_value.json')
-def test_one_component_value(css):
-    return to_json(parse_one_component_value(css))
-
-
-@json_test('one_declaration.json')
-def test_one_declaration(css):
-    return to_json(parse_one_declaration(css))
-
-
-@json_test('declaration_list.json')
-def test_declaration_list(css):
-    return to_json(parse_declaration_list(css))
+test_component_value_list = json_test(parse_component_value_list)
+test_one_component_value = json_test(parse_one_component_value)
+test_declaration_list = json_test(parse_declaration_list)
+test_one_declaration = json_test(parse_one_declaration)
+test_stylesheet_rule = json_test(parse_stylesheet)
+test_rule_list = json_test(parse_rule_list)
+test_one_rule = json_test(parse_one_rule)

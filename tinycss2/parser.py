@@ -111,7 +111,7 @@ def parse_declaration_list(input):
     result = []
     for token in tokens:
         if token.type == 'at-keyword':
-            result.append(_parse_at_rule(token, tokens))
+            result.append(_consume_at_rule(token, tokens))
         elif token.type != 'whitespace' and token != ';':
             declaration_tokens = [token]
             for token in tokens:
@@ -137,7 +137,7 @@ def parse_one_rule(input):
     if first is None:
         return ParseError(1, 1, 'empty', 'Input is empty')
 
-    rule = _parse_rule(first, tokens)
+    rule = _consume_rule(first, tokens)
     next = _next_non_whitespace(tokens)
     if next is not None:
         return ParseError(
@@ -162,7 +162,7 @@ def parse_rule_list(input):
 
     """
     tokens = _to_token_iterator(input)
-    return [_parse_rule(token, tokens) for token in tokens
+    return [_consume_rule(token, tokens) for token in tokens
             if token.type != 'whitespace']
 
 
@@ -181,11 +181,11 @@ def parse_stylesheet(input):
 
     """
     tokens = _to_token_iterator(input)
-    return [_parse_rule(token, tokens) for token in tokens
+    return [_consume_rule(token, tokens) for token in tokens
             if token.type != 'whitespace' and token not in ('<!--', '-->')]
 
 
-def _parse_rule(first_token, tokens):
+def _consume_rule(first_token, tokens):
     """Parse a qualified rule or at-rule.
 
     Consume just enough of :obj:`tokens` for this rule.
@@ -199,7 +199,7 @@ def _parse_rule(first_token, tokens):
 
     """
     if first_token.type == 'at-keyword':
-        return _parse_at_rule(first_token, tokens)
+        return _consume_at_rule(first_token, tokens)
     if first_token.type == '{} block':
         prelude = []
         block = first_token
@@ -212,13 +212,13 @@ def _parse_rule(first_token, tokens):
             prelude.append(token)
         else:
             return ParseError(
-                prelude[-1].source_line, prelude[-1].source_column,
+                prelude[-1].source_line, prelude[-1].source_column, 'invalid',
                 'EOF reached before {} block for a qualified rule.')
     return QualifiedRule(first_token.source_line, first_token.source_column,
                          prelude, block.content)
 
 
-def _parse_at_rule(at_keyword, tokens):
+def _consume_at_rule(at_keyword, tokens):
     """Parse an at-rule.
 
     Consume just enough of :obj:`tokens` for this rule.
