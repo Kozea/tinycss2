@@ -173,9 +173,6 @@ def parse_component_value_list(css, preserve_comments=False):
             else:
                 tokens.append(LiteralToken(line, column, c))
         else:
-            if c == '\\':
-                tokens.append(ParseError(line, column, 'bad-escape',
-                                         'Invalid backslash-escape'))
             tokens.append(LiteralToken(line, column, c))
             pos += 1
     return root
