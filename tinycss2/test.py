@@ -65,7 +65,7 @@ def to_json():
 
 def json_test(function):
     json_data = json.load(open(os.path.join(
-        os.path.dirname(__file__), 'tests',
+        os.path.dirname(__file__), 'css-parsing-tests',
         function.__name__.replace('parse_', '') + '.json')))
     json_data = list(zip(json_data[::2], json_data[1::2]))
 
