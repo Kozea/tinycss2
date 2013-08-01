@@ -14,6 +14,7 @@ from .ast import (
     HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
     ParseError, PercentageToken, SquareBracketsBlock, StringToken, URLToken,
     UnicodeRangeToken, WhitespaceToken, Declaration, AtRule, QualifiedRule)
+from .color3 import parse_color_string, RGBA
 
 
 def generic(func):
@@ -32,6 +33,7 @@ def to_json():
         'integer' if t.int_value is not None else 'number']
     return {
         type(None): lambda _: None,
+        str: lambda s: s,
         list: lambda l: [to_json(el) for el in l],
         ParseError: lambda e: ['error', e.kind],
 
@@ -60,16 +62,21 @@ def to_json():
                            to_json(r.content)],
         QualifiedRule: lambda r: ['qualified rule', to_json(r.prelude),
                                   to_json(r.content)],
+
+        RGBA: lambda v: [round(c, 10) for c in v],
     }
 
 
-def json_test(function):
+def load_json(filename):
     json_data = json.load(open(os.path.join(
-        os.path.dirname(__file__), 'css-parsing-tests',
-        function.__name__.replace('parse_', '') + '.json')))
-    json_data = list(zip(json_data[::2], json_data[1::2]))
+        os.path.dirname(__file__), 'css-parsing-tests', filename)))
+    return list(zip(json_data[::2], json_data[1::2]))
 
-    @pytest.mark.parametrize(('css', 'expected'), json_data)
+
+def json_test(function, filename=None):
+    filename = filename or function.__name__.replace('parse_', '') + '.json'
+
+    @pytest.mark.parametrize(('css', 'expected'), load_json(filename))
     def test(css, expected):
         value = to_json(function(css))
         if value != expected:  # pragma: no cover
@@ -85,3 +92,19 @@ test_one_declaration = json_test(parse_one_declaration)
 test_stylesheet_rule = json_test(parse_stylesheet)
 test_rule_list = json_test(parse_rule_list)
 test_one_rule = json_test(parse_one_rule)
+test_color3 = json_test(parse_color_string, filename='color3.json')
+
+
+# Do not use @pytest.mark.parametrize because it is slow with that many values.
+def test_color3_hsl():
+    for css, expected in load_json('color3_hsl.json'):
+        assert to_json(parse_color_string(css)) == expected
+
+
+def test_color3_keywords():
+    for css, expected in load_json('color3_keywords.json'):
+        result = parse_color_string(css)
+        if result is not None:
+            r, g, b, a = result
+            result = [r * 255, g * 255, b * 255, a]
+        assert result == expected
