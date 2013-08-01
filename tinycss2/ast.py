@@ -236,21 +236,25 @@ class NumberToken(Node):
     .. attribute:: int_value
 
         The numeric value as an :class:`int`
-        if the token was syntactically an integer,
-        or :obj:`None`.
+        if :attr:`is_integer` is true, :obj:`None` otherwise.
+
+    .. attribute:: is_integer
+
+        Whether the token was syntactically an integer, as a boolean.
 
     .. attribute:: representation
 
         The CSS representation of the value, as an Unicode string.
 
     """
-    __slots__ = ['value', 'int_value', 'representation']
+    __slots__ = ['value', 'int_value', 'is_integer', 'representation']
     type = 'number'
 
     def __init__(self, line, column, value, int_value, representation):
         Node.__init__(self, line, column)
         self.value = value
         self.int_value = int_value
+        self.is_integer = int_value is not None
         self.representation = representation
 
 
