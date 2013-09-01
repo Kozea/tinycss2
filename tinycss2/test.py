@@ -15,6 +15,7 @@ from .ast import (
     ParseError, PercentageToken, SquareBracketsBlock, StringToken, URLToken,
     UnicodeRangeToken, WhitespaceToken, Declaration, AtRule, QualifiedRule)
 from .color3 import parse_color_string, RGBA
+from .nth import parse_nth
 
 
 def generic(func):
@@ -34,7 +35,9 @@ def to_json():
     return {
         type(None): lambda _: None,
         str: lambda s: s,
+        int: lambda s: s,
         list: lambda l: [to_json(el) for el in l],
+        tuple: lambda l: [to_json(el) for el in l],
         ParseError: lambda e: ['error', e.kind],
 
         WhitespaceToken: lambda t: ' ',
@@ -93,6 +96,7 @@ test_stylesheet_rule = json_test(parse_stylesheet)
 test_rule_list = json_test(parse_rule_list)
 test_one_rule = json_test(parse_one_rule)
 test_color3 = json_test(parse_color_string, filename='color3.json')
+test_nth = json_test(parse_nth, filename='An+B.json')
 
 
 # Do not use @pytest.mark.parametrize because it is slow with that many values.

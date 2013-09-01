@@ -271,19 +271,24 @@ class PercentageToken(Node):
         if the token was syntactically an integer,
         or :obj:`None`.
 
+    .. attribute:: is_integer
+
+        Whether the token’s value was syntactically an integer, as a boolean.
+
     .. attribute:: representation
 
         The CSS representation of the value without the unit,
         as an Unicode string.
 
     """
-    __slots__ = ['value', 'int_value', 'representation']
+    __slots__ = ['value', 'int_value', 'is_integer', 'representation']
     type = 'percentage'
 
     def __init__(self, line, column, value, int_value, representation):
         Node.__init__(self, line, column)
         self.value = value
         self.int_value = int_value
+        self.is_integer = int_value is not None
         self.representation = representation
 
 
@@ -299,6 +304,10 @@ class DimensionToken(Node):
         The numeric value as an :class:`int`
         if the token was syntactically an integer,
         or :obj:`None`.
+
+    .. attribute:: is_integer
+
+        Whether the token’value was syntactically an integer, as a boolean.
 
     .. attribute:: representation
 
@@ -316,13 +325,15 @@ class DimensionToken(Node):
         This is the value to use when comparing to a CSS unit.
 
     """
-    __slots__ = ['value', 'int_value', 'representation', 'unit', 'lower_unit']
+    __slots__ = ['value', 'int_value', 'is_integer', 'representation',
+                 'unit', 'lower_unit']
     type = 'dimension'
 
     def __init__(self, line, column, value, int_value, representation, unit):
         Node.__init__(self, line, column)
         self.value = value
         self.int_value = int_value
+        self.is_integer = int_value is not None
         self.representation = representation
         self.unit = unit
         self.lower_unit = ascii_lower(unit)
