@@ -1,0 +1,24 @@
+tinycss2 changelog
+==================
+
+Version 0.2
+-----------
+
+Released on 2013-09-02.
+
+Add parsing for <An+B>,
+as in ``:nth-child()`` and related Selectors pseudo-classes.
+
+
+Version 0.1
+-----------
+
+Released on 2013-08-31.
+
+First PyPI release. Contains:
+
+* Decoding from bytes (``@charset``, etc.)
+* Tokenization
+* Parsing for "generic" rules and declarations
+* Parsing for CSS Color Level 3
+* Tests for all of the above, except for decoding from bytes.
