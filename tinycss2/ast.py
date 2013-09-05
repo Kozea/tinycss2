@@ -212,18 +212,22 @@ class URLToken(Node):
 class UnicodeRangeToken(Node):
     """An <unicode-range> token.
 
-    .. attribute:: range
+    .. attribute:: start
 
-        A ``(start, end)`` tuple of Unicode characters for an inclusive range,
-        or ``None`` for empty ranges.
+        The start of the range, as an integer.
+
+    .. attribute:: end
+
+        The end of the range, as an integer.
 
     """
-    __slots__ = ['range']
+    __slots__ = ['start', 'end']
     type = 'unicode-range'
 
-    def __init__(self, line, column, range_):
+    def __init__(self, line, column, start, end):
         Node.__init__(self, line, column)
-        self.range = range_
+        self.start = start
+        self.end = end
 
 
 class NumberToken(Node):

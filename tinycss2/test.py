@@ -51,8 +51,7 @@ def to_json():
         NumberToken: lambda t: ['number'] + numeric(t),
         PercentageToken: lambda t: ['percentage'] + numeric(t),
         DimensionToken: lambda t: ['dimension'] + numeric(t) + [t.unit],
-        UnicodeRangeToken: lambda t: ['unicode-range',
-                                      list(t.range) if t.range else None],
+        UnicodeRangeToken: lambda t: ['unicode-range', t.start, t.end],
 
         CurlyBracketsBlock: lambda t: ['{}'] + to_json(t.content),
         SquareBracketsBlock: lambda t: ['[]'] + to_json(t.content),

@@ -52,8 +52,8 @@ def parse_component_value_list(css, preserve_comments=False):
             continue
         elif (c in 'Uu' and pos + 2 < length and css[pos + 1] == '+'
                 and css[pos + 2] in '0123456789abcdefABCDEF?'):
-            value, pos = _consume_unicode_range(css, pos + 2)
-            tokens.append(UnicodeRangeToken(line, column, value))
+            start, end, pos = _consume_unicode_range(css, pos + 2)
+            tokens.append(UnicodeRangeToken(line, column, start, end))
             continue
         elif _is_ident_start(css, pos):
             value, pos = _consume_ident(css, pos)
@@ -361,31 +361,25 @@ def _consume_unicode_range(css, pos):
     max_pos = min(pos + 6, length)
     while pos < max_pos and css[pos] in '0123456789abcdefABCDEF':
         pos += 1
-    hex_1 = css[start_pos:pos]
+    start = css[start_pos:pos]
 
     start_pos = pos
-    max_pos = min(pos + 6 - len(hex_1), length)
+    # Same max_pos as before: total of hex digits and question marks <= 6
     while pos < max_pos and css[pos] == '?':
         pos += 1
     question_marks = pos - start_pos
 
     if question_marks:
-        hex_2 = hex_1 + 'F' * question_marks
-        hex_1 += '0' * question_marks
+        end = start + 'F' * question_marks
+        start = start + '0' * question_marks
     elif (pos + 1 < length and css[pos] == '-'
             and css[pos + 1] in '0123456789abcdefABCDEF'):
+        pos += 1
         start_pos = pos
         max_pos = min(pos + 6, length)
         while pos < max_pos and css[pos] in '0123456789abcdefABCDEF':
             pos += 1
-        hex_2 = css[start_pos:pos]
+        end = css[start_pos:pos]
     else:
-        hex_2 = hex_1
-    start = int(hex_1, 16)
-    end = int(hex_2, 16)
-
-    # http://dev.w3.org/csswg/css-syntax/#set-the-unicode-ranges-range
-    if start > sys.maxunicode or end < start:
-        return None, pos
-    else:
-        return (unichr(start), unichr(min(end, sys.maxunicode))), pos
+        end = start
+    return int(start, 16), int(end, 16), pos
