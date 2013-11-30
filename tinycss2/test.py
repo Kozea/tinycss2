@@ -127,7 +127,6 @@ def test_stylesheet_bytes(kwargs):
 
 def test_serialization(css):
     parsed = parse_component_value_list(css)
-    print(serialize(parsed))
     return parse_component_value_list(serialize(parsed))
 
 test_serialization = json_test(test_serialization, 'component_value_list.json')
