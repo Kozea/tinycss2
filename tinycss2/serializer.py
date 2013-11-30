@@ -22,8 +22,8 @@ def serialize_identifier(value):
         result = ''
     c = value[0]
     result += (
-        c  if c in ('abcdefghijklmnopqrstuvwxyz_'
-                    'ABCDEFGHIJKLMNOPQRSTUVWXYZ') or ord(c) > 0x7F else
+        c if c in ('abcdefghijklmnopqrstuvwxyz_'
+                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ') or ord(c) > 0x7F else
         r'\A ' if c == '\n' else
         r'\D ' if c == '\r' else
         r'\C ' if c == '\f' else
@@ -36,8 +36,8 @@ def serialize_identifier(value):
 
 def serialize_name(value):
     return ''.join(
-        c  if c in ('abcdefghijklmnopqrstuvwxyz-_0123456789'
-                    'ABCDEFGHIJKLMNOPQRSTUVWXYZ') or ord(c) > 0x7F else
+        c if c in ('abcdefghijklmnopqrstuvwxyz-_0123456789'
+                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ') or ord(c) > 0x7F else
         r'\A ' if c == '\n' else
         r'\D ' if c == '\r' else
         r'\C ' if c == '\f' else
@@ -68,7 +68,8 @@ def _serialize_to(nodes, write):
     bad_pairs = BAD_PAIRS
     previous_type = None
     for node in nodes:
-        serialization_type = node.type if node.type != 'literal' else node.value
+        serialization_type = (node.type if node.type != 'literal'
+                              else node.value)
         if (previous_type, serialization_type) in bad_pairs:
             write('/**/')
         if previous_type == '\\':
@@ -81,16 +82,20 @@ def _serialize_to(nodes, write):
 
 
 BAD_PAIRS = set(
-    [(a, b) for a in ('ident', 'at-keyword', 'hash', 'dimension', '#', '-',
-                      'number')
-            for b in ('ident', 'function', 'url', 'number', 'percentage',
-                      'dimension', 'unicode-range')] +
-    [(a, b) for a in ('ident', 'at-keyword', 'hash', 'dimension')
-            for b in ('-', '-->')] +
-    [(a, b) for a in ('#', '-', 'number', '@')
-            for b in ('ident', 'function', 'url')] +
-    [(a, b) for a in ('unicode-range', '.', '+')
-            for b in ('number', 'percentage', 'dimension')] +
+    [(a, b)
+        for a in ('ident', 'at-keyword', 'hash', 'dimension', '#', '-',
+                  'number')
+        for b in ('ident', 'function', 'url', 'number', 'percentage',
+                  'dimension', 'unicode-range')] +
+    [(a, b)
+        for a in ('ident', 'at-keyword', 'hash', 'dimension')
+        for b in ('-', '-->')] +
+    [(a, b)
+        for a in ('#', '-', 'number', '@')
+        for b in ('ident', 'function', 'url')] +
+    [(a, b)
+        for a in ('unicode-range', '.', '+')
+        for b in ('number', 'percentage', 'dimension')] +
     [('@', b) for b in ('ident', 'function', 'url', 'unicode-range', '-')] +
     [('unicode-range', b) for b in ('ident', 'function', '?')] +
     [(a, '=') for a in '$*^~|'] +

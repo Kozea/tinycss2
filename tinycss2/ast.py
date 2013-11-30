@@ -92,7 +92,6 @@ class ParseError(Node):
             raise TypeError('Can not serialize %r' % self)
 
 
-
 class Comment(Node):
     """A CSS comment."""
     __slots__ = ['value']
@@ -422,7 +421,8 @@ class DimensionToken(Node):
     __slots__ = ['value', 'int_value', 'is_integer', 'representation',
                  'unit', 'lower_unit']
     type = 'dimension'
-    repr_format = '<{self.__class__.__name__} {self.representation}{self.unit}>'
+    repr_format = ('<{self.__class__.__name__} '
+                   '{self.representation}{self.unit}>')
 
     def __init__(self, line, column, value, int_value, representation, unit):
         Node.__init__(self, line, column)
