@@ -15,5 +15,5 @@ setup(
     author='Simon Sapin',
     author_email='simon.sapin@exyr.org',
     packages=['tinycss2'],
-    install_requires=['webencodings'],
+    install_requires=['webencodings>=0.4'],
 )
