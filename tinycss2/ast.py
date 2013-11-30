@@ -18,6 +18,9 @@ from __future__ import unicode_literals
 
 from webencodings import ascii_lower
 
+from .serializer import (serialize_identifier, serialize_name,
+                         serialize_string_value, _serialize_to)
+
 
 class Node(object):
     """Base class for all tokens.
@@ -40,6 +43,19 @@ class Node(object):
 
     def __repr__(self):
         return self.repr_format.format(self=self)
+
+    def serialize(self):
+        """Serialize this node to CSS syntax and return an Unicode string."""
+        chuncks = []
+        self._serialize_to(chuncks.append)
+        return ''.join(chuncks)
+
+    def _serialize_to(self, write):
+        """Serialize this node to CSS syntax, writing chuncks as Unicode string
+        by calling the provided :obj:`write` callback.
+
+        """
+        raise NotImplementedError
 
 
 class ParseError(Node):
@@ -65,6 +81,17 @@ class ParseError(Node):
         self.kind = kind
         self.message = message
 
+    def _serialize_to(self, write):
+        if self.kind == 'bad-string':
+            write('"[bad string]\n')
+        elif self.kind == 'bad-url':
+            write('url([bad url])')
+        elif self.kind in ')]}':
+            write(self.kind)
+        else:
+            raise TypeError('Can not serialize %r' % self)
+
+
 
 class Comment(Node):
     """A CSS comment."""
@@ -76,12 +103,20 @@ class Comment(Node):
         Node.__init__(self, line, column)
         self.value = value
 
+    def _serialize_to(self, write):
+        write('/*')
+        write(self.value)
+        write('*/')
+
 
 class WhitespaceToken(Node):
     """A <whitespace> token."""
     __slots__ = []
     type = 'whitespace'
     repr_format = '<{self.__class__.__name__}>'
+
+    def _serialize_to(self, write):
+        write(' ')
 
 
 class LiteralToken(Node):
@@ -113,6 +148,9 @@ class LiteralToken(Node):
     def __ne__(self, other):
         return not self == other
 
+    def _serialize_to(self, write):
+        write(self.value)
+
 
 class IdentToken(Node):
     """A <ident> token.
@@ -136,6 +174,9 @@ class IdentToken(Node):
         Node.__init__(self, line, column)
         self.value = value
         self.lower_value = ascii_lower(value)
+
+    def _serialize_to(self, write):
+        write(serialize_identifier(self.value))
 
 
 class AtKeywordToken(Node):
@@ -161,6 +202,10 @@ class AtKeywordToken(Node):
         self.value = value
         self.lower_value = ascii_lower(value)
 
+    def _serialize_to(self, write):
+        write('@')
+        write(serialize_identifier(self.value))
+
 
 class HashToken(Node):
     r"""A <hash> token.
@@ -185,6 +230,13 @@ class HashToken(Node):
         self.value = value
         self.is_identifier = is_identifier
 
+    def _serialize_to(self, write):
+        write('#')
+        if self.is_identifier:
+            write(serialize_identifier(self.value))
+        else:
+            write(serialize_name(self.value))
+
 
 class StringToken(Node):
     """A <string> token.
@@ -201,6 +253,11 @@ class StringToken(Node):
     def __init__(self, line, column, value):
         Node.__init__(self, line, column)
         self.value = value
+
+    def _serialize_to(self, write):
+        write('"')
+        write(serialize_string_value(self.value))
+        write('"')
 
 
 class URLToken(Node):
@@ -219,6 +276,11 @@ class URLToken(Node):
     def __init__(self, line, column, value):
         Node.__init__(self, line, column)
         self.value = value
+
+    def _serialize_to(self, write):
+        write('url("')
+        write(serialize_string_value(self.value))
+        write('")')
 
 
 class UnicodeRangeToken(Node):
@@ -241,6 +303,12 @@ class UnicodeRangeToken(Node):
         Node.__init__(self, line, column)
         self.start = start
         self.end = end
+
+    def _serialize_to(self, write):
+        if self.end == self.start:
+            write('U+%X' % self.start)
+        else:
+            write('U+%X-%X' % (self.start, self.end))
 
 
 class NumberToken(Node):
@@ -274,6 +342,9 @@ class NumberToken(Node):
         self.int_value = int_value
         self.is_integer = int_value is not None
         self.representation = representation
+
+    def _serialize_to(self, write):
+        write(self.representation)
 
 
 class PercentageToken(Node):
@@ -309,6 +380,10 @@ class PercentageToken(Node):
         self.int_value = int_value
         self.is_integer = int_value is not None
         self.representation = representation
+
+    def _serialize_to(self, write):
+        write(self.representation)
+        write('%')
 
 
 class DimensionToken(Node):
@@ -358,6 +433,16 @@ class DimensionToken(Node):
         self.unit = unit
         self.lower_unit = ascii_lower(unit)
 
+    def _serialize_to(self, write):
+        write(self.representation)
+        # Disambiguate with scientific notation
+        unit = self.unit
+        if unit in ('e', 'E') or unit.startswith(('e-', 'E-')):
+            write('\\65 ')
+            write(serialize_name(unit[1:]))
+        else:
+            write(serialize_identifier(unit))
+
 
 class ParenthesesBlock(Node):
     """A () block.
@@ -375,6 +460,11 @@ class ParenthesesBlock(Node):
     def __init__(self, line, column, content):
         Node.__init__(self, line, column)
         self.content = content
+
+    def _serialize_to(self, write):
+        write('(')
+        _serialize_to(self.content, write)
+        write(')')
 
 
 class SquareBracketsBlock(Node):
@@ -394,6 +484,11 @@ class SquareBracketsBlock(Node):
         Node.__init__(self, line, column)
         self.content = content
 
+    def _serialize_to(self, write):
+        write('[')
+        _serialize_to(self.content, write)
+        write(']')
+
 
 class CurlyBracketsBlock(Node):
     """A {} block.
@@ -411,6 +506,11 @@ class CurlyBracketsBlock(Node):
     def __init__(self, line, column, content):
         Node.__init__(self, line, column)
         self.content = content
+
+    def _serialize_to(self, write):
+        write('{')
+        _serialize_to(self.content, write)
+        write('}')
 
 
 class Function(Node):
@@ -443,6 +543,12 @@ class Function(Node):
         self.name = name
         self.lower_name = ascii_lower(name)
         self.arguments = arguments
+
+    def _serialize_to(self, write):
+        write(serialize_identifier(self.name))
+        write('(')
+        _serialize_to(self.arguments, write)
+        write(')')
 
 
 class Declaration(Node):
@@ -486,6 +592,12 @@ class Declaration(Node):
         self.value = value
         self.important = important
 
+    def _serialize_to(self, write):
+        write(serialize_identifier(self.name))
+        write(':')
+        _serialize_to(self.value, write)
+        write(';')
+
 
 class QualifiedRule(Node):
     """A qualified rule, ie. a rule that is not an at-rule.
@@ -517,6 +629,12 @@ class QualifiedRule(Node):
         Node.__init__(self, line, column)
         self.prelude = prelude
         self.content = content
+
+    def _serialize_to(self, write):
+        _serialize_to(self.prelude, write)
+        write('{')
+        _serialize_to(self.content, write)
+        write('}')
 
 
 class AtRule(Node):
@@ -565,3 +683,14 @@ class AtRule(Node):
         self.lower_at_keyword = lower_at_keyword
         self.prelude = prelude
         self.content = content
+
+    def _serialize_to(self, write):
+        write('@')
+        write(serialize_identifier(self.at_keyword))
+        _serialize_to(self.prelude, write)
+        if self.content is None:
+            write(';')
+        else:
+            write('{')
+            _serialize_to(self.content, write)
+            write('}')
