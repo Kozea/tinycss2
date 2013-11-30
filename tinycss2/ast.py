@@ -38,6 +38,9 @@ class Node(object):
         self.source_line = source_line
         self.source_column = source_column
 
+    def __repr__(self):
+        return self.repr_format.format(self=self)
+
 
 class ParseError(Node):
     """A syntax error of some sort.
@@ -55,6 +58,7 @@ class ParseError(Node):
     """
     __slots__ = ['kind', 'message']
     type = 'error'
+    repr_format = '<{self.__class__.__name__} {self.kind}>'
 
     def __init__(self, line, column, kind, message):
         Node.__init__(self, line, column)
@@ -66,6 +70,7 @@ class Comment(Node):
     """A CSS comment."""
     __slots__ = ['value']
     type = 'comment'
+    repr_format = '<{self.__class__.__name__} {self.value:r}>'
 
     def __init__(self, line, column, value):
         Node.__init__(self, line, column)
@@ -76,6 +81,7 @@ class WhitespaceToken(Node):
     """A <whitespace> token."""
     __slots__ = []
     type = 'whitespace'
+    repr_format = '<{self.__class__.__name__}>'
 
 
 class LiteralToken(Node):
@@ -95,6 +101,7 @@ class LiteralToken(Node):
     """
     __slots__ = ['value']
     type = 'literal'
+    repr_format = '<{self.__class__.__name__} {self.value}>'
 
     def __init__(self, line, column, value):
         Node.__init__(self, line, column)
@@ -123,6 +130,7 @@ class IdentToken(Node):
     """
     __slots__ = ['value', 'lower_value']
     type = 'ident'
+    repr_format = '<{self.__class__.__name__} {self.value}>'
 
     def __init__(self, line, column, value):
         Node.__init__(self, line, column)
@@ -146,6 +154,7 @@ class AtKeywordToken(Node):
     """
     __slots__ = ['value', 'lower_value']
     type = 'at-keyword'
+    repr_format = '<{self.__class__.__name__} @{self.value}>'
 
     def __init__(self, line, column, value):
         Node.__init__(self, line, column)
@@ -169,6 +178,7 @@ class HashToken(Node):
     """
     __slots__ = ['value', 'is_identifier']
     type = 'hash'
+    repr_format = '<{self.__class__.__name__} #{self.value}>'
 
     def __init__(self, line, column, value, is_identifier):
         Node.__init__(self, line, column)
@@ -186,6 +196,7 @@ class StringToken(Node):
     """
     __slots__ = ['value']
     type = 'string'
+    repr_format = '<{self.__class__.__name__} {self.value:r}>'
 
     def __init__(self, line, column, value):
         Node.__init__(self, line, column)
@@ -203,6 +214,7 @@ class URLToken(Node):
     """
     __slots__ = ['value']
     type = 'url'
+    repr_format = '<{self.__class__.__name__} url({self.value})>'
 
     def __init__(self, line, column, value):
         Node.__init__(self, line, column)
@@ -223,6 +235,7 @@ class UnicodeRangeToken(Node):
     """
     __slots__ = ['start', 'end']
     type = 'unicode-range'
+    repr_format = '<{self.__class__.__name__} {self.start} {self.end}>'
 
     def __init__(self, line, column, start, end):
         Node.__init__(self, line, column)
@@ -253,6 +266,7 @@ class NumberToken(Node):
     """
     __slots__ = ['value', 'int_value', 'is_integer', 'representation']
     type = 'number'
+    repr_format = '<{self.__class__.__name__} {self.representation}>'
 
     def __init__(self, line, column, value, int_value, representation):
         Node.__init__(self, line, column)
@@ -287,6 +301,7 @@ class PercentageToken(Node):
     """
     __slots__ = ['value', 'int_value', 'is_integer', 'representation']
     type = 'percentage'
+    repr_format = '<{self.__class__.__name__} {self.representation}%>'
 
     def __init__(self, line, column, value, int_value, representation):
         Node.__init__(self, line, column)
@@ -332,6 +347,7 @@ class DimensionToken(Node):
     __slots__ = ['value', 'int_value', 'is_integer', 'representation',
                  'unit', 'lower_unit']
     type = 'dimension'
+    repr_format = '<{self.__class__.__name__} {self.representation}{self.unit}>'
 
     def __init__(self, line, column, value, int_value, representation, unit):
         Node.__init__(self, line, column)
@@ -354,6 +370,7 @@ class ParenthesesBlock(Node):
     """
     __slots__ = ['content']
     type = '() block'
+    repr_format = '<{self.__class__.__name__} ( {self.content} )>'
 
     def __init__(self, line, column, content):
         Node.__init__(self, line, column)
@@ -371,6 +388,7 @@ class SquareBracketsBlock(Node):
     """
     __slots__ = ['content']
     type = '[] block'
+    repr_format = '<{self.__class__.__name__} [ {self.content} ]>'
 
     def __init__(self, line, column, content):
         Node.__init__(self, line, column)
@@ -388,6 +406,7 @@ class CurlyBracketsBlock(Node):
     """
     __slots__ = ['content']
     type = '{} block'
+    repr_format = '<{self.__class__.__name__} {{ {self.content} }}>'
 
     def __init__(self, line, column, content):
         Node.__init__(self, line, column)
@@ -417,6 +436,7 @@ class Function(Node):
     """
     __slots__ = ['name', 'lower_name', 'arguments']
     type = 'function'
+    repr_format = '<{self.__class__.__name__} {self.name}( {self.arguments} )>'
 
     def __init__(self, line, column, name, arguments):
         Node.__init__(self, line, column)
@@ -457,6 +477,7 @@ class Declaration(Node):
     """
     __slots__ = ['name', 'lower_name', 'value', 'important']
     type = 'declaration'
+    repr_format = '<{self.__class__.__name__} {self.name}: {self.value}>'
 
     def __init__(self, line, column, name, lower_name, value, important):
         Node.__init__(self, line, column)
@@ -489,6 +510,8 @@ class QualifiedRule(Node):
     """
     __slots__ = ['prelude', 'content']
     type = 'qualified-rule'
+    repr_format = ('<{self.__class__.__name__} '
+                   '{self.prelude} {{ {self.content} }}>')
 
     def __init__(self, line, column, prelude, content):
         Node.__init__(self, line, column)
@@ -532,6 +555,8 @@ class AtRule(Node):
     """
     __slots__ = ['at_keyword', 'lower_at_keyword', 'prelude', 'content']
     type = 'at-rule'
+    repr_format = ('<{self.__class__.__name__} '
+                   '@{self.at_keyword} {self.prelude} {{ {self.content} }}>')
 
     def __init__(self, line, column,
                  at_keyword, lower_at_keyword, prelude, content):
