@@ -34,9 +34,9 @@ def decode_stylesheet_bytes(css_bytes, protocol_encoding=None,
     if css_bytes.startswith(b'@charset "'):
         # 10 is len(b'@charset "')
         # 100 is arbitrary so that no encoding label is more than 100-10 bytes.
-        end_quote = css_bytes.find('"', 10, 100)
-        if end_quote != -1 and css_bytes.startswith('";', end_quote):
-            fallback = lookup(css_bytes[10:end_quote])
+        end_quote = css_bytes.find(b'"', 10, 100)
+        if end_quote != -1 and css_bytes.startswith(b'";', end_quote):
+            fallback = lookup(css_bytes[10:end_quote].decode('latin1'))
             if fallback:
                 if fallback.name in ('utf-16be', 'utf-16le'):
                     return decode(css_bytes, UTF8)

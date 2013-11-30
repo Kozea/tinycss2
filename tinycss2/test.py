@@ -4,11 +4,12 @@ import functools
 import pprint
 
 import pytest
+from webencodings import Encoding, lookup
 
 from . import (
     parse_component_value_list, parse_one_component_value,
     parse_declaration_list, parse_one_declaration,
-    parse_rule_list, parse_one_rule, parse_stylesheet)
+    parse_rule_list, parse_one_rule, parse_stylesheet, parse_stylesheet_bytes)
 from .ast import (
     AtKeywordToken, CurlyBracketsBlock, DimensionToken, Function,
     HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
@@ -38,6 +39,7 @@ def to_json():
         int: lambda s: s,
         list: lambda l: [to_json(el) for el in l],
         tuple: lambda l: [to_json(el) for el in l],
+        Encoding: lambda e: e.name,
         ParseError: lambda e: ['error', e.kind],
 
         WhitespaceToken: lambda t: ' ',
@@ -76,7 +78,7 @@ def load_json(filename):
 
 
 def json_test(function, filename=None):
-    filename = filename or function.__name__.replace('parse_', '') + '.json'
+    filename = filename or function.__name__.split('_', 1)[-1] + '.json'
 
     @pytest.mark.parametrize(('css', 'expected'), load_json(filename))
     def test(css, expected):
@@ -91,7 +93,7 @@ test_component_value_list = json_test(parse_component_value_list)
 test_one_component_value = json_test(parse_one_component_value)
 test_declaration_list = json_test(parse_declaration_list)
 test_one_declaration = json_test(parse_one_declaration)
-test_stylesheet_rule = json_test(parse_stylesheet)
+test_stylesheet = json_test(parse_stylesheet)
 test_rule_list = json_test(parse_rule_list)
 test_one_rule = json_test(parse_one_rule)
 test_color3 = json_test(parse_color_string, filename='color3.json')
@@ -111,3 +113,12 @@ def test_color3_keywords():
             r, g, b, a = result
             result = [r * 255, g * 255, b * 255, a]
         assert result == expected
+
+
+@json_test
+def test_stylesheet_bytes(kwargs):
+    kwargs['css_bytes'] = kwargs['css_bytes'].encode('latin1')
+    kwargs.pop('comment', None)
+    if kwargs.get('environment_encoding'):
+        kwargs['environment_encoding'] = lookup(kwargs['environment_encoding'])
+    return parse_stylesheet_bytes(**kwargs)
