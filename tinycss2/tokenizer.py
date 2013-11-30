@@ -3,7 +3,8 @@ from __future__ import unicode_literals
 import re
 import sys
 
-from .utils import ascii_lower
+from webencodings import ascii_lower
+
 from .ast import (
     AtKeywordToken, Comment, CurlyBracketsBlock, DimensionToken, Function,
     HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,

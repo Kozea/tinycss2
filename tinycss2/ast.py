@@ -16,7 +16,7 @@ Differences with css-syntax:
 
 from __future__ import unicode_literals
 
-from .utils import ascii_lower
+from webencodings import ascii_lower
 
 
 class Node(object):
@@ -124,7 +124,7 @@ class IdentToken(Node):
     .. attribute:: lower_value
 
         Same as :attr:`value` but normalized to *ASCII lower case*,
-        see :func:`~tinycss2.ascii_lower`.
+        see :func:`~webencodings.ascii_lower`.
         This is the value to use when comparing to a CSS keyword.
 
     """
@@ -148,7 +148,7 @@ class AtKeywordToken(Node):
     .. attribute:: lower_value
 
         Same as :attr:`value` but normalized to *ASCII lower case*,
-        see :func:`~tinycss2.ascii_lower`.
+        see :func:`~webencodings.ascii_lower`.
         This is the value to use when comparing to a CSS at-keyword.
 
     """
@@ -340,7 +340,7 @@ class DimensionToken(Node):
     .. attribute:: lower_unit
 
         Same as :attr:`name` but normalized to *ASCII lower case*,
-        see :func:`~tinycss2.ascii_lower`.
+        see :func:`~webencodings.ascii_lower`.
         This is the value to use when comparing to a CSS unit.
 
     """
@@ -423,7 +423,7 @@ class Function(Node):
     .. attribute:: lower_name
 
         Same as :attr:`name` but normalized to *ASCII lower case*,
-        see :func:`~tinycss2.ascii_lower`.
+        see :func:`~webencodings.ascii_lower`.
         This is the value to use when comparing to a CSS function name.
 
     .. attribute:: arguments
@@ -458,7 +458,7 @@ class Declaration(Node):
     .. attribute:: lower_name
 
         Same as :attr:`name` but normalized to *ASCII lower case*,
-        see :func:`~tinycss2.ascii_lower`.
+        see :func:`~webencodings.ascii_lower`.
         This is the value to use when comparing to
         a CSS property or descriptor name.
 
@@ -537,7 +537,7 @@ class AtRule(Node):
     .. attribute:: lower_at_keyword
 
         Same as :attr:`at_keyword` but normalized to *ASCII lower case*,
-        see :func:`~tinycss2.ascii_lower`.
+        see :func:`~webencodings.ascii_lower`.
         This is the value to use when comparing to a CSS at-keyword.
 
     .. attribute:: prelude
