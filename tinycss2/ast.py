@@ -3,15 +3,6 @@
 
 Data structures for the CSS abstract syntax tree.
 
-Differences with css-syntax:
-
-* :class:`LiteralToken` regroups
-  colon ``:``, semicolon ``;``, comma ``,``, cdo ``<!--``, cdc ``-->``,
-  include-match ``~=``, dash-match ``|=``,
-  prefix-match ``^=``, suffix-match ``$=``, substring-match ``*=``,
-  and delim tokens.
-  (Delim is any single character not matched by another token.)
-
 """
 
 from __future__ import unicode_literals
@@ -23,16 +14,41 @@ from .serializer import (serialize_identifier, serialize_name,
 
 
 class Node(object):
-    """Base class for all tokens.
+    """Every node type inherits from this class,
+    which is never instantiated directly.
+
+    .. attribute:: type
+
+        Each child class has a :attr:`type` class attribute
+        with an unique string value.
+        This allows checking for the node type with code like:
+
+        .. code-block:: python
+
+            if node.type == 'whitespace':
+
+        instead of the more verbose:
+
+        .. code-block:: python
+
+            from tinycss2.ast import WhitespaceToken
+            if isinstance(node, WhitespaceToken):
+
+    Every node also has these attributes and methods,
+    which are not repeated for brevity:
 
     .. attribute:: source_line
 
         The line number of the start of the node in the CSS source.
+        Starts at 1.
 
     .. attribute:: source_column
 
-        The column number within :attr:`line` of the start of the node
+        The column number within :attr:`source_line` of the start of the node
         in the CSS source.
+        Starts at 1.
+
+    .. automethod:: serialize
 
     """
     __slots__ = ['source_line', 'source_column']
@@ -59,7 +75,15 @@ class Node(object):
 
 
 class ParseError(Node):
-    """A syntax error of some sort.
+    """A syntax error of some sort. May occur anywhere in the tree.
+
+    Syntax errors are not fatal in the parser
+    to allow for different error handling behaviors.
+    For example, an error in a Selector list makes the whole rule invalid,
+    but an error in a Media Query list only replaces one comma-separated query
+    with ``not all``.
+
+    .. autoattribute:: type
 
     .. attribute:: kind
 
@@ -93,7 +117,14 @@ class ParseError(Node):
 
 
 class Comment(Node):
-    """A CSS comment."""
+    """A CSS comment.
+
+    .. autoattribute:: type
+    .. attribute:: value
+
+        The content of the comment, between ``/*`` and ``*/``.
+
+    """
     __slots__ = ['value']
     type = 'comment'
     repr_format = '<{self.__class__.__name__} {self.value:r}>'
@@ -109,7 +140,11 @@ class Comment(Node):
 
 
 class WhitespaceToken(Node):
-    """A <whitespace> token."""
+    """A :diagram:`whitespace-token`.
+
+    .. autoattribute:: type
+
+    """
     __slots__ = []
     type = 'whitespace'
     repr_format = '<{self.__class__.__name__}>'
@@ -121,16 +156,36 @@ class WhitespaceToken(Node):
 class LiteralToken(Node):
     r"""Token that represents one or more characters as in the CSS source.
 
+    .. autoattribute:: type
+
     .. attribute:: value
 
         A string of one to four characters.
 
-    Instances compare equal to their value.
+    Instances compare equal to their :attr:`value`,
+    so that these are equivalent:
 
-    This regroups what the spec defines as
-    <delim>, <colon>, <semicolon>, <comma>, <cdc>, <cdo>,
-    <include-match>, <dash-match>, <prefix-match>, <suffix-match>,
-    and <substring-match> tokens.
+    .. code-block:: python
+
+        if node == ';':
+        if node.type == 'literal' and node.value == ';':
+
+    This regroups what `the specification`_ defines as separate token types:
+
+    .. _the specification: http://dev.w3.org/csswg/css-syntax-3/
+
+    * *<colon-token>* ``:``
+    * *<semicolon-token>* ``;``
+    * *<comma-token>* ``,``
+    * *<cdc-token>* ``-->``
+    * *<cdo-token>* ``<!--``
+    * *<include-match-token>* ``~=``
+    * *<dash-match-token>* ``|=``
+    * *<prefix-match-token>* ``^=``
+    * *<suffix-match-token>* ``$=``
+    * *<substring-match-token>* ``*=``
+    * *<column-token>* ``||``
+    * *<delim-token>* (a single ASCII character not part of any another token)
 
     """
     __slots__ = ['value']
@@ -152,7 +207,9 @@ class LiteralToken(Node):
 
 
 class IdentToken(Node):
-    """A <ident> token.
+    """An :diagram:`ident-token`.
+
+    .. autoattribute:: type
 
     .. attribute:: value
 
@@ -179,17 +236,23 @@ class IdentToken(Node):
 
 
 class AtKeywordToken(Node):
-    """A <at-keyword> token.
+    """An :diagram:`at-keyword-token`.
+
+    .. autoattribute:: type
 
     .. attribute:: value
 
-        The unescaped value, as an Unicode string.
+        The unescaped value, as an Unicode string, without the preceding ``@``.
 
     .. attribute:: lower_value
 
         Same as :attr:`value` but normalized to *ASCII lower case*,
         see :func:`~webencodings.ascii_lower`.
         This is the value to use when comparing to a CSS at-keyword.
+
+        .. code-block:: python
+
+            if node.type == 'at-keyword' and node.lower_value == 'import': ...
 
     """
     __slots__ = ['value', 'lower_value']
@@ -207,15 +270,17 @@ class AtKeywordToken(Node):
 
 
 class HashToken(Node):
-    r"""A <hash> token.
+    r"""A :diagram:`hash-token`.
+
+    .. autoattribute:: type
 
     .. attribute:: value
 
-        The unescaped value, as an Unicode string.
+        The unescaped value, as an Unicode string, without the preceding ``#``.
 
     .. attribute:: is_identifier
 
-        A :class:`bool`, true if the CSS source for this token
+        A boolean, true if the CSS source for this token
         was ``#`` followed by a valid identifier.
         (Only such hash tokens are valid ID selectors.)
 
@@ -238,7 +303,9 @@ class HashToken(Node):
 
 
 class StringToken(Node):
-    """A <string> token.
+    """A :diagram:`string-token`.
+
+    .. autoattribute:: type
 
     .. attribute:: value
 
@@ -260,7 +327,9 @@ class StringToken(Node):
 
 
 class URLToken(Node):
-    """A <url> token.
+    """An :diagram:`url-token`.
+
+    .. autoattribute:: type
 
     .. attribute:: value
 
@@ -283,15 +352,18 @@ class URLToken(Node):
 
 
 class UnicodeRangeToken(Node):
-    """An <unicode-range> token.
+    """An :diagram:`unicode-range-token`.
+
+    .. autoattribute:: type
 
     .. attribute:: start
 
-        The start of the range, as an integer.
+        The start of the range, as an integer between 0 and 1114111.
 
     .. attribute:: end
 
-        The end of the range, as an integer.
+        The end of the range, as an integer between 0 and 1114111.
+        Same as :attr:`start` if the source only specified one value.
 
     """
     __slots__ = ['start', 'end']
@@ -311,7 +383,9 @@ class UnicodeRangeToken(Node):
 
 
 class NumberToken(Node):
-    """A <number> token.
+    """A :diagram:`numer-token`.
+
+    .. autoattribute:: type
 
     .. attribute:: value
 
@@ -347,7 +421,9 @@ class NumberToken(Node):
 
 
 class PercentageToken(Node):
-    """A <percentage> token.
+    """A :diagram:`percentage-token`.
+
+    .. autoattribute:: type
 
     .. attribute:: value
 
@@ -386,7 +462,9 @@ class PercentageToken(Node):
 
 
 class DimensionToken(Node):
-    """A <dimension> token.
+    """A :diagram:`dimension-token`.
+
+    .. autoattribute:: type
 
     .. attribute:: value
 
@@ -400,7 +478,7 @@ class DimensionToken(Node):
 
     .. attribute:: is_integer
 
-        Whether the token’value was syntactically an integer, as a boolean.
+        Whether the token’s value was syntactically an integer, as a boolean.
 
     .. attribute:: representation
 
@@ -413,9 +491,13 @@ class DimensionToken(Node):
 
     .. attribute:: lower_unit
 
-        Same as :attr:`name` but normalized to *ASCII lower case*,
+        Same as :attr:`unit` but normalized to *ASCII lower case*,
         see :func:`~webencodings.ascii_lower`.
         This is the value to use when comparing to a CSS unit.
+
+        .. code-block:: python
+
+            if node.type == 'dimension' and node.lower_unit == 'px': ...
 
     """
     __slots__ = ['value', 'int_value', 'is_integer', 'representation',
@@ -445,11 +527,13 @@ class DimensionToken(Node):
 
 
 class ParenthesesBlock(Node):
-    """A () block.
+    """A :diagram:`()-block`.
+
+    .. autoattribute:: type
 
     .. attribute:: content
 
-        The content of the block, as list of :ref:`component values`.
+        The content of the block, as list of :term:`component values`.
         The ``(`` and ``)`` markers themselves are not represented in the list.
 
     """
@@ -468,11 +552,13 @@ class ParenthesesBlock(Node):
 
 
 class SquareBracketsBlock(Node):
-    """A [] block.
+    """A :diagram:`[]-block`.
+
+    .. autoattribute:: type
 
     .. attribute:: content
 
-        The content of the block, as list of :ref:`component values`.
+        The content of the block, as list of :term:`component values`.
         The ``[`` and ``]`` markers themselves are not represented in the list.
 
     """
@@ -491,11 +577,13 @@ class SquareBracketsBlock(Node):
 
 
 class CurlyBracketsBlock(Node):
-    """A {} block.
+    """A :diagram:`{}-block`.
+
+    .. autoattribute:: type
 
     .. attribute:: content
 
-        The content of the block, as list of :ref:`component values`.
+        The content of the block, as list of :term:`component values`.
         The ``[`` and ``]`` markers themselves are not represented in the list.
 
     """
@@ -513,8 +601,10 @@ class CurlyBracketsBlock(Node):
         write('}')
 
 
-class Function(Node):
-    """A CSS function.
+class FunctionBlock(Node):
+    """A :diagram:`function-block`.
+
+    .. autoattribute:: type
 
     .. attribute:: name
 
@@ -528,7 +618,7 @@ class Function(Node):
 
     .. attribute:: arguments
 
-        The arguments of the function, as list of :ref:`component values`.
+        The arguments of the function, as list of :term:`component values`.
         The ``(`` and ``)`` markers themselves are not represented in the list.
         Commas are not special, but represented as :obj:`LiteralToken` objects
         in the list.
@@ -552,14 +642,15 @@ class Function(Node):
 
 
 class Declaration(Node):
-    """A (property or descriptor) declaration.
+    """A (property or descriptor) :diagram:`declaration`.
 
-    Syntax:
-    ``<ident> <whitespace>* ':' <token>* ( '!' <ident("important")> )?``
+    .. autoattribute:: type
 
     .. attribute:: name
 
-        The unescaped value, as an Unicode string.
+        The unescaped name, as an Unicode string.
+
+    .. autoattribute:: type
 
     .. attribute:: lower_name
 
@@ -568,15 +659,19 @@ class Declaration(Node):
         This is the value to use when comparing to
         a CSS property or descriptor name.
 
+        .. code-block:: python
+
+            if node.type == 'declaration' and node.lower_name == 'color': ...
+
     .. attribute:: value
 
-        The declaration value as a list of :ref:`component values`:
+        The declaration value as a list of :term:`component values`:
         anything between ``:`` and
         the end of the declaration, or ``!important``.
 
     .. attribute:: important
 
-        A boolean, true if the declaration had an ``!important`` markers.
+        A boolean, true if the declaration had an ``!important`` marker.
         It is up to the consumer to reject declarations that do not accept
         this flag, such as non-property descriptor declarations.
 
@@ -600,24 +695,25 @@ class Declaration(Node):
 
 
 class QualifiedRule(Node):
-    """A qualified rule, ie. a rule that is not an at-rule.
+    """A :diagram:`qualified rule`.
 
-    Qulified rules are often style rules,
-    where the prelude is parsed as a selector list
-    and the content as a declaration list.
+    The interpretation of style rules depend on their context.
+    At the top-level of a stylesheet
+    or in a conditional rule such as ``@media``,
+    they are style rules where the :attr:`prelude` is a list of Selectors
+    and the :attr:`body` is a list of property declarations.
 
-    Syntax:
-    ``<token except {} block>* <{} block>``
+    .. autoattribute:: type
 
     .. attribute:: prelude
 
         The rule’s prelude, the part before the {} block,
-        as a list of :ref:`component values`.
+        as a list of :term:`component values`.
 
     .. attribute:: content
 
         The rule’s content, the part inside the {} block,
-        as a list of :ref:`component values`.
+        as a list of :term:`component values`.
 
     """
     __slots__ = ['prelude', 'content']
@@ -638,14 +734,15 @@ class QualifiedRule(Node):
 
 
 class AtRule(Node):
-    """An at-rule.
+    """An :diagram:`at-rule`.
 
-    The interpretation of at-rules depend on their at-keywords.
-    Most at-rules (ie. at-keyword values) are only allowed in some context,
+    The interpretation of at-rules depend on their at-keyword
+    as well as their context.
+    Most types of at-rules (ie. at-keyword values)
+    are only allowed in some context,
     and must either end with a {} block or a semicolon.
 
-    Syntax:
-    ``<at-keyword> <token except {} block>* ( <{} block> | ';' )``
+    .. autoattribute:: type
 
     .. attribute:: at_keyword
 
@@ -658,15 +755,19 @@ class AtRule(Node):
         see :func:`~webencodings.ascii_lower`.
         This is the value to use when comparing to a CSS at-keyword.
 
+        .. code-block:: python
+
+            if node.type == 'at-rule' and node.lower_at_keyword == 'import': ...
+
     .. attribute:: prelude
 
         The rule’s prelude, the part before the {} block or semicolon,
-        as a list of :ref:`component values`.
+        as a list of :term:`component values`.
 
     .. attribute:: content
 
         The rule’s content, if any.
-        The block’s content as a list of :ref:`component values`
+        The block’s content as a list of :term:`component values`
         for at-rules with a {} block,
         or :obj:`None` for at-rules ending with a semicolon.
 

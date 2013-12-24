@@ -12,7 +12,7 @@ from . import (
     parse_rule_list, parse_one_rule, parse_stylesheet, parse_stylesheet_bytes,
     serialize)
 from .ast import (
-    AtKeywordToken, CurlyBracketsBlock, DimensionToken, Function,
+    AtKeywordToken, CurlyBracketsBlock, DimensionToken, FunctionBlock,
     HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
     ParseError, PercentageToken, SquareBracketsBlock, StringToken, URLToken,
     UnicodeRangeToken, WhitespaceToken, Declaration, AtRule, QualifiedRule)
@@ -59,7 +59,7 @@ def to_json():
         CurlyBracketsBlock: lambda t: ['{}'] + to_json(t.content),
         SquareBracketsBlock: lambda t: ['[]'] + to_json(t.content),
         ParenthesesBlock: lambda t: ['()'] + to_json(t.content),
-        Function: lambda t: ['function', t.name] + to_json(t.arguments),
+        FunctionBlock: lambda t: ['function', t.name] + to_json(t.arguments),
 
         Declaration: lambda d: ['declaration', d.name,
                                 to_json(d.value), d.important],

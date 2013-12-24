@@ -6,7 +6,7 @@ import sys
 from webencodings import ascii_lower
 
 from .ast import (
-    AtKeywordToken, Comment, CurlyBracketsBlock, DimensionToken, Function,
+    AtKeywordToken, Comment, CurlyBracketsBlock, DimensionToken, FunctionBlock,
     HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
     ParseError, PercentageToken, SquareBracketsBlock, StringToken, URLToken,
     UnicodeRangeToken, WhitespaceToken)
@@ -69,7 +69,7 @@ def parse_component_value_list(css, preserve_comments=False):
                     else ParseError(line, column, 'bad-url', 'bad URL token'))
                 continue
             arguments = []
-            tokens.append(Function(line, column, value, arguments))
+            tokens.append(FunctionBlock(line, column, value, arguments))
             stack.append((tokens, end_char))
             end_char = ')'
             tokens = arguments

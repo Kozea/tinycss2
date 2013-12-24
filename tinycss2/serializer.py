@@ -2,8 +2,10 @@ from __future__ import unicode_literals
 
 
 def serialize(nodes):
-    """Serialize an iterable of nodes to CSS syntax
-    and return an Unicode string.
+    """Serialize nodes to CSS syntax.
+
+    :param nodes: a list or other iterable of :class:`Node` object
+    :returns: an Unicode string
 
     """
     chuncks = []
@@ -12,6 +14,16 @@ def serialize(nodes):
 
 
 def serialize_identifier(value):
+    """Serialize any string as a CSS identifier
+
+    :param value: a :term:`string`
+    :returns:
+        an Unicode string
+        that would parse as an :class:`~tinycss2.ast.IdentToken`
+        whose :attr:`~tinycss2.ast.IdentToken.value` attribute
+        equals the passed :obj:`value` argument.
+
+    """
     if value == '-':
         return r'\-'
 

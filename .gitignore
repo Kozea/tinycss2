@@ -4,3 +4,4 @@
 .tox
 /htmlcov
 /dist
+/build
