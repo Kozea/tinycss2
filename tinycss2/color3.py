@@ -2,6 +2,7 @@ from __future__ import division
 import re
 import collections
 
+from ._compat import basestring
 from .parser import parse_one_component_value
 
 
@@ -16,42 +17,27 @@ class RGBA(collections.namedtuple('RGBA', ['red', 'green', 'blue', 'alpha'])):
     type = 'rgba'
 
 
-def parse_color_string(css_string):
-    """Parse a CSS string as a color value,
-    as defined in `CSS Color Level 3 <http://www.w3.org/TR/css3-color/>`_.
-
-    This is a convenience wrapper around :func:`parse_color` in case you
-    have a string that is not from a CSS stylesheet.
-
-    :param css_string:
-        An unicode string in CSS syntax.
-    :returns:
-        Same as :func:`parse_color`.
-
-    """
-    return parse_color(parse_one_component_value(css_string))
-
-
-def parse_color(token):
-    """Parse single token as a color value,
-    as defined in `CSS Color Level 3 <http://www.w3.org/TR/css3-color/>`_.
+def parse_color(input):
+    """Parse a color value as defined in `CSS Color Level 3
+    <http://www.w3.org/TR/css3-color/>`_.
 
     :param token:
-        A single :class:`~.token_data.Token` or
-        :class:`~.token_data.ContainerToken`, as found eg. in a
-        property value.
+        A :term:`string`, or a single :term:`component value`.
     :returns:
         * :obj:`None` if the token is not a valid CSS 3 color value.
           (No exception is raised.)
-        * For the *currentColor* keyword: the string ``'currentColor'``
-        * Every other values (including keywords, HSL and HSLA) is converted
-          to RGBA and returned as an :class:`RGBA` object (a 4-tuple with
-          attribute access).
+        * The string ``'currentColor'`` for the *currentColor* keyword
+        * Or a :class:`RGBA` object for every other values
+          (including keywords, HSL and HSLA.)
           The alpha channel is clipped to [0, 1], but R, G, or B can be
           out of range (eg. ``rgb(-51, 306, 0)`` is represented as
           ``(-.2, 1.2, 0, 1)``.)
 
     """
+    if isinstance(input, basestring):
+        token = parse_one_component_value(input)
+    else:
+        token = input
     if token.type == 'ident':
         return _COLOR_KEYWORDS.get(token.lower_value)
     elif token.type == 'hash':

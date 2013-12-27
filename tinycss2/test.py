@@ -16,7 +16,7 @@ from .ast import (
     HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
     ParseError, PercentageToken, SquareBracketsBlock, StringToken, URLToken,
     UnicodeRangeToken, WhitespaceToken, Declaration, AtRule, QualifiedRule)
-from .color3 import parse_color_string, RGBA
+from .color3 import parse_color, RGBA
 from .nth import parse_nth
 
 
@@ -97,19 +97,19 @@ test_one_declaration = json_test(parse_one_declaration)
 test_stylesheet = json_test(parse_stylesheet)
 test_rule_list = json_test(parse_rule_list)
 test_one_rule = json_test(parse_one_rule)
-test_color3 = json_test(parse_color_string, filename='color3.json')
+test_color3 = json_test(parse_color, filename='color3.json')
 test_nth = json_test(parse_nth, filename='An+B.json')
 
 
 # Do not use @pytest.mark.parametrize because it is slow with that many values.
 def test_color3_hsl():
     for css, expected in load_json('color3_hsl.json'):
-        assert to_json(parse_color_string(css)) == expected
+        assert to_json(parse_color(css)) == expected
 
 
 def test_color3_keywords():
     for css, expected in load_json('color3_keywords.json'):
-        result = parse_color_string(css)
+        result = parse_color(css)
         if result is not None:
             r, g, b, a = result
             result = [r * 255, g * 255, b * 255, a]
