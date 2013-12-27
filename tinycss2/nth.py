@@ -3,11 +3,19 @@ from .parser import _to_token_iterator, _next_non_whitespace
 
 
 def parse_nth(input):
-    """Parse <An+B>, as found in ``:nth-child()`` and related pseudo-classes.
+    """Parse `<An+B> <http://dev.w3.org/csswg/css-syntax-3/#anb>`_,
+    as found in `:nth-child()
+    <http://dev.w3.org/csswg/selectors/#nth-child-pseudo>`_
+    and related Selector pseudo-classes.
+
+    Although tinycss2 does not include a full Selector parser,
+    this bit of syntax is included as it is particularly tricky to define
+    on top of a CSS tokenizer.
 
     :param input:
         A :term:`string`, or an iterable yielding :term:`component values`
-        (eg. the arguments of a functional pseudo-class.)
+        (eg. the :attr:`~tinycss2.ast.FunctionBlock.arguments`
+        of a functional pseudo-class.)
     :returns:
         A ``(a, b)`` tuple of integers, or :obj:`None` if the input is invalid.
 

@@ -45,6 +45,23 @@ some serialization-related functions are available:
 .. autofunction:: serialize_identifier
 
 
+.. module:: tinycss2.color3
+
+Color
+=====
+
+.. autofunction:: parse_color
+.. autoclass:: RGBA
+
+
+.. module:: tinycss2.nth
+
+<An+B>
+======
+
+.. autofunction:: parse_nth
+
+
 .. module:: tinycss2.ast
 
 AST nodes

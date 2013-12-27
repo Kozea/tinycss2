@@ -9,29 +9,42 @@ from .parser import parse_one_component_value
 class RGBA(collections.namedtuple('RGBA', ['red', 'green', 'blue', 'alpha'])):
     """An RGBA color.
 
-    A tuple of four floats in the 0..1 range: ``(r, g, b, a)``.
-    Also has :attr:`red`, :attr:`green`, :attr:`blue` and :attr:`alpha`
-    attributes to access the same values.
+    A tuple of four floats in the 0..1 range: ``(red, green, blue, alpha)``.
+
+    .. attribute:: red
+
+        Convenience access to the red channel. Same as ``rgba[0]``.
+
+    .. attribute:: green
+
+        Convenience access to the green channel. Same as ``rgba[1]``.
+
+    .. attribute:: blue
+
+        Convenience access to the blue channel. Same as ``rgba[2]``.
+
+    .. attribute:: alpha
+
+        Convenience access to the alpha channel. Same as ``rgba[3]``.
 
     """
-    type = 'rgba'
 
 
 def parse_color(input):
     """Parse a color value as defined in `CSS Color Level 3
     <http://www.w3.org/TR/css3-color/>`_.
 
-    :param token:
+    :param input:
         A :term:`string`, or a single :term:`component value`.
     :returns:
-        * :obj:`None` if the token is not a valid CSS 3 color value.
+        * :obj:`None` if the input is not a valid color value.
           (No exception is raised.)
         * The string ``'currentColor'`` for the *currentColor* keyword
         * Or a :class:`RGBA` object for every other values
           (including keywords, HSL and HSLA.)
-          The alpha channel is clipped to [0, 1], but R, G, or B can be
-          out of range (eg. ``rgb(-51, 306, 0)`` is represented as
-          ``(-.2, 1.2, 0, 1)``.)
+          The alpha channel is clipped to [0, 1]
+          but red, green, or blue can be out of range
+          (eg. ``rgb(-10%, 120%, 0%)`` is represented as ``(-0.1, 1.2, 0, 1)``.)
 
     """
     if isinstance(input, basestring):
