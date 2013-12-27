@@ -1,3 +1,5 @@
+# coding: utf-8
+
 from .tokenizer import parse_component_value_list
 from .ast import ParseError, Declaration, AtRule, QualifiedRule
 from ._compat import basestring
@@ -6,8 +8,8 @@ from ._compat import basestring
 def _to_token_iterator(input):
     """
 
-    :param input: A string or an iterable yielding :ref:`component values`.
-    :returns: A iterator yielding :ref:`component values`.
+    :param input: A string or an iterable of :term:`component values`.
+    :returns: A iterator yielding :term:`component values`.
 
     """
     # Accept ASCII-only byte strings on Python 2, with implicit conversion.
@@ -19,8 +21,8 @@ def _to_token_iterator(input):
 def _next_non_whitespace(tokens):
     """Return the next non-<whitespace> token.
 
-    :param tokens: An *iterator* yielding :ref:`component values`.
-    :returns: A :ref:`component value`, or :obj:`None`.
+    :param tokens: An *iterator* yielding :term:`component values`.
+    :returns: A :term:`component value`, or :obj:`None`.
 
     """
     for token in tokens:
@@ -29,11 +31,14 @@ def _next_non_whitespace(tokens):
 
 
 def parse_one_component_value(input):
-    """Parse a single component value.
+    """Parse a single :diagram:`component value`.
+
+    This is used e.g. for an attribute value
+    referred to by ``attr(foo length)``.
 
     :param input:
-        A :ref:`string`, or an iterable yielding :ref:`component values`.
-    :returns: A :ref:`component value`, or a :class:`~tinycss2.ast.ParseError`.
+        A :term:`string`, or an iterable of :term:`component values`.
+    :returns: A :term:`component value`, or a :class:`~tinycss2.ast.ParseError`.
 
     """
     tokens = _to_token_iterator(input)
@@ -50,10 +55,13 @@ def parse_one_component_value(input):
 
 
 def parse_one_declaration(input):
-    """Parse a single declaration.
+    """Parse a single :diagram:`declaration`.
+
+    This is used e.g. for a declaration in an `@supports
+    <http://dev.w3.org/csswg/css-conditional/#at-supports>`_ test.
 
     :param input:
-        A :ref:`string`, or an iterable yielding :ref:`component values`.
+        A :term:`string`, or an iterable of :term:`component values`.
     :returns:
         A :class:`~tinycss2.ast.Declaration`
         or :class:`~tinycss2.ast.ParseError`.
@@ -79,7 +87,7 @@ def _consume_declaration(first_token, tokens):
 
     Consume :obj:`tokens` until the end of the declaration or the first error.
 
-    :param tokens: An *iterator* yielding :ref:`component values`.
+    :param tokens: An *iterator* yielding :term:`component values`.
     :returns:
         A :class:`~tinycss2.ast.Declaration`
         or :class:`~tinycss2.ast.ParseError`.
@@ -139,9 +147,17 @@ def _consume_whole_declaration(first_token, tokens):
 
 
 def parse_declaration_list(input):
-    """Parse a mixed list of declarations and at-rules.
+    """Parse a :diagram:`declaration list` (which may also contain at-rules).
 
-    :param input: A string or an iterable yielding :ref:`component values`.
+    This is used e.g. for the :attr:`~tinycss2.ast.QualifiedRule.content`
+    of a style rule or ``@page`` rule,
+    or for the `style` attribute of an HTML element.
+
+    In contexts that don’t expect any at-rule,
+    all :class:`~tinycss2.ast.AtRule` objects
+    should simply be rejected as invalid.
+
+    :param input: A string or an iterable of :term:`component values`.
     :returns:
         A list of
         :class:`~tinycss2.ast.Declaration`,
@@ -157,9 +173,13 @@ def parse_declaration_list(input):
 
 
 def parse_one_rule(input):
-    """Parse a single qualified rule or at-rule.
+    """Parse a single :diagram:`qualified rule` or :diagram:`at-rule`.
 
-    :param input: A string or an iterable yielding :ref:`component values`.
+    This would be used e.g. by `insertRule()
+    <http://dev.w3.org/csswg/cssom/#dom-cssstylesheet-insertrule>`_
+    in an implementation of CSSOM.
+
+    :param input: A string or an iterable of :term:`component values`.
     :returns:
         A :class:`~tinycss2.ast.QualifiedRule`,
         :class:`~tinycss2.ast.AtRule`,
@@ -181,13 +201,14 @@ def parse_one_rule(input):
 
 
 def parse_rule_list(input):
-    """Parse a mixed list of qualified rules and at-rules.
+    """Parse a non-top-level :diagram:`rule list`.
 
-    This is meant for parsing eg. the content of an ``@media`` rule.
+    This is used for parsing the :attr:`~tinycss2.ast.AtRule.content`
+    of nested rules like ``@media``.
     This differs from :func:`parse_stylesheet` in that
     top-level ``<!--`` and ``-->`` tokens are not ignored.
 
-    :param input: A string or an iterable yielding :ref:`component values`.
+    :param input: A string or an iterable of :term:`component values`.
     :returns:
         A list of
         :class:`~tinycss2.ast.QualifiedRule`,
@@ -201,12 +222,14 @@ def parse_rule_list(input):
 
 
 def parse_stylesheet(input):
-    """Parse stylesheet: a mixed list of qualified rules and at-rules.
+    """Parse :diagram:`stylesheet` from text.
+
+    This is used e.g. for a ``<style>`` HTML element.
 
     This differs from :func:`parse_rule_list` in that
     top-level ``<!--`` and ``-->`` tokens are ignored.
 
-    :param input: A string or an iterable yielding :ref:`component values`.
+    :param input: A string or an iterable of :term:`component values`.
     :returns:
         A list of
         :class:`~tinycss2.ast.QualifiedRule`,
@@ -224,8 +247,8 @@ def _consume_rule(first_token, tokens):
 
     Consume just enough of :obj:`tokens` for this rule.
 
-    :param first_token: The first :ref:`component value` of the rule.
-    :param tokens: An *iterator* yielding :ref:`component values`.
+    :param first_token: The first :term:`component value` of the rule.
+    :param tokens: An *iterator* yielding :term:`component values`.
     :returns:
         A :class:`~tinycss2.ast.QualifiedRule`,
         :class:`~tinycss2.ast.AtRule`,
@@ -258,7 +281,7 @@ def _consume_at_rule(at_keyword, tokens):
     Consume just enough of :obj:`tokens` for this rule.
 
     :param at_keyword: The :class:`AtKeywordToken` object starting this rule.
-    :param tokens: An *iterator* yielding :ref:`component values`.
+    :param tokens: An *iterator* yielding :term:`component values`.
     :returns:
         A :class:`~tinycss2.ast.QualifiedRule`,
         or :class:`~tinycss2.ast.ParseError`.

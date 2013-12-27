@@ -119,6 +119,11 @@ class ParseError(Node):
 class Comment(Node):
     """A CSS comment.
 
+    By default, comments are ignored
+    and :class:`Comment` objects are not created.
+    This can be changed by passing ``preserve_comments=True``
+    to :func:`~tinycss2.parse_component_value_list`
+
     .. autoattribute:: type
     .. attribute:: value
 

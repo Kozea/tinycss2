@@ -8,7 +8,7 @@ def decode_stylesheet_bytes(css_bytes, protocol_encoding=None,
                             environment_encoding=None):
     """Determine the character encoding of a CSS stylesheet and decode it.
 
-    This is based on the presence of a :abbr:`BOM (Byte Order Mark)`,
+    This is based on the presence of a ,
     an ``@charset`` rule,
     and encoding meta-information.
 
@@ -48,7 +48,12 @@ def decode_stylesheet_bytes(css_bytes, protocol_encoding=None,
 
 def parse_stylesheet_bytes(css_bytes, protocol_encoding=None,
                            environment_encoding=None):
-    """Parse stylesheet from bytes.
+    """Parse :diagram:`stylesheet` from bytes.
+
+    This is used when reading a file or fetching an URL.
+    The character encoding is determined from the initial bytes
+    (a :abbr:`BOM (Byte Order Mark)` or an ``@charset`` rule)
+    as well as the parameters.
 
     :param css_bytes: A byte string.
     :param protocol_encoding:
@@ -56,16 +61,34 @@ def parse_stylesheet_bytes(css_bytes, protocol_encoding=None,
         (e.g. via the ``charset`` parameter of the ``Content-Type`` header.)
     :param environment_encoding:
         A :class:`webencodings.Encoding` object
-        for the `environment encoding
-        <http://www.w3.org/TR/css-syntax/#environment-encoding>`_,
+        for the `environment encoding`_,
         if any.
     :returns:
-        A 2-tuple of a list
-        and the :class:`webencodings.Encoding` object that was used.
-        The list contains
-        :class:`~tinycss2.ast.QualifiedRule`,
-        :class:`~tinycss2.ast.AtRule`,
-        and :class:`~tinycss2.ast.ParseError` objects.
+        A ``(rules, encoding)`` tuple.
+
+        * :obj:`rules` is a list of
+          :class:`~tinycss2.ast.QualifiedRule`,
+          :class:`~tinycss2.ast.AtRule`,
+          and :class:`~tinycss2.ast.ParseError` objects.
+        * :obj:`encoding` is the :class:`webencodings.Encoding` object
+          that was used,
+          the `environment encoding`_ for stylesheets imported
+          from ``@import`` rules in :obj:`rules`.
+
+    .. _environment encoding: http://www.w3.org/TR/css-syntax/#environment-encoding
+
+    .. code-block:: python
+
+        response = urlopen('http://example.net/foo.css')
+        rules, encoding = parse_stylesheet_bytes(
+            css_bytes=response.read(),
+            # Python 3.x
+            protocol_encoding=response.info().get_content_type().get_param('charset'),
+            # Python 2.x
+            protocol_encoding=response.info().gettype().getparam('charset'),
+        )
+        for rule in rules:
+            ...
 
     """
     css_unicode, encoding = decode_stylesheet_bytes(

@@ -1,9 +1,6 @@
+:tocdepth: 3
+
 .. include:: ../README.rst
-
-Contents:
-
-.. toctree::
-   :maxdepth: 2
 
 
 Installation
@@ -24,15 +21,19 @@ although they’re only tested on CPython and PyPy.
 
 .. _parsing:
 
-Parsing overview
-================
-
-Various parsing functions return a **node** or a list of nodes.
-Some types of nodes contain nested nodes which may in turn contain more nodes,
-forming together an **abstract syntax tree**.
-
+Parsing
+=======
 
 .. module:: tinycss2
+.. autofunction:: parse_stylesheet_bytes
+.. autofunction:: parse_stylesheet
+.. autofunction:: parse_rule_list
+.. autofunction:: parse_one_rule
+.. autofunction:: parse_declaration_list
+.. autofunction:: parse_one_declaration
+.. autofunction:: parse_component_value_list
+.. autofunction:: parse_one_component_value
+
 
 Serialization
 =============
@@ -49,9 +50,12 @@ some serialization-related functions are available:
 AST nodes
 =========
 
+Various parsing functions return a **node** or a list of nodes.
+Some types of nodes contain nested nodes which may in turn contain more nodes,
+forming together an **abstract syntax tree**.
+
 Although you typically don’t need to import it,
 the :mod:`tinycss2.ast` module defines a class for every type of node.
-(see :ref:`parsing`.)
 
 .. autoclass:: Node()
 
@@ -89,10 +93,12 @@ Glossary
 .. glossary::
 
     String
-        On Python 2.x,
+        In this documentation “a string” means an Unicode string:
+        :func:`unicode <py2:unicode>` on Python 2.x and
+        :class:`py3:str` on Python 3.x.
+        On 2.x,
         a byte string (:func:`str <py2:str>`) that only contains ASCII bytes
-        or an Unicode string (:func:`unicode <py2:unicode>`).
-        On Python 3.x, an Unicode string (:class:`py3:str`).
+        is also accepted and implicitly decoded.
 
     Component value
     Component values

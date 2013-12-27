@@ -9,8 +9,8 @@ class RGBA(collections.namedtuple('RGBA', ['red', 'green', 'blue', 'alpha'])):
     """An RGBA color.
 
     A tuple of four floats in the 0..1 range: ``(r, g, b, a)``.
-    Also has ``red``, ``green``, ``blue`` and ``alpha`` attributes to access
-    the same values.
+    Also has :attr:`red`, :attr:`green`, :attr:`blue` and :attr:`alpha`
+    attributes to access the same values.
 
     """
     type = 'rgba'

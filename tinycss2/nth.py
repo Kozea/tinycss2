@@ -6,7 +6,7 @@ def parse_nth(input):
     """Parse <An+B>, as found in ``:nth-child()`` and related pseudo-classes.
 
     :param input:
-        A :ref:`string`, or an iterable yielding :ref:`component values`
+        A :term:`string`, or an iterable yielding :term:`component values`
         (eg. the arguments of a functional pseudo-class.)
     :returns:
         A ``(a, b)`` tuple of integers, or :obj:`None` if the input is invalid.

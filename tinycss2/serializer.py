@@ -4,7 +4,12 @@ from __future__ import unicode_literals
 def serialize(nodes):
     """Serialize nodes to CSS syntax.
 
-    :param nodes: a list or other iterable of :class:`Node` object
+    This should be used for :term:`component values`
+    instead of just :meth:`~tinycss2.ast.Node.serialize` on each node
+    as it takes care of corner cases such as consecutive identifiers
+    that would otherwise parse back as the same token.
+
+    :param nodes: an iterable of :class:`~tinycss2.ast.Node` objects
     :returns: an Unicode string
 
     """

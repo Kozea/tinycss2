@@ -18,10 +18,10 @@ _HEX_ESCAPE_RE = re.compile(r'([0-9A-Fa-f]{1,6})[ \n\t]?')
 
 
 def parse_component_value_list(css, preserve_comments=False):
-    """The tokenizer and block/function parser.
+    """Parse a list of component values.
 
-    :param css: A :ref:`string`.
-    :returns: A list of :ref:`component values`.
+    :param css: A :term:`string`.
+    :returns: A list of :term:`component values`.
 
     """
     css = (css.replace('\0', '\uFFFD')
