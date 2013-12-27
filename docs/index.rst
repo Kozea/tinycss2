@@ -35,6 +35,8 @@ Parsing
 .. autofunction:: parse_one_component_value
 
 
+.. _serialization:
+
 Serialization
 =============
 
@@ -137,3 +139,6 @@ Glossary
         :class:`FunctionBlock`,
         or (if requested explicitly) :class:`Comment`
         object.
+
+
+.. include:: ../CHANGES
