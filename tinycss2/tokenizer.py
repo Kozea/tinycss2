@@ -104,6 +104,7 @@ def parse_component_value_list(css, preserve_comments=False):
             if pos < length and (
                     css[pos] in '0123456789abcdefghijklmnopqrstuvwxyz'
                                 '-_ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                    or ord(css[pos]) > 0x7F  # Non-ASCII
                     # Valid escape:
                     or (css[pos] == '\\' and not css.startswith('\\\n', pos))):
                 is_identifier = _is_ident_start(css, pos)

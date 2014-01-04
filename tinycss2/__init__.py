@@ -1,4 +1,4 @@
-VERSION = '0.3'
+VERSION = '0.4'
 
 
 from .tokenizer import parse_component_value_list

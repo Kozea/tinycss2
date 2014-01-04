@@ -1,6 +1,14 @@
 tinycss2 changelog
 ==================
 
+Version 0.4
+-----------
+
+Not released yet.
+
+* Fix :class:`HashToken` starting with a non-ASCII character.
+
+
 Version 0.3
 -----------
 
