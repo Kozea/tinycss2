@@ -7,6 +7,7 @@ Version 0.4
 Not released yet.
 
 * Fix :class:`HashToken` starting with a non-ASCII character.
+* Fix :func:`repr` on AST nodes.
 
 
 Version 0.3

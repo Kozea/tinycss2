@@ -57,8 +57,12 @@ class Node(object):
         self.source_line = source_line
         self.source_column = source_column
 
-    def __repr__(self):
-        return self.repr_format.format(self=self)
+    if str is bytes:
+        def __repr__(self):
+            return self.repr_format.format(self=self).encode('utf8')
+    else:
+        def __repr__(self):
+            return self.repr_format.format(self=self)
 
     def serialize(self):
         """Serialize this node to CSS syntax and return an Unicode string."""
@@ -132,7 +136,7 @@ class Comment(Node):
     """
     __slots__ = ['value']
     type = 'comment'
-    repr_format = '<{self.__class__.__name__} {self.value:r}>'
+    repr_format = '<{self.__class__.__name__} {self.value}>'
 
     def __init__(self, line, column, value):
         Node.__init__(self, line, column)
@@ -319,7 +323,7 @@ class StringToken(Node):
     """
     __slots__ = ['value']
     type = 'string'
-    repr_format = '<{self.__class__.__name__} {self.value:r}>'
+    repr_format = '<{self.__class__.__name__} "{self.value}">'
 
     def __init__(self, line, column, value):
         Node.__init__(self, line, column)
@@ -544,7 +548,7 @@ class ParenthesesBlock(Node):
     """
     __slots__ = ['content']
     type = '() block'
-    repr_format = '<{self.__class__.__name__} ( {self.content} )>'
+    repr_format = '<{self.__class__.__name__} ( … )>'
 
     def __init__(self, line, column, content):
         Node.__init__(self, line, column)
@@ -569,7 +573,7 @@ class SquareBracketsBlock(Node):
     """
     __slots__ = ['content']
     type = '[] block'
-    repr_format = '<{self.__class__.__name__} [ {self.content} ]>'
+    repr_format = '<{self.__class__.__name__} [ … ]>'
 
     def __init__(self, line, column, content):
         Node.__init__(self, line, column)
@@ -594,7 +598,7 @@ class CurlyBracketsBlock(Node):
     """
     __slots__ = ['content']
     type = '{} block'
-    repr_format = '<{self.__class__.__name__} {{ {self.content} }}>'
+    repr_format = '<{self.__class__.__name__} {{ … }}>'
 
     def __init__(self, line, column, content):
         Node.__init__(self, line, column)
@@ -631,7 +635,7 @@ class FunctionBlock(Node):
     """
     __slots__ = ['name', 'lower_name', 'arguments']
     type = 'function'
-    repr_format = '<{self.__class__.__name__} {self.name}( {self.arguments} )>'
+    repr_format = '<{self.__class__.__name__} {self.name}( … )>'
 
     def __init__(self, line, column, name, arguments):
         Node.__init__(self, line, column)
@@ -683,7 +687,7 @@ class Declaration(Node):
     """
     __slots__ = ['name', 'lower_name', 'value', 'important']
     type = 'declaration'
-    repr_format = '<{self.__class__.__name__} {self.name}: {self.value}>'
+    repr_format = '<{self.__class__.__name__} {self.name}: …>'
 
     def __init__(self, line, column, name, lower_name, value, important):
         Node.__init__(self, line, column)
@@ -724,7 +728,7 @@ class QualifiedRule(Node):
     __slots__ = ['prelude', 'content']
     type = 'qualified-rule'
     repr_format = ('<{self.__class__.__name__} '
-                   '{self.prelude} {{ {self.content} }}>')
+                   '… {{ … }}>')
 
     def __init__(self, line, column, prelude, content):
         Node.__init__(self, line, column)
@@ -780,7 +784,7 @@ class AtRule(Node):
     __slots__ = ['at_keyword', 'lower_at_keyword', 'prelude', 'content']
     type = 'at-rule'
     repr_format = ('<{self.__class__.__name__} '
-                   '@{self.at_keyword} {self.prelude} {{ {self.content} }}>')
+                   '@{self.at_keyword} … {{ … }}>')
 
     def __init__(self, line, column,
                  at_keyword, lower_at_keyword, prelude, content):

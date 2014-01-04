@@ -83,7 +83,9 @@ def json_test(function, filename=None):
 
     @pytest.mark.parametrize(('css', 'expected'), load_json(filename))
     def test(css, expected):
-        value = to_json(function(css))
+        result = function(css)
+        repr(result)  # Test that these do not raise
+        value = to_json(result)
         if value != expected:  # pragma: no cover
             pprint.pprint(value)
             assert value == expected

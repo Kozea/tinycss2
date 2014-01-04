@@ -1,3 +1,4 @@
+# coding: utf8
 """
 A Sphinx extension adding a 'css' role creating links to
 the spec’s railroad diagrams.
