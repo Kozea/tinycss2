@@ -132,7 +132,7 @@ class Comment(Node):
     """
     __slots__ = ['value']
     type = 'comment'
-    repr_format = '<{self.__class__.__name__} {self.value:r}>'
+    repr_format = '<{self.__class__.__name__} {self.value!r}>'
 
     def __init__(self, line, column, value):
         Node.__init__(self, line, column)
@@ -319,7 +319,7 @@ class StringToken(Node):
     """
     __slots__ = ['value']
     type = 'string'
-    repr_format = '<{self.__class__.__name__} {self.value:r}>'
+    repr_format = '<{self.__class__.__name__} {self.value!r}>'
 
     def __init__(self, line, column, value):
         Node.__init__(self, line, column)
