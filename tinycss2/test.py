@@ -25,6 +25,7 @@ def generic(func):
 
     @functools.wraps(func)
     def run(value):
+        repr(value)  # Test that this does not raise.
         return implementations[type(value)](value)
     return run
 
@@ -83,9 +84,7 @@ def json_test(function, filename=None):
 
     @pytest.mark.parametrize(('css', 'expected'), load_json(filename))
     def test(css, expected):
-        result = function(css)
-        repr(result)  # Test that these do not raise
-        value = to_json(result)
+        value = to_json(function(css))
         if value != expected:  # pragma: no cover
             pprint.pprint(value)
             assert value == expected
