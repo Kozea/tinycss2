@@ -154,12 +154,16 @@ class WhitespaceToken(Node):
     .. autoattribute:: type
 
     """
-    __slots__ = []
+    __slots__ = ['value']
     type = 'whitespace'
     repr_format = '<{self.__class__.__name__}>'
 
+    def __init__(self, line, column, value):
+        Node.__init__(self, line, column)
+        self.value = value
+
     def _serialize_to(self, write):
-        write(' ')
+        write(self.value)
 
 
 class LiteralToken(Node):
