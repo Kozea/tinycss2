@@ -44,7 +44,8 @@ def parse_color(input):
           (including keywords, HSL and HSLA.)
           The alpha channel is clipped to [0, 1]
           but red, green, or blue can be out of range
-          (eg. ``rgb(-10%, 120%, 0%)`` is represented as ``(-0.1, 1.2, 0, 1)``.)
+          (eg. ``rgb(-10%, 120%, 0%)`` is represented as
+          ``(-0.1, 1.2, 0, 1)``.)
 
     """
     if isinstance(input, basestring):

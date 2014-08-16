@@ -89,12 +89,10 @@ def _serialize_to(nodes, write):
                               else node.value)
         if (previous_type, serialization_type) in bad_pairs:
             write('/**/')
-        if previous_type == '\\':
+        elif previous_type == '\\' and not (serialization_type == 'whitespace'
+                                            and node.value.startswith('\n')):
             write('\n')
-            if serialization_type != 'whitespace':
-                node._serialize_to(write)
-        else:
-            node._serialize_to(write)
+        node._serialize_to(write)
         if serialization_type == 'declaration':
             write(';')
         previous_type = serialization_type

@@ -57,10 +57,10 @@ class Node(object):
         self.source_line = source_line
         self.source_column = source_column
 
-    if str is bytes:
+    if str is bytes:  # pragma: no cover
         def __repr__(self):
             return self.repr_format.format(self=self).encode('utf8')
-    else:
+    else:  # pragma: no cover
         def __repr__(self):
             return self.repr_format.format(self=self)
 
@@ -75,7 +75,7 @@ class Node(object):
         by calling the provided :obj:`write` callback.
 
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
 
 class ParseError(Node):
@@ -116,7 +116,7 @@ class ParseError(Node):
             write('url([bad url])')
         elif self.kind in ')]}':
             write(self.kind)
-        else:
+        else:  # pragma: no cover
             raise TypeError('Can not serialize %r' % self)
 
 

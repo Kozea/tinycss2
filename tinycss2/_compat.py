@@ -1,7 +1,6 @@
 if str is bytes:  # pragma: no cover
-    # Python 2
     unichr = unichr
     basestring = basestring
-else:
+else:  # pragma: no cover
     unichr = chr
     basestring = str

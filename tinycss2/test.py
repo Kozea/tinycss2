@@ -131,3 +131,46 @@ def test_serialization(css):
     return parse_component_value_list(serialize(parsed))
 
 test_serialization = json_test(test_serialization, 'component_value_list.json')
+
+
+def test_preserve():
+    source = '''
+    /* foo */
+    @media print {
+        #foo {
+            width: /* bar*/4px;
+            color: green;
+        }
+    }
+    '''
+    default = parse_stylesheet(source)
+    preserve = parse_component_value_list(
+        source, preserve_comments=True, preserve_whitespace=True)
+    assert serialize(default) != source
+    assert serialize(preserve) == source
+
+
+def test_comment_eof():
+    source = '/* foo '
+    preserve = parse_component_value_list(source, preserve_comments=True)
+    assert serialize(preserve) == '/* foo */'
+
+
+def test_parse_declaration_value_color():
+    source = 'color:#369'
+    declaration = parse_one_declaration(source)
+    (value_token,) = declaration.value
+    assert parse_color(value_token) == (.2, .4, .6, 1)
+    assert declaration.serialize() == source
+
+
+def test_serialize_rules():
+    source = '@import "a.css";foo#bar.baz { color: red }@media print{}'
+    rules = parse_rule_list(source)
+    assert serialize(rules) == source
+
+
+def test_serialize_declarations():
+    source = 'color: #123;@top-left {}width:7px;'
+    rules = parse_declaration_list(source)
+    assert serialize(rules) == source
