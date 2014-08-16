@@ -95,6 +95,8 @@ def _serialize_to(nodes, write):
                 node._serialize_to(write)
         else:
             node._serialize_to(write)
+        if serialization_type == 'declaration':
+            write(';')
         previous_type = serialization_type
 
 
