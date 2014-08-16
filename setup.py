@@ -24,4 +24,5 @@ setup(
     author_email='simon.sapin@exyr.org',
     packages=['tinycss2'],
     install_requires=['webencodings>=0.4'],
+    package_data={'tinycss2': ['css-parsing-tests/*']},
 )

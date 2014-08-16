@@ -1,0 +1,4 @@
+include CHANGES
+include LICENSE
+include docs/*
+include tinycss2/css-parsing-tests/*
