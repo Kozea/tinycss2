@@ -56,6 +56,10 @@ def parse_component_value_list(css, preserve_comments=False):
             start, end, pos = _consume_unicode_range(css, pos + 2)
             tokens.append(UnicodeRangeToken(line, column, start, end))
             continue
+        elif css.startswith('-->', pos):  # Check before identifiers
+            tokens.append(LiteralToken(line, column, '-->'))
+            pos += 3
+            continue
         elif _is_ident_start(css, pos):
             value, pos = _consume_ident(css, pos)
             if not css.startswith('(', pos):  # Not a function
@@ -161,9 +165,6 @@ def parse_component_value_list(css, preserve_comments=False):
         elif css.startswith('<!--', pos):
             tokens.append(LiteralToken(line, column, '<!--'))
             pos += 4
-        elif css.startswith('-->', pos):
-            tokens.append(LiteralToken(line, column, '-->'))
-            pos += 3
         elif css.startswith('||', pos):
             tokens.append(LiteralToken(line, column, '||'))
             pos += 2
@@ -189,6 +190,8 @@ def _is_ident_start(css, pos):
     if c == '-' and pos + 1 < length:
         pos += 1
         c = css[pos]
+        if c == '-':
+            return True
     return (
         c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'
         or ord(c) > 0x7F  # Non-ASCII
