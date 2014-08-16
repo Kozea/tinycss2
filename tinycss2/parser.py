@@ -38,7 +38,8 @@ def parse_one_component_value(input):
 
     :param input:
         A :term:`string`, or an iterable of :term:`component values`.
-    :returns: A :term:`component value`, or a :class:`~tinycss2.ast.ParseError`.
+    :returns:
+        A :term:`component value`, or a :class:`~tinycss2.ast.ParseError`.
 
     """
     tokens = _to_token_iterator(input)
@@ -71,22 +72,15 @@ def parse_one_declaration(input):
     first_token = _next_non_whitespace(tokens)
     if first_token is None:
         return ParseError(1, 1, 'empty', 'Input is empty')
-    result = _consume_declaration(first_token, tokens)
-    if result.type != 'error':
-        next = _next_non_whitespace(tokens)
-        if next is not None:
-            return ParseError(
-                next.source_line, next.source_column, 'extra-input',
-                'Expected a single rule, got %s after the first rule.'
-                % next.type)
-    return result
+    return _parse_declaration(first_token, tokens)
 
 
-def _consume_declaration(first_token, tokens):
+def _parse_declaration(first_token, tokens):
     """Parse a declaration.
 
     Consume :obj:`tokens` until the end of the declaration or the first error.
 
+    :param first_token: The first :term:`component value` of the rule.
     :param tokens: An *iterator* yielding :term:`component values`.
     :returns:
         A :class:`~tinycss2.ast.Declaration`
@@ -109,41 +103,37 @@ def _consume_declaration(first_token, tokens):
                           % colon.type)
 
     value = []
-    important = False
-    for token in tokens:
-        if token == ';':
-            break
-        elif token == '!':
-            token = _next_non_whitespace(tokens)
-            if (token is not None and token.type == 'ident'
-                    and token.lower_value == 'important'):
-                token = _next_non_whitespace(tokens)
-                if token is None or token == ';':
-                    important = True
-                    break
-            return ParseError(
-                token.source_line, token.source_column, 'invalid',
-                "Invalid '!' value, expected 'important'.")
-        else:
-            value.append(token)
+    state = 'value'
+    for i, token in enumerate(tokens):
+        if state == 'value' and token == '!':
+            state = 'bang'
+            bang_position = i
+        elif state == 'bang' and token.type == 'ident' \
+                and token.lower_value == 'important':
+            state = 'important'
+        elif token.type != 'whitespace':
+            state = 'value'
+        value.append(token)
+
+    if state == 'important':
+        del value[bang_position:]
 
     return Declaration(name.source_line, name.source_column, name.value,
-                       name.lower_value, value, important)
+                       name.lower_value, value, state == 'important')
 
 
-def _consume_whole_declaration(first_token, tokens):
+def _consume_declaration_in_list(first_token, tokens):
     """
     Same as :func:`_consume_declaration`, but consume to the end
     of the (possibly invalid) declaration.
 
     """
-    result = _consume_declaration(first_token, tokens)
-    if result.type == 'error':
-        # Consume until the next ';' or EOF.
-        for token in tokens:
-            if token == ';':
-                break
-    return result
+    other_declaration_tokens = []
+    for token in tokens:
+        if token == ';':
+            break
+        other_declaration_tokens.append(token)
+    return _parse_declaration(first_token, iter(other_declaration_tokens))
 
 
 def parse_declaration_list(input):
@@ -168,7 +158,7 @@ def parse_declaration_list(input):
     tokens = _to_token_iterator(input)
     return [
         _consume_at_rule(token, tokens) if token.type == 'at-keyword'
-        else _consume_whole_declaration(token, tokens)
+        else _consume_declaration_in_list(token, tokens)
         for token in tokens if token.type != 'whitespace' and token != ';']
 
 
