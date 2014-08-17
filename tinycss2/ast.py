@@ -704,6 +704,8 @@ class Declaration(Node):
         write(serialize_identifier(self.name))
         write(':')
         _serialize_to(self.value, write)
+        if self.important:
+            write('!important')
 
 
 class QualifiedRule(Node):
