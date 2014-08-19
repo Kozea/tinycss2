@@ -47,7 +47,8 @@ def decode_stylesheet_bytes(css_bytes, protocol_encoding=None,
 
 
 def parse_stylesheet_bytes(css_bytes, protocol_encoding=None,
-                           environment_encoding=None):
+                           environment_encoding=None,
+                           preserve_comments=True, preserve_whitespace=True):
     """Parse :diagram:`stylesheet` from bytes.
 
     This is used when reading a file or fetching an URL.
@@ -93,4 +94,6 @@ def parse_stylesheet_bytes(css_bytes, protocol_encoding=None,
     """
     css_unicode, encoding = decode_stylesheet_bytes(
         css_bytes, protocol_encoding, environment_encoding)
-    return parse_stylesheet(parse_component_value_list(css_unicode)), encoding
+    stylesheet = parse_stylesheet(
+        css_unicode, preserve_comments, preserve_whitespace)
+    return stylesheet, encoding

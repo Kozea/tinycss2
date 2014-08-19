@@ -17,8 +17,8 @@ _NUMBER_RE = re.compile(r'[-+]?([0-9]*\.)?[0-9]+([eE][+-]?[0-9]+)?')
 _HEX_ESCAPE_RE = re.compile(r'([0-9A-Fa-f]{1,6})[ \n\t]?')
 
 
-def parse_component_value_list(css, preserve_comments=False,
-                               preserve_whitespace=False):
+def parse_component_value_list(css, preserve_comments=True,
+                               preserve_whitespace=True):
     """Parse a list of component values.
 
     :param css: A :term:`string`.

@@ -49,7 +49,8 @@ def parse_color(input):
 
     """
     if isinstance(input, basestring):
-        token = parse_one_component_value(input)
+        token = parse_one_component_value(
+            input, preserve_comments=False, preserve_whitespace=False)
     else:
         token = input
     if token.type == 'ident':
@@ -164,7 +165,8 @@ def _parse_comma_separated(tokens):
     or None if the function token content do not match the description above.
 
     """
-    tokens = [token for token in tokens if token.type != 'whitespace']
+    tokens = [token for token in tokens
+              if token.type not in ('whitespace', 'comment')]
     if not tokens:
         return []
     if len(tokens) % 2 == 1 and all(token == ',' for token in tokens[1::2]):

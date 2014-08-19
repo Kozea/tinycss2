@@ -12,7 +12,7 @@ from . import (
     parse_rule_list, parse_one_rule, parse_stylesheet, parse_stylesheet_bytes,
     serialize)
 from .ast import (
-    AtKeywordToken, CurlyBracketsBlock, DimensionToken, FunctionBlock,
+    AtKeywordToken, Comment, CurlyBracketsBlock, DimensionToken, FunctionBlock,
     HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
     ParseError, PercentageToken, SquareBracketsBlock, StringToken, URLToken,
     UnicodeRangeToken, WhitespaceToken, Declaration, AtRule, QualifiedRule)
@@ -44,6 +44,7 @@ def to_json():
         Encoding: lambda e: e.name,
         ParseError: lambda e: ['error', e.kind],
 
+        Comment: lambda t: '/* … */',
         WhitespaceToken: lambda t: ' ',
         LiteralToken: lambda t: t.value,
         IdentToken: lambda t: ['ident', t.value],
@@ -79,27 +80,65 @@ def load_json(filename):
     return list(zip(json_data[::2], json_data[1::2]))
 
 
-def json_test(function, filename=None):
-    filename = filename or function.__name__.split('_', 1)[-1] + '.json'
+def json_test(filename=None):
+    def decorator(function):
+        filename_ = filename or function.__name__.split('_', 1)[-1] + '.json'
 
-    @pytest.mark.parametrize(('css', 'expected'), load_json(filename))
-    def test(css, expected):
-        value = to_json(function(css))
-        if value != expected:  # pragma: no cover
-            pprint.pprint(value)
-            assert value == expected
-    return test
+        @pytest.mark.parametrize(('css', 'expected'), load_json(filename_))
+        def test(css, expected):
+            value = to_json(function(css))
+            if value != expected:  # pragma: no cover
+                pprint.pprint(value)
+                assert value == expected
+        return test
+    return decorator
 
 
-test_component_value_list = json_test(parse_component_value_list)
-test_one_component_value = json_test(parse_one_component_value)
-test_declaration_list = json_test(parse_declaration_list)
-test_one_declaration = json_test(parse_one_declaration)
-test_stylesheet = json_test(parse_stylesheet)
-test_rule_list = json_test(parse_rule_list)
-test_one_rule = json_test(parse_one_rule)
-test_color3 = json_test(parse_color, filename='color3.json')
-test_nth = json_test(parse_nth, filename='An+B.json')
+NO_PRESERVE = dict(preserve_comments=False, preserve_whitespace=False)
+
+@json_test()
+def test_component_value_list(input):
+    return parse_component_value_list(input, **NO_PRESERVE)
+
+
+@json_test()
+def test_one_component_value(input):
+    return parse_one_component_value(input, **NO_PRESERVE)
+
+
+@json_test()
+def test_declaration_list(input):
+    return parse_declaration_list(input, **NO_PRESERVE)
+
+
+@json_test()
+def test_one_declaration(input):
+    return parse_one_declaration(input, **NO_PRESERVE)
+
+
+@json_test()
+def test_stylesheet(input):
+    return parse_stylesheet(input, **NO_PRESERVE)
+
+
+@json_test()
+def test_rule_list(input):
+    return parse_rule_list(input, **NO_PRESERVE)
+
+
+@json_test()
+def test_one_rule(input):
+    return parse_one_rule(input, **NO_PRESERVE)
+
+
+@json_test()
+def test_color3(input):
+    return parse_color(input)
+
+
+@json_test(filename='An+B.json')
+def test_nth(input):
+    return parse_nth(input)
 
 
 # Do not use @pytest.mark.parametrize because it is slow with that many values.
@@ -117,20 +156,20 @@ def test_color3_keywords():
         assert result == expected
 
 
-@json_test
+@json_test()
 def test_stylesheet_bytes(kwargs):
     kwargs['css_bytes'] = kwargs['css_bytes'].encode('latin1')
     kwargs.pop('comment', None)
     if kwargs.get('environment_encoding'):
         kwargs['environment_encoding'] = lookup(kwargs['environment_encoding'])
+    kwargs.update(NO_PRESERVE)
     return parse_stylesheet_bytes(**kwargs)
 
 
+@json_test(filename='component_value_list.json')
 def test_serialization(css):
-    parsed = parse_component_value_list(css)
-    return parse_component_value_list(serialize(parsed))
-
-test_serialization = json_test(test_serialization, 'component_value_list.json')
+    parsed = parse_component_value_list(css, **NO_PRESERVE)
+    return parse_component_value_list(serialize(parsed), **NO_PRESERVE)
 
 
 def test_preserve():
@@ -143,16 +182,17 @@ def test_preserve():
         }
     }
     '''
-    default = parse_stylesheet(source)
-    preserve = parse_component_value_list(
-        source, preserve_comments=True, preserve_whitespace=True)
-    assert serialize(default) != source
+    no_ws = parse_stylesheet(source, preserve_whitespace=False)
+    no_comment = parse_stylesheet(source, preserve_comments=False)
+    preserve = parse_component_value_list(source)
+    assert serialize(no_ws) != source
+    assert serialize(no_comment) != source
     assert serialize(preserve) == source
 
 
 def test_comment_eof():
     source = '/* foo '
-    preserve = parse_component_value_list(source, preserve_comments=True)
+    preserve = parse_component_value_list(source)
     assert serialize(preserve) == '/* foo */'
 
 
@@ -165,12 +205,12 @@ def test_parse_declaration_value_color():
 
 
 def test_serialize_rules():
-    source = '@import "a.css";foo#bar.baz { color: red }@media print{}'
+    source = '@import "a.css"; foo#bar.baz { color: red } /**/ @media print{}'
     rules = parse_rule_list(source)
     assert serialize(rules) == source
 
 
 def test_serialize_declarations():
-    source = 'color: #123;@top-left {}width:7px !important;'
+    source = 'color: #123; /**/ @top-left {} width:7px !important;'
     rules = parse_declaration_list(source)
     assert serialize(rules) == source

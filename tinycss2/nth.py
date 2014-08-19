@@ -1,5 +1,5 @@
 import re
-from .parser import _to_token_iterator, _next_non_whitespace
+from .parser import _to_token_iterator, _next_significant
 
 
 def parse_nth(input):
@@ -20,8 +20,9 @@ def parse_nth(input):
         A ``(a, b)`` tuple of integers, or :obj:`None` if the input is invalid.
 
     """
-    tokens = _to_token_iterator(input)
-    token = _next_non_whitespace(tokens)
+    tokens = _to_token_iterator(
+        input, preserve_comments=False, preserve_whitespace=False)
+    token = _next_significant(tokens)
     if token is None:
         return
     token_type = token.type
@@ -74,7 +75,7 @@ def parse_nth(input):
 
 
 def parse_b(tokens, a):
-    token = _next_non_whitespace(tokens)
+    token = _next_significant(tokens)
     if token is None:
         return (a, 0)
     elif token == '+':
@@ -87,14 +88,14 @@ def parse_b(tokens, a):
 
 
 def parse_signless_b(tokens, a, b_sign):
-    token = _next_non_whitespace(tokens)
+    token = _next_significant(tokens)
     if (token.type == 'number' and token.is_integer
             and not token.representation[0] in '-+'):
         return parse_end(tokens, a, b_sign * token.int_value)
 
 
 def parse_end(tokens, a, b):
-    if _next_non_whitespace(tokens) is None:
+    if _next_significant(tokens) is None:
         return (a, b)
 
 
