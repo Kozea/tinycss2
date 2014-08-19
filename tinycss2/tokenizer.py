@@ -17,8 +17,7 @@ _NUMBER_RE = re.compile(r'[-+]?([0-9]*\.)?[0-9]+([eE][+-]?[0-9]+)?')
 _HEX_ESCAPE_RE = re.compile(r'([0-9A-Fa-f]{1,6})[ \n\t]?')
 
 
-def parse_component_value_list(css, preserve_comments=True,
-                               preserve_whitespace=True):
+def parse_component_value_list(css, skip_comments=False):
     """Parse a list of component values.
 
     :param css: A :term:`string`.
@@ -50,7 +49,7 @@ def parse_component_value_list(css, preserve_comments=True,
             pos += 1
             while css.startswith((' ', '\n', '\t'), pos):
                 pos += 1
-            value = css[token_start_pos:pos] if preserve_whitespace else ' '
+            value = css[token_start_pos:pos]
             tokens.append(WhitespaceToken(line, column, value))
             continue
         elif (c in 'Uu' and pos + 2 < length and css[pos + 1] == '+'
@@ -156,11 +155,11 @@ def parse_component_value_list(css, preserve_comments=True,
         elif css.startswith('/*', pos):  # Comment
             pos = css.find('*/', pos + 2)
             if pos == -1:
-                if preserve_comments:
+                if not skip_comments:
                     tokens.append(
                         Comment(line, column, css[token_start_pos + 2:]))
                 break
-            if preserve_comments:
+            if not skip_comments:
                 tokens.append(
                     Comment(line, column, css[token_start_pos + 2:pos]))
             pos += 2

@@ -49,8 +49,7 @@ def parse_color(input):
 
     """
     if isinstance(input, basestring):
-        token = parse_one_component_value(
-            input, preserve_comments=False, preserve_whitespace=False)
+        token = parse_one_component_value(input, skip_comments=True)
     else:
         token = input
     if token.type == 'ident':

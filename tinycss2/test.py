@@ -94,41 +94,42 @@ def json_test(filename=None):
     return decorator
 
 
-NO_PRESERVE = dict(preserve_comments=False, preserve_whitespace=False)
+SKIP = dict(skip_comments=True, skip_whitespace=True)
+
 
 @json_test()
 def test_component_value_list(input):
-    return parse_component_value_list(input, **NO_PRESERVE)
+    return parse_component_value_list(input, skip_comments=True)
 
 
 @json_test()
 def test_one_component_value(input):
-    return parse_one_component_value(input, **NO_PRESERVE)
+    return parse_one_component_value(input, skip_comments=True)
 
 
 @json_test()
 def test_declaration_list(input):
-    return parse_declaration_list(input, **NO_PRESERVE)
+    return parse_declaration_list(input, **SKIP)
 
 
 @json_test()
 def test_one_declaration(input):
-    return parse_one_declaration(input, **NO_PRESERVE)
+    return parse_one_declaration(input, skip_comments=True)
 
 
 @json_test()
 def test_stylesheet(input):
-    return parse_stylesheet(input, **NO_PRESERVE)
+    return parse_stylesheet(input, **SKIP)
 
 
 @json_test()
 def test_rule_list(input):
-    return parse_rule_list(input, **NO_PRESERVE)
+    return parse_rule_list(input, **SKIP)
 
 
 @json_test()
 def test_one_rule(input):
-    return parse_one_rule(input, **NO_PRESERVE)
+    return parse_one_rule(input, skip_comments=True)
 
 
 @json_test()
@@ -162,17 +163,17 @@ def test_stylesheet_bytes(kwargs):
     kwargs.pop('comment', None)
     if kwargs.get('environment_encoding'):
         kwargs['environment_encoding'] = lookup(kwargs['environment_encoding'])
-    kwargs.update(NO_PRESERVE)
+    kwargs.update(SKIP)
     return parse_stylesheet_bytes(**kwargs)
 
 
 @json_test(filename='component_value_list.json')
 def test_serialization(css):
-    parsed = parse_component_value_list(css, **NO_PRESERVE)
-    return parse_component_value_list(serialize(parsed), **NO_PRESERVE)
+    parsed = parse_component_value_list(css, skip_comments=True)
+    return parse_component_value_list(serialize(parsed), skip_comments=True)
 
 
-def test_preserve():
+def test_skip():
     source = '''
     /* foo */
     @media print {
@@ -182,18 +183,18 @@ def test_preserve():
         }
     }
     '''
-    no_ws = parse_stylesheet(source, preserve_whitespace=False)
-    no_comment = parse_stylesheet(source, preserve_comments=False)
-    preserve = parse_component_value_list(source)
+    no_ws = parse_stylesheet(source, skip_whitespace=True)
+    no_comment = parse_stylesheet(source, skip_comments=True)
+    default = parse_component_value_list(source)
     assert serialize(no_ws) != source
     assert serialize(no_comment) != source
-    assert serialize(preserve) == source
+    assert serialize(default) == source
 
 
 def test_comment_eof():
     source = '/* foo '
-    preserve = parse_component_value_list(source)
-    assert serialize(preserve) == '/* foo */'
+    parsed = parse_component_value_list(source)
+    assert serialize(parsed) == '/* foo */'
 
 
 def test_parse_declaration_value_color():
@@ -214,3 +215,13 @@ def test_serialize_declarations():
     source = 'color: #123; /**/ @top-left {} width:7px !important;'
     rules = parse_declaration_list(source)
     assert serialize(rules) == source
+
+
+def test_backslash_delim():
+    source = '\\\nfoo'
+    tokens = parse_component_value_list(source)
+    assert [t.type for t in tokens] == ['literal', 'whitespace', 'ident']
+    assert tokens[0].value == '\\'
+    del tokens[1]
+    assert [t.type for t in tokens] == ['literal', 'ident']
+    assert serialize(tokens) == source

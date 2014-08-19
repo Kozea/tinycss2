@@ -5,8 +5,7 @@ from .ast import ParseError, Declaration, AtRule, QualifiedRule
 from ._compat import basestring
 
 
-def _to_token_iterator(input, preserve_comments=True,
-                       preserve_whitespace=True):
+def _to_token_iterator(input, skip_comments=False):
     """
 
     :param input: A string or an iterable of :term:`component values`.
@@ -15,8 +14,7 @@ def _to_token_iterator(input, preserve_comments=True,
     """
     # Accept ASCII-only byte strings on Python 2, with implicit conversion.
     if isinstance(input, basestring):
-        input = parse_component_value_list(
-            input, preserve_comments, preserve_whitespace)
+        input = parse_component_value_list(input, skip_comments)
     return iter(input)
 
 
@@ -32,8 +30,7 @@ def _next_significant(tokens):
             return token
 
 
-def parse_one_component_value(input, preserve_comments=True,
-                              preserve_whitespace=True):
+def parse_one_component_value(input, skip_comments=False):
     """Parse a single :diagram:`component value`.
 
     This is used e.g. for an attribute value
@@ -45,7 +42,7 @@ def parse_one_component_value(input, preserve_comments=True,
         A :term:`component value`, or a :class:`~tinycss2.ast.ParseError`.
 
     """
-    tokens = _to_token_iterator(input, preserve_comments, preserve_whitespace)
+    tokens = _to_token_iterator(input, skip_comments)
     first = _next_significant(tokens)
     second = _next_significant(tokens)
     if first is None:
@@ -58,8 +55,7 @@ def parse_one_component_value(input, preserve_comments=True,
         return first
 
 
-def parse_one_declaration(input, preserve_comments=True,
-                          preserve_whitespace=True):
+def parse_one_declaration(input, skip_comments=False):
     """Parse a single :diagram:`declaration`.
 
     This is used e.g. for a declaration in an `@supports
@@ -72,7 +68,7 @@ def parse_one_declaration(input, preserve_comments=True,
         or :class:`~tinycss2.ast.ParseError`.
 
     """
-    tokens = _to_token_iterator(input, preserve_comments, preserve_whitespace)
+    tokens = _to_token_iterator(input, skip_comments)
     first_token = _next_significant(tokens)
     if first_token is None:
         return ParseError(1, 1, 'empty', 'Input is empty')
@@ -140,8 +136,7 @@ def _consume_declaration_in_list(first_token, tokens):
     return _parse_declaration(first_token, iter(other_declaration_tokens))
 
 
-def parse_declaration_list(input, preserve_comments=True,
-                           preserve_whitespace=True):
+def parse_declaration_list(input, skip_comments=False, skip_whitespace=False):
     """Parse a :diagram:`declaration list` (which may also contain at-rules).
 
     This is used e.g. for the :attr:`~tinycss2.ast.QualifiedRule.content`
@@ -160,14 +155,14 @@ def parse_declaration_list(input, preserve_comments=True,
         and :class:`~tinycss2.ast.ParseError` objects
 
     """
-    tokens = _to_token_iterator(input, preserve_comments, preserve_whitespace)
+    tokens = _to_token_iterator(input, skip_comments)
     result = []
     for token in tokens:
         if token.type == 'whitespace':
-            if preserve_whitespace:
+            if not skip_whitespace:
                 result.append(token)
         elif token.type == 'comment':
-            if preserve_comments:
+            if not skip_comments:
                 result.append(token)
         elif token.type == 'at-keyword':
             result.append(_consume_at_rule(token, tokens))
@@ -176,7 +171,7 @@ def parse_declaration_list(input, preserve_comments=True,
     return result
 
 
-def parse_one_rule(input, preserve_comments=True, preserve_whitespace=True):
+def parse_one_rule(input, skip_comments=False):
     """Parse a single :diagram:`qualified rule` or :diagram:`at-rule`.
 
     This would be used e.g. by `insertRule()
@@ -190,7 +185,7 @@ def parse_one_rule(input, preserve_comments=True, preserve_whitespace=True):
         or :class:`~tinycss2.ast.ParseError` objects.
 
     """
-    tokens = _to_token_iterator(input, preserve_comments, preserve_whitespace)
+    tokens = _to_token_iterator(input, skip_comments)
     first = _next_significant(tokens)
     if first is None:
         return ParseError(1, 1, 'empty', 'Input is empty')
@@ -204,7 +199,7 @@ def parse_one_rule(input, preserve_comments=True, preserve_whitespace=True):
     return rule
 
 
-def parse_rule_list(input, preserve_comments=True, preserve_whitespace=True):
+def parse_rule_list(input, skip_comments=False, skip_whitespace=False):
     """Parse a non-top-level :diagram:`rule list`.
 
     This is used for parsing the :attr:`~tinycss2.ast.AtRule.content`
@@ -220,21 +215,21 @@ def parse_rule_list(input, preserve_comments=True, preserve_whitespace=True):
         and :class:`~tinycss2.ast.ParseError` objects.
 
     """
-    tokens = _to_token_iterator(input, preserve_comments, preserve_whitespace)
+    tokens = _to_token_iterator(input, skip_comments)
     result = []
     for token in tokens:
         if token.type == 'whitespace':
-            if preserve_whitespace:
+            if not skip_whitespace:
                 result.append(token)
         elif token.type == 'comment':
-            if preserve_comments:
+            if not skip_comments:
                 result.append(token)
         else:
             result.append(_consume_rule(token, tokens))
     return result
 
 
-def parse_stylesheet(input, preserve_comments=True, preserve_whitespace=True):
+def parse_stylesheet(input, skip_comments=False, skip_whitespace=False):
     """Parse :diagram:`stylesheet` from text.
 
     This is used e.g. for a ``<style>`` HTML element.
@@ -250,14 +245,14 @@ def parse_stylesheet(input, preserve_comments=True, preserve_whitespace=True):
         and :class:`~tinycss2.ast.ParseError` objects.
 
     """
-    tokens = _to_token_iterator(input, preserve_comments, preserve_whitespace)
+    tokens = _to_token_iterator(input, skip_comments)
     result = []
     for token in tokens:
         if token.type == 'whitespace':
-            if preserve_whitespace:
+            if not skip_whitespace:
                 result.append(token)
         elif token.type == 'comment':
-            if preserve_comments:
+            if not skip_comments:
                 result.append(token)
         elif token not in ('<!--', '-->'):
             result.append(_consume_rule(token, tokens))

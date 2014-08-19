@@ -20,8 +20,7 @@ def parse_nth(input):
         A ``(a, b)`` tuple of integers, or :obj:`None` if the input is invalid.
 
     """
-    tokens = _to_token_iterator(
-        input, preserve_comments=False, preserve_whitespace=False)
+    tokens = _to_token_iterator(input, skip_comments=True)
     token = _next_significant(tokens)
     if token is None:
         return
