@@ -1,5 +1,5 @@
-tinycss2: Modern CSS parser for Python
-######################################
+tinycss2: Modern, low-level CSS parser for Python
+#################################################
 
 tinycss2 is a rewrite of tinycss_ with a simpler API,
 based on the more recent `CSS Syntax Level 3`_ specification.
@@ -12,3 +12,8 @@ based on the more recent `CSS Syntax Level 3`_ specification.
 * Latest documentation: http://pythonhosted.org/tinycss2/
 * Source code and issue tracker: https://github.com/SimonSapin/tinycss2
 * PyPI releases: https://pypi.python.org/pypi/tinycss2/
+* Continuous integration: |travis|
+
+.. |travis| image:: https://travis-ci.org/SimonSapin/tinycss2.svg?branch=master
+    :target: https://travis-ci.org/SimonSapin/tinycss2
+    :alt: https://travis-ci.org/SimonSapin/tinycss2

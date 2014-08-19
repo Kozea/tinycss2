@@ -24,6 +24,19 @@ although they’re only tested on CPython and PyPy.
 Parsing
 =======
 
+tinycss2 is “low-level” in that it doesn’t parse all of CSS:
+it doesn’t know about the syntax of any specific properties or at-rules.
+Instead, it provides a set of functions that can be composed
+to support exactly the parts of CSS you’re interested in,
+including new or non-standard rules or properties,
+without modifying tinycss or having a complex hook/plugin system.
+
+In many cases, parts of the parsed values
+(such as the :attr:`~tinycss2.ast.AtRule.content`
+of a :attr:`~tinycss2.ast.AtRule`)
+is given as :term:`component values` that can be parsed further
+with other functions.
+
 .. module:: tinycss2
 .. autofunction:: parse_stylesheet_bytes
 .. autofunction:: parse_stylesheet
@@ -137,7 +150,7 @@ Glossary
         :class:`SquareBracketsBlock`,
         :class:`CurlyBracketsBlock`,
         :class:`FunctionBlock`,
-        or (if requested explicitly) :class:`Comment`
+        or :class:`Comment`
         object.
 
 

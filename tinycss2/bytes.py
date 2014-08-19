@@ -48,15 +48,18 @@ def decode_stylesheet_bytes(css_bytes, protocol_encoding=None,
 def parse_stylesheet_bytes(css_bytes, protocol_encoding=None,
                            environment_encoding=None,
                            skip_comments=False, skip_whitespace=False):
-    """Parse :diagram:`stylesheet` from bytes.
+    """Parse :diagram:`stylesheet` from bytes,
+    determining the character encoding as web browsers do.
 
     This is used when reading a file or fetching an URL.
     The character encoding is determined from the initial bytes
     (a :abbr:`BOM (Byte Order Mark)` or an ``@charset`` rule)
     as well as the parameters.
+    The ultimate fallback is UTF-8.
 
     :param css_bytes: A byte string.
     :param protocol_encoding:
+        A string.
         The encoding label, if any, defined by HTTP or equivalent protocol.
         (e.g. via the ``charset`` parameter of the ``Content-Type`` header.)
     :param environment_encoding:
@@ -64,10 +67,10 @@ def parse_stylesheet_bytes(css_bytes, protocol_encoding=None,
         for the `environment encoding`_,
         if any.
     :param skip_comments:
-        Ignore CSS comments at the top-level of the list.
+        Ignore CSS comments at the top-level of the stylesheet.
         If the input is a string, ignore all comments.
     :param skip_whitespace:
-        Ignore whitespace at the top-level of the list.
+        Ignore whitespace at the top-level of the stylesheet.
         Whitespace is still preserved
         in the :attr:`~tinycss2.ast.QualifiedRule.prelude`
         and the :attr:`~tinycss2.ast.QualifiedRule.content` of rules.

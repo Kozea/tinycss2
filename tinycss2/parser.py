@@ -268,13 +268,14 @@ def parse_stylesheet(input, skip_comments=False, skip_whitespace=False):
 
     This differs from :func:`parse_rule_list` in that
     top-level ``<!--`` and ``-->`` tokens are ignored.
+    This is a legacy quirk for the ``<style>`` HTML element.
 
     :param input: A string or an iterable of :term:`component values`.
     :param skip_comments:
-        Ignore CSS comments at the top-level of the list.
+        Ignore CSS comments at the top-level of the stylesheet.
         If the input is a string, ignore all comments.
     :param skip_whitespace:
-        Ignore whitespace at the top-level of the list.
+        Ignore whitespace at the top-level of the stylesheet.
         Whitespace is still preserved
         in the :attr:`~tinycss2.ast.QualifiedRule.prelude`
         and the :attr:`~tinycss2.ast.QualifiedRule.content` of rules.
