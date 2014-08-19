@@ -6,7 +6,8 @@ def serialize(nodes):
 
     This should be used for :term:`component values`
     instead of just :meth:`~tinycss2.ast.Node.serialize` on each node
-    as it takes care of corner cases such as consecutive identifiers
+    as it takes care of corner cases such as ``;`` between declarations,
+    and consecutive identifiers
     that would otherwise parse back as the same token.
 
     :param nodes: an iterable of :class:`~tinycss2.ast.Node` objects

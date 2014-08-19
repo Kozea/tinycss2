@@ -21,6 +21,10 @@ def parse_component_value_list(css, skip_comments=False):
     """Parse a list of component values.
 
     :param css: A :term:`string`.
+    :param skip_comments:
+        Ignore CSS comments.
+        The return values (and recursively its blocks and functions)
+        will not contain any :class:`~tinycss2.ast.Comment` object.
     :returns: A list of :term:`component values`.
 
     """

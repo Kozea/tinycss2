@@ -123,15 +123,17 @@ class ParseError(Node):
 class Comment(Node):
     """A CSS comment.
 
-    By default, comments are ignored
-    and :class:`Comment` objects are not created.
-    This can be changed by passing ``preserve_comments=True``
-    to :func:`~tinycss2.parse_component_value_list`
+    .. code-block:: text
+
+        '/*' <value> '*/'
+
+    Comments can be ignored by passing ``preserve_comments=False``
+    to functions such as :func:`~tinycss2.parse_component_value_list`.
 
     .. autoattribute:: type
     .. attribute:: value
 
-        The content of the comment, between ``/*`` and ``*/``.
+        The content of the comment, between ``/*`` and ``*/``, as a string.
 
     """
     __slots__ = ['value']
@@ -152,6 +154,10 @@ class WhitespaceToken(Node):
     """A :diagram:`whitespace-token`.
 
     .. autoattribute:: type
+    .. attribute:: value
+
+        The whitespace sequence, as a string, as in the original CSS source.
+
 
     """
     __slots__ = ['value']
@@ -251,6 +257,10 @@ class IdentToken(Node):
 class AtKeywordToken(Node):
     """An :diagram:`at-keyword-token`.
 
+    .. code-block:: text
+
+        '@' <value>
+
     .. autoattribute:: type
 
     .. attribute:: value
@@ -265,7 +275,7 @@ class AtKeywordToken(Node):
 
         .. code-block:: python
 
-            if node.type == 'at-keyword' and node.lower_value == 'import': ...
+            if node.type == 'at-keyword' and node.lower_value == 'import':
 
     """
     __slots__ = ['value', 'lower_value']
@@ -284,6 +294,10 @@ class AtKeywordToken(Node):
 
 class HashToken(Node):
     r"""A :diagram:`hash-token`.
+
+    .. code-block:: text
+
+        '#' <value>
 
     .. autoattribute:: type
 
@@ -318,6 +332,10 @@ class HashToken(Node):
 class StringToken(Node):
     """A :diagram:`string-token`.
 
+    .. code-block:: text
+
+        '"' <value> '"'
+
     .. autoattribute:: type
 
     .. attribute:: value
@@ -341,6 +359,10 @@ class StringToken(Node):
 
 class URLToken(Node):
     """An :diagram:`url-token`.
+
+    .. code-block:: text
+
+        'url("' <value> '")'
 
     .. autoattribute:: type
 
@@ -436,6 +458,10 @@ class NumberToken(Node):
 class PercentageToken(Node):
     """A :diagram:`percentage-token`.
 
+    .. code-block:: text
+
+        <representation> '%'
+
     .. autoattribute:: type
 
     .. attribute:: value
@@ -477,6 +503,10 @@ class PercentageToken(Node):
 class DimensionToken(Node):
     """A :diagram:`dimension-token`.
 
+    .. code-block:: text
+
+        <representation> <unit>
+
     .. autoattribute:: type
 
     .. attribute:: value
@@ -510,7 +540,7 @@ class DimensionToken(Node):
 
         .. code-block:: python
 
-            if node.type == 'dimension' and node.lower_unit == 'px': ...
+            if node.type == 'dimension' and node.lower_unit == 'px':
 
     """
     __slots__ = ['value', 'int_value', 'is_integer', 'representation',
@@ -542,6 +572,10 @@ class DimensionToken(Node):
 class ParenthesesBlock(Node):
     """A :diagram:`()-block`.
 
+    .. code-block:: text
+
+        '(' <content> ')'
+
     .. autoattribute:: type
 
     .. attribute:: content
@@ -566,6 +600,10 @@ class ParenthesesBlock(Node):
 
 class SquareBracketsBlock(Node):
     """A :diagram:`[]-block`.
+
+    .. code-block:: text
+
+        '[' <content> ']'
 
     .. autoattribute:: type
 
@@ -592,6 +630,10 @@ class SquareBracketsBlock(Node):
 class CurlyBracketsBlock(Node):
     """A :diagram:`{}-block`.
 
+    .. code-block:: text
+
+        '{' <content> '}'
+
     .. autoattribute:: type
 
     .. attribute:: content
@@ -616,6 +658,10 @@ class CurlyBracketsBlock(Node):
 
 class FunctionBlock(Node):
     """A :diagram:`function-block`.
+
+    .. code-block:: text
+
+        <name> '(' <arguments> ')'
 
     .. autoattribute:: type
 
@@ -657,6 +703,11 @@ class FunctionBlock(Node):
 class Declaration(Node):
     """A (property or descriptor) :diagram:`declaration`.
 
+    .. code-block:: text
+
+        <name> ':' <value>
+        <name> ':' <value> '!important'
+
     .. autoattribute:: type
 
     .. attribute:: name
@@ -674,7 +725,7 @@ class Declaration(Node):
 
         .. code-block:: python
 
-            if node.type == 'declaration' and node.lower_name == 'color': ...
+            if node.type == 'declaration' and node.lower_name == 'color':
 
     .. attribute:: value
 
@@ -711,11 +762,15 @@ class Declaration(Node):
 class QualifiedRule(Node):
     """A :diagram:`qualified rule`.
 
-    The interpretation of style rules depend on their context.
+    .. code-block:: text
+
+        <prelude> '{' <content> '}'
+
+    The interpretation of qualified rules depend on their context.
     At the top-level of a stylesheet
     or in a conditional rule such as ``@media``,
-    they are style rules where the :attr:`prelude` is a list of Selectors
-    and the :attr:`body` is a list of property declarations.
+    they are **style rules** where the :attr:`prelude` is Selectors list
+    and the :attr:`content` is a list of property declarations.
 
     .. autoattribute:: type
 
@@ -750,6 +805,11 @@ class QualifiedRule(Node):
 class AtRule(Node):
     """An :diagram:`at-rule`.
 
+    .. code-block:: text
+
+        @<at_keyword> <prelude> '{' <content> '}'
+        @<at_keyword> <prelude> ';'
+
     The interpretation of at-rules depend on their at-keyword
     as well as their context.
     Most types of at-rules (ie. at-keyword values)
@@ -771,7 +831,7 @@ class AtRule(Node):
 
         .. code-block:: python
 
-            if node.type == 'at-rule' and node.lower_at_keyword == 'import': ...
+            if node.type == 'at-rule' and node.lower_at_keyword == 'import':
 
     .. attribute:: prelude
 

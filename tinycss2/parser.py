@@ -9,6 +9,8 @@ def _to_token_iterator(input, skip_comments=False):
     """
 
     :param input: A string or an iterable of :term:`component values`.
+    :param skip_comments:
+        If the input is a string, ignore all CSS comments.
     :returns: A iterator yielding :term:`component values`.
 
     """
@@ -38,8 +40,11 @@ def parse_one_component_value(input, skip_comments=False):
 
     :param input:
         A :term:`string`, or an iterable of :term:`component values`.
+    :param skip_comments:
+        If the input is a string, ignore all CSS comments.
     :returns:
-        A :term:`component value`, or a :class:`~tinycss2.ast.ParseError`.
+        A :term:`component value` (that is neither whitespace or comment),
+        or a :class:`~tinycss2.ast.ParseError`.
 
     """
     tokens = _to_token_iterator(input, skip_comments)
@@ -63,9 +68,13 @@ def parse_one_declaration(input, skip_comments=False):
 
     :param input:
         A :term:`string`, or an iterable of :term:`component values`.
+    :param skip_comments:
+        If the input is a string, ignore all CSS comments.
     :returns:
         A :class:`~tinycss2.ast.Declaration`
         or :class:`~tinycss2.ast.ParseError`.
+
+    Any whitespace or comment before the ``:`` colon is dropped.
 
     """
     tokens = _to_token_iterator(input, skip_comments)
@@ -123,11 +132,7 @@ def _parse_declaration(first_token, tokens):
 
 
 def _consume_declaration_in_list(first_token, tokens):
-    """
-    Same as :func:`_consume_declaration`, but consume to the end
-    of the (possibly invalid) declaration.
-
-    """
+    """Like :func:`_parse_declaration`, but stop at the first ``;``."""
     other_declaration_tokens = []
     for token in tokens:
         if token == ';':
@@ -141,17 +146,29 @@ def parse_declaration_list(input, skip_comments=False, skip_whitespace=False):
 
     This is used e.g. for the :attr:`~tinycss2.ast.QualifiedRule.content`
     of a style rule or ``@page`` rule,
-    or for the `style` attribute of an HTML element.
+    or for the ``style`` attribute of an HTML element.
 
     In contexts that don’t expect any at-rule,
     all :class:`~tinycss2.ast.AtRule` objects
     should simply be rejected as invalid.
 
     :param input: A string or an iterable of :term:`component values`.
+    :param skip_comments:
+        Ignore CSS comments at the top-level of the list.
+        If the input is a string, ignore all comments.
+    :param skip_whitespace:
+        Ignore whitespace at the top-level of the list.
+        Whitespace is still preserved
+        in the :attr:`~tinycss2.ast.Declaration.value` of declarations
+        and the :attr:`~tinycss2.ast.AtRule.prelude`
+        and :attr:`~tinycss2.ast.AtRule.content` of at-rules.
     :returns:
         A list of
         :class:`~tinycss2.ast.Declaration`,
         :class:`~tinycss2.ast.AtRule`,
+        :class:`~tinycss2.ast.Comment` (if ``skip_comments`` is false),
+        :class:`~tinycss2.ast.WhitespaceToken`
+        (if ``skip_whitespace`` is false),
         and :class:`~tinycss2.ast.ParseError` objects
 
     """
@@ -179,10 +196,14 @@ def parse_one_rule(input, skip_comments=False):
     in an implementation of CSSOM.
 
     :param input: A string or an iterable of :term:`component values`.
+    :param skip_comments:
+        If the input is a string, ignore all CSS comments.
     :returns:
         A :class:`~tinycss2.ast.QualifiedRule`,
         :class:`~tinycss2.ast.AtRule`,
         or :class:`~tinycss2.ast.ParseError` objects.
+
+    Any whitespace or comment before or after the rule is dropped.
 
     """
     tokens = _to_token_iterator(input, skip_comments)
@@ -208,10 +229,21 @@ def parse_rule_list(input, skip_comments=False, skip_whitespace=False):
     top-level ``<!--`` and ``-->`` tokens are not ignored.
 
     :param input: A string or an iterable of :term:`component values`.
+    :param skip_comments:
+        Ignore CSS comments at the top-level of the list.
+        If the input is a string, ignore all comments.
+    :param skip_whitespace:
+        Ignore whitespace at the top-level of the list.
+        Whitespace is still preserved
+        in the :attr:`~tinycss2.ast.QualifiedRule.prelude`
+        and the :attr:`~tinycss2.ast.QualifiedRule.content` of rules.
     :returns:
         A list of
         :class:`~tinycss2.ast.QualifiedRule`,
         :class:`~tinycss2.ast.AtRule`,
+        :class:`~tinycss2.ast.Comment` (if ``skip_comments`` is false),
+        :class:`~tinycss2.ast.WhitespaceToken`
+        (if ``skip_whitespace`` is false),
         and :class:`~tinycss2.ast.ParseError` objects.
 
     """
@@ -238,10 +270,21 @@ def parse_stylesheet(input, skip_comments=False, skip_whitespace=False):
     top-level ``<!--`` and ``-->`` tokens are ignored.
 
     :param input: A string or an iterable of :term:`component values`.
+    :param skip_comments:
+        Ignore CSS comments at the top-level of the list.
+        If the input is a string, ignore all comments.
+    :param skip_whitespace:
+        Ignore whitespace at the top-level of the list.
+        Whitespace is still preserved
+        in the :attr:`~tinycss2.ast.QualifiedRule.prelude`
+        and the :attr:`~tinycss2.ast.QualifiedRule.content` of rules.
     :returns:
         A list of
         :class:`~tinycss2.ast.QualifiedRule`,
         :class:`~tinycss2.ast.AtRule`,
+        :class:`~tinycss2.ast.Comment` (if ``skip_comments`` is false),
+        :class:`~tinycss2.ast.WhitespaceToken`
+        (if ``skip_whitespace`` is false),
         and :class:`~tinycss2.ast.ParseError` objects.
 
     """

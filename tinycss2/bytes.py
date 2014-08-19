@@ -63,17 +63,28 @@ def parse_stylesheet_bytes(css_bytes, protocol_encoding=None,
         A :class:`webencodings.Encoding` object
         for the `environment encoding`_,
         if any.
+    :param skip_comments:
+        Ignore CSS comments at the top-level of the list.
+        If the input is a string, ignore all comments.
+    :param skip_whitespace:
+        Ignore whitespace at the top-level of the list.
+        Whitespace is still preserved
+        in the :attr:`~tinycss2.ast.QualifiedRule.prelude`
+        and the :attr:`~tinycss2.ast.QualifiedRule.content` of rules.
     :returns:
         A ``(rules, encoding)`` tuple.
 
         * :obj:`rules` is a list of
           :class:`~tinycss2.ast.QualifiedRule`,
           :class:`~tinycss2.ast.AtRule`,
+          :class:`~tinycss2.ast.Comment` (if ``skip_comments`` is false),
+          :class:`~tinycss2.ast.WhitespaceToken`
+          (if ``skip_whitespace`` is false),
           and :class:`~tinycss2.ast.ParseError` objects.
         * :obj:`encoding` is the :class:`webencodings.Encoding` object
-          that was used,
-          the `environment encoding`_ for stylesheets imported
-          from ``@import`` rules in :obj:`rules`.
+          that was used.
+          If ``rules`` contains an ``@import`` rule, this is
+          the `environment encoding`_ for the imported stylesheet.
 
     .. _environment encoding: http://www.w3.org/TR/css-syntax/#environment-encoding
 
