@@ -127,7 +127,7 @@ class Comment(Node):
 
         '/*' <value> '*/'
 
-    Comments can be ignored by passing ``preserve_comments=False``
+    Comments can be ignored by passing ``skip_comments=True``
     to functions such as :func:`~tinycss2.parse_component_value_list`.
 
     .. autoattribute:: type

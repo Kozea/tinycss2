@@ -1,12 +1,31 @@
 tinycss2 changelog
 ==================
 
+Version 0.5
+-----------
+
+Released on 2014-08-19.
+
+* Update for spec changes.
+* Add a :attr:`~tinycss2.ast.WhitespaceToken.value` attribute
+  to :class:`~tinycss2.ast.WhitespaceToken`.
+* **Breaking change**: CSS comments are now preserved
+  as :class:`~tinycss2.ast.Comment` objects by default.
+  Pass ``skip_comments=True`` to parsing functions to get the old behavior.
+* **Breaking change**: Top-level comments and whitespace are now preserved
+  when parsing a stylesheet, rule list, or declaration list.
+  Pass ``skip_comments=True`` and ``skip_whitespace=True``
+  to get the old behavior.
+* Test on Python 3.4 and PyPy3
+* Set up continous integration on Travis-CI
+
+
 Version 0.4
 -----------
 
 Released on 2014-01-04.
 
-* Fix :class:`HashToken` starting with a non-ASCII character.
+* Fix :class:`~tinycss2.ast.HashToken` starting with a non-ASCII character.
 * Fix :func:`repr` on AST nodes.
 
 

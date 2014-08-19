@@ -33,7 +33,7 @@ without modifying tinycss or having a complex hook/plugin system.
 
 In many cases, parts of the parsed values
 (such as the :attr:`~tinycss2.ast.AtRule.content`
-of a :attr:`~tinycss2.ast.AtRule`)
+of a :class:`~tinycss2.ast.AtRule`)
 is given as :term:`component values` that can be parsed further
 with other functions.
 
@@ -154,4 +154,5 @@ Glossary
         object.
 
 
+.. currentmodule:: tinycss2
 .. include:: ../CHANGES
