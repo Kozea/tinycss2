@@ -14,9 +14,9 @@ def serialize(nodes):
     :returns: an Unicode string
 
     """
-    chuncks = []
-    _serialize_to(nodes, chuncks.append)
-    return ''.join(chuncks)
+    chunks = []
+    _serialize_to(nodes, chunks.append)
+    return ''.join(chunks)
 
 
 def serialize_identifier(value):
@@ -79,7 +79,7 @@ def serialize_string_value(value):
 # http://dev.w3.org/csswg/css-syntax/#serialization-tables
 def _serialize_to(nodes, write):
     """Serialize an iterable of nodes to CSS syntax,
-    writing chuncks as Unicode string
+    writing chunks as Unicode string
     by calling the provided :obj:`write` callback.
 
     """
