@@ -17,7 +17,7 @@ README = codecs.open(
 setup(
     name='tinycss2',
     version=VERSION,
-    description='Modern CSS parser for Python',
+    description='Low-level CSS parser for Python',
     long_description=README,
     license='BSD',
     author='Simon Sapin',

@@ -1,4 +1,4 @@
-tinycss2: Modern, low-level CSS parser for Python
+tinycss2: Low-level CSS parser for Python
 #################################################
 
 tinycss2 is a rewrite of tinycss_ with a simpler API,
