@@ -1,3 +1,19 @@
 language: python
-install: pip install tox
-script: tox
+matrix:
+  include:
+      # latest python and system-provided python versions
+    - python: 3.6
+      env: TOX_ENV=py26,py27,py33,py34,py36,pypy
+    - python: 3.5
+      env: TOX_ENV=py35
+    - python: pypy3
+      env: TOX_ENV=pypy3
+    - python: 3.2
+      env: TOX_ENV=py32
+
+sudo: false
+
+install:
+    - pip install tox
+    #- travis_retry pip install "virtualenv<14.0.0" pytest tox
+script: tox -e ${TOX_ENV}
