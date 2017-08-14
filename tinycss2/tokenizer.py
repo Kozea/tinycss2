@@ -186,22 +186,30 @@ def parse_component_value_list(css, skip_comments=False):
     return root
 
 
+def _is_name_start(css, pos):
+    """Return true if the given character is a name-start code point."""
+    # https://www.w3.org/TR/css-syntax-3/#name-start-code-point
+    c = css[pos]
+    return (
+        c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_' or
+        ord(c) > 0x7F)
+
+
 def _is_ident_start(css, pos):
     """Return True if the given position is the start of a CSS identifier."""
-    c = css[pos]
-    length = len(css)
-#    if c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_':
-#        return True  # Fast path XXX
-    if c == '-' and pos + 1 < length:
+    # https://www.w3.org/TR/css-syntax-3/#would-start-an-identifier
+    if _is_name_start(css, pos):
+        return True
+    elif css[pos] == '-':
         pos += 1
-        c = css[pos]
-        if c == '-':
-            return True
-    return (
-        c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'
-        or ord(c) > 0x7F  # Non-ASCII
-        # Valid escape:
-        or (c == '\\' and not css.startswith('\\\n', pos)))
+        return (
+            # Name-start code point:
+            (pos < len(css) and _is_name_start(css, pos)) or
+            # Valid escape:
+            (css.startswith('\\', pos) and not css.startswith('\\\n', pos)))
+    elif css[pos] == '\\':
+        return not css.startswith('\\\n', pos)
+    return False
 
 
 def _consume_ident(css, pos):
