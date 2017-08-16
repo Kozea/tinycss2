@@ -1,4 +1,4 @@
-VERSION = '0.5'
+VERSION = '0.6.0'
 
 
 from .tokenizer import parse_component_value_list  # noqa
