@@ -1,6 +1,6 @@
 if str is bytes:  # pragma: no cover
-    unichr = unichr
-    basestring = basestring
+    unichr = unichr  # noqa
+    basestring = basestring  # noqa
 else:  # pragma: no cover
-    unichr = chr
-    basestring = str
+    unichr = chr  # noqa
+    basestring = str  # noqa

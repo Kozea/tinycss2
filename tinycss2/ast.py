@@ -9,8 +9,8 @@ from __future__ import unicode_literals
 
 from webencodings import ascii_lower
 
-from .serializer import (serialize_identifier, serialize_name,
-                         serialize_string_value, _serialize_to)
+from .serializer import (_serialize_to, serialize_identifier, serialize_name,
+                         serialize_string_value)
 
 
 class Node(object):

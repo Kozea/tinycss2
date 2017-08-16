@@ -1,8 +1,8 @@
 # coding: utf-8
 
-from .tokenizer import parse_component_value_list
-from .ast import ParseError, Declaration, AtRule, QualifiedRule
 from ._compat import basestring
+from .ast import AtRule, Declaration, ParseError, QualifiedRule
+from .tokenizer import parse_component_value_list
 
 
 def _to_token_iterator(input, skip_comments=False):

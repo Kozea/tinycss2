@@ -1,6 +1,7 @@
 from __future__ import division
-import re
+
 import collections
+import re
 
 from ._compat import basestring
 from .parser import parse_one_component_value
@@ -96,8 +97,8 @@ def _parse_rgb(args, alpha):
     Otherwise, return None.
     """
     types = [arg.type for arg in args]
-    if (types == ['number', 'number', 'number']
-            and all(a.is_integer for a in args)):
+    if (types == ['number', 'number', 'number'] and
+            all(a.is_integer for a in args)):
         r, g, b = [arg.int_value / 255 for arg in args[:3]]
         return RGBA(r, g, b, alpha)
     elif types == ['percentage', 'percentage', 'percentage']:

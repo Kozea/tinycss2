@@ -1,7 +1,8 @@
 *.pyc
 *.egg-info
+.cache
 .coverage
-.tox
+.eggs
 /htmlcov
 /dist
 /build

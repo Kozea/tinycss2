@@ -1,4 +1,4 @@
-from webencodings import lookup, decode, UTF8
+from webencodings import UTF8, decode, lookup
 
 from .parser import parse_stylesheet
 
@@ -89,7 +89,8 @@ def parse_stylesheet_bytes(css_bytes, protocol_encoding=None,
           If ``rules`` contains an ``@import`` rule, this is
           the `environment encoding`_ for the imported stylesheet.
 
-    .. _environment encoding: http://www.w3.org/TR/css-syntax/#environment-encoding
+    .. _environment encoding:
+            http://www.w3.org/TR/css-syntax/#environment-encoding
 
     .. code-block:: python
 
