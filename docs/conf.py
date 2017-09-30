@@ -5,8 +5,11 @@
 
 import codecs
 import re
+import sys
 from os import path
 
+
+sys.path.append(path.dirname(path.abspath(__file__)))
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
