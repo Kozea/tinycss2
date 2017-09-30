@@ -11,9 +11,8 @@ Installing tinycss2 with pip_ should Just Work::
     pip install tinycss2
 
 This will also automatically install tinycss2’s only dependency, webencodings_.
-tinycss2 and webencodings both only contain Python code
-and should work on any Python implementation,
-although they’re only tested on CPython and PyPy.
+tinycss2 and webencodings both only contain Python code and should work on any
+Python implementation, although they’re only tested on CPython.
 
 .. _pip: http://pip-installer.org/
 .. _webencodings: http://pythonhosted.org/webencodings/
