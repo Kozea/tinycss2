@@ -254,6 +254,28 @@ class IdentToken(Node):
         write(serialize_identifier(self.value))
 
 
+class CustomToken(Node):
+    """An :diagram:`custom-token`.
+
+    .. autoattribute:: type
+
+    .. attribute:: value
+
+        The unescaped value, as an Unicode string.
+
+    """
+    __slots__ = ['value']
+    type = 'custom'
+    repr_format = '<{self.__class__.__name__} {self.value}>'
+
+    def __init__(self, line, column, value):
+        Node.__init__(self, line, column)
+        self.value = value
+
+    def _serialize_to(self, write):
+        write(serialize_identifier(self.value))
+
+
 class AtKeywordToken(Node):
     """An :diagram:`at-keyword-token`.
 
