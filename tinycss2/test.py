@@ -17,7 +17,7 @@ from .ast import (AtKeywordToken, AtRule, Comment, CurlyBracketsBlock,
                   IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
                   ParseError, PercentageToken, QualifiedRule,
                   SquareBracketsBlock, StringToken, UnicodeRangeToken,
-                  URLToken, WhitespaceToken)
+                  URLToken, WhitespaceToken, CustomToken)
 from .color3 import RGBA, parse_color
 from .nth import parse_nth
 
@@ -51,6 +51,7 @@ def to_json():
         WhitespaceToken: lambda t: ' ',
         LiteralToken: lambda t: t.value,
         IdentToken: lambda t: ['ident', t.value],
+        CustomToken: lambda t: ['custom', t.value],
         AtKeywordToken: lambda t: ['at-keyword', t.value],
         HashToken: lambda t: ['hash', t.value,
                               'id' if t.is_identifier else 'unrestricted'],

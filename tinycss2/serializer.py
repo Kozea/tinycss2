@@ -33,7 +33,10 @@ def serialize_identifier(value):
     if value == '-':
         return r'\-'
 
-    if value[0] == '-':
+    if value.startswith('--'):
+        result = '--'
+        value = value[2:]
+    elif value[0] == '-':
         result = '-'
         value = value[1:]
     else:
