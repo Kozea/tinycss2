@@ -21,7 +21,7 @@ matrix:
       env: PYTHON_VERSION=3
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install python3; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew upgrade python; fi
 
 install:
   - pip$PYTHON_VERSION install --upgrade -e.[test]
