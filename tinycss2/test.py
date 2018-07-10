@@ -4,6 +4,7 @@ import functools
 import json
 import os.path
 import pprint
+from io import open
 
 import pytest
 from webencodings import Encoding, lookup
@@ -79,7 +80,8 @@ def to_json():
 
 def load_json(filename):
     json_data = json.load(open(os.path.join(
-        os.path.dirname(__file__), 'css-parsing-tests', filename)))
+        os.path.dirname(__file__), 'css-parsing-tests', filename),
+        encoding='utf-8'))
     return list(zip(json_data[::2], json_data[1::2]))
 
 
