@@ -202,6 +202,9 @@ def _is_ident_start(css, pos):
     elif css[pos] == '-':
         pos += 1
         return (
+            # Double dash:
+            (pos + 1 < len(css) and css[pos] == '-' and
+             _is_name_start(css, pos + 1)) or
             # Name-start code point:
             (pos < len(css) and _is_name_start(css, pos)) or
             # Valid escape:

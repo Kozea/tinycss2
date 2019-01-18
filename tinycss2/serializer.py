@@ -33,6 +33,9 @@ def serialize_identifier(value):
     if value == '-':
         return r'\-'
 
+    if value[:2] == '--':
+        return '--' + serialize_name(value[2:])
+
     if value[0] == '-':
         result = '-'
         value = value[1:]
