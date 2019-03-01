@@ -1,6 +1,3 @@
-# coding: utf-8
-
-from ._compat import basestring
 from .ast import AtRule, Declaration, ParseError, QualifiedRule
 from .tokenizer import parse_component_value_list
 
@@ -15,7 +12,7 @@ def _to_token_iterator(input, skip_comments=False):
 
     """
     # Accept ASCII-only byte strings on Python 2, with implicit conversion.
-    if isinstance(input, basestring):
+    if isinstance(input, str):
         input = parse_component_value_list(input, skip_comments)
     return iter(input)
 

@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# coding: utf8
-
 import codecs
 import os.path
 import re

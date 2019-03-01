@@ -3,7 +3,6 @@ from __future__ import division
 import collections
 import re
 
-from ._compat import basestring
 from .parser import parse_one_component_value
 
 
@@ -49,7 +48,7 @@ def parse_color(input):
           ``(-0.1, 1.2, 0, 1)``.)
 
     """
-    if isinstance(input, basestring):
+    if isinstance(input, str):
         token = parse_one_component_value(input, skip_comments=True)
     else:
         token = input

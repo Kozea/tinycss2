@@ -1,5 +1,3 @@
-# coding: utf8
-
 import functools
 import json
 import os.path

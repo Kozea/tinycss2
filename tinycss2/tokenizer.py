@@ -5,7 +5,6 @@ import sys
 
 from webencodings import ascii_lower
 
-from ._compat import unichr
 from .ast import (AtKeywordToken, Comment, CurlyBracketsBlock, DimensionToken,
                   FunctionBlock, HashToken, IdentToken, LiteralToken,
                   NumberToken, ParenthesesBlock, ParseError, PercentageToken,
@@ -287,7 +286,7 @@ def _consume_escape(css, pos):
     if hex_match:
         codepoint = int(hex_match.group(1), 16)
         return (
-            unichr(codepoint) if 0 < codepoint <= sys.maxunicode else '\uFFFD',
+            chr(codepoint) if 0 < codepoint <= sys.maxunicode else '\uFFFD',
             hex_match.end())
     elif pos < len(css):
         return css[pos], pos + 1

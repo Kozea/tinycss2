@@ -1,4 +1,3 @@
-# coding: utf8
 """
 
 Data structures for the CSS abstract syntax tree.
