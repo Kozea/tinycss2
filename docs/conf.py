@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 # tinycss2 documentation build configuration file.
 
-import codecs
-import re
 import sys
-from os import path
+import os
 
-
-sys.path.append(path.dirname(path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
@@ -32,10 +29,10 @@ copyright = '2013-2017, Simon Sapin'
 # built documents.
 #
 # The full version, including alpha/beta/rc tags.
-release = re.search("VERSION = '([^']+)'", codecs.open(
-    path.join(path.dirname(path.dirname(__file__)), 'tinycss2', '__init__.py'),
-    encoding='utf-8',
-).read().strip()).group(1)
+release = open(
+    os.path.join(
+        os.path.dirname(__file__), os.pardir,
+        'weasyprint', 'VERSION')).read().strip()
 
 # The short X.Y version.
 version = '.'.join(release.split('.')[:2])
