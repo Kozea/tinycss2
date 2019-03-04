@@ -1,11 +1,16 @@
-tinycss2: Low-level CSS parser for Python
-#################################################
+========
+tinycss2
+========
 
-tinycss2 is a rewrite of tinycss_ with a simpler API,
-based on the more recent `CSS Syntax Level 3`_ specification.
+tinycss2 is a low-level CSS parser and serializer: it can parse strings, return
+Python objects representing tokens and blocks, and generate stylesheets
+corresponding to these objects.
 
-.. _tinycss: http://pythonhosted.org/tinycss/
-.. _CSS Syntax Level 3: http://dev.w3.org/csswg/css-syntax-3/
+Based on the `CSS Syntax Level 3`_ specification, tinycss2 knows the grammar of
+CSS but doesn't know specific rules, properties or values supported in various
+CSS modules.
+
+.. _CSS Syntax Level 3: https://drafts.csswg.org/css-syntax-3/
 
 * BSD licensed
 * For Python 3.5+ (tested on CPython and Pypy3)

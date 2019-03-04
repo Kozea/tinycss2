@@ -1,7 +1,13 @@
-:tocdepth: 3
+.. See https://github.com/sphinx-doc/sphinx/issues/2103
+
+.. toctree::
+   :hidden:
+   :maxdepth: 3
+
+   index
+
 
 .. include:: ../README.rst
-
 
 Installation
 ============
@@ -122,14 +128,6 @@ Glossary
 
 .. currentmodule:: tinycss2.ast
 .. glossary::
-
-    String
-        In this documentation “a string” means an Unicode string:
-        :func:`unicode <py2:unicode>` on Python 2.x and
-        :class:`py3:str` on Python 3.x.
-        On 2.x,
-        a byte string (:func:`str <py2:str>`) that only contains ASCII bytes
-        is also accepted and implicitly decoded.
 
     Component value
     Component values
