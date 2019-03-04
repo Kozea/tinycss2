@@ -2,6 +2,19 @@ tinycss2 changelog
 ==================
 
 
+Version 1.0.0
+-------------
+
+Released on 2019-03-04.
+
+* Drop Python 2.7, 3.3 and 3.4 support.
+* Allow leading double dash syntax for ident tokens, allowing CSS variables to
+  be parsed correctly.
+* Test with PyPy3.
+* Force tests to parse JSON files as UTF-8.
+* Clean packaging.
+
+
 Version 0.6.1
 -------------
 
