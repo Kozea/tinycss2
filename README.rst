@@ -2,8 +2,8 @@
 tinycss2
 ========
 
-tinycss2 is a low-level CSS parser and serializer: it can parse strings, return
-Python objects representing tokens and blocks, and generate stylesheets
+tinycss2 is a low-level CSS parser and generator: it can parse strings, return
+Python objects representing tokens and blocks, and generate CSS strings
 corresponding to these objects.
 
 Based on the `CSS Syntax Level 3`_ specification, tinycss2 knows the grammar of
