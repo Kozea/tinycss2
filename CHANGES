@@ -2,6 +2,15 @@ tinycss2 changelog
 ==================
 
 
+Version 1.0.1
+-------------
+
+Released on 2019-03-06.
+
+* Fix tests launched by CI
+* Parse "--" ident tokens correctly
+
+
 Version 1.0.0
 -------------
 
