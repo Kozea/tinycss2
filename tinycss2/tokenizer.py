@@ -195,17 +195,15 @@ def _is_name_start(css, pos):
 
 def _is_ident_start(css, pos):
     """Return True if the given position is the start of a CSS identifier."""
-    # https://www.w3.org/TR/css-syntax-3/#would-start-an-identifier
+    # https://drafts.csswg.org/css-syntax/#would-start-an-identifier
     if _is_name_start(css, pos):
         return True
     elif css[pos] == '-':
         pos += 1
         return (
-            # Double dash:
-            (pos + 1 < len(css) and css[pos] == '-' and
-             _is_name_start(css, pos + 1)) or
-            # Name-start code point:
-            (pos < len(css) and _is_name_start(css, pos)) or
+            # Name-start code point or hyphen:
+            (pos < len(css) and (
+                _is_name_start(css, pos) or css[pos] == '-')) or
             # Valid escape:
             (css.startswith('\\', pos) and not css.startswith('\\\n', pos)))
     elif css[pos] == '\\':
