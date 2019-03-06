@@ -247,7 +247,10 @@ class IdentToken(Node):
     def __init__(self, line, column, value):
         Node.__init__(self, line, column)
         self.value = value
-        self.lower_value = ascii_lower(value)
+        try:
+            self.lower_value = ascii_lower(value)
+        except UnicodeEncodeError:
+            self.lower_value = value
 
     def _serialize_to(self, write):
         write(serialize_identifier(self.value))
@@ -284,7 +287,10 @@ class AtKeywordToken(Node):
     def __init__(self, line, column, value):
         Node.__init__(self, line, column)
         self.value = value
-        self.lower_value = ascii_lower(value)
+        try:
+            self.lower_value = ascii_lower(value)
+        except UnicodeEncodeError:
+            self.lower_value = value
 
     def _serialize_to(self, write):
         write('@')
