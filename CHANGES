@@ -2,6 +2,14 @@ tinycss2 changelog
 ==================
 
 
+Version 1.0.2
+-------------
+
+Released on 2019-03-21.
+
+* Don't crash when indent tokens have no lowercase equivalent name
+
+
 Version 1.0.1
 -------------
 
