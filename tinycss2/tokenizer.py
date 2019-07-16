@@ -10,6 +10,7 @@ from .ast import (AtKeywordToken, Comment, CurlyBracketsBlock, DimensionToken,
                   NumberToken, ParenthesesBlock, ParseError, PercentageToken,
                   SquareBracketsBlock, StringToken, UnicodeRangeToken,
                   URLToken, WhitespaceToken)
+from .serializer import serialize_string_value
 
 _NUMBER_RE = re.compile(r'[-+]?([0-9]*\.)?[0-9]+([eE][+-]?[0-9]+)?')
 _HEX_ESCAPE_RE = re.compile(r'([0-9A-Fa-f]{1,6})[ \n\t]?')
@@ -70,10 +71,18 @@ def parse_component_value_list(css, skip_comments=False):
                 continue
             pos += 1  # Skip the '('
             if ascii_lower(value) == 'url':
-                value, pos = _consume_url(css, pos)
-                tokens.append(
-                    URLToken(line, column, value) if value is not None
-                    else ParseError(line, column, 'bad-url', 'bad URL token'))
+                value, pos, error = _consume_url(css, pos)
+                if value is not None:
+                    repr = 'url("{}")'.format(serialize_string_value(value))
+                    if error is not None:
+                        error_key = error[0]
+                        if error_key == 'eof-in-string':
+                            repr = repr[:-2]
+                        elif error_key == 'eof-in-url':
+                            repr = repr[:-1]
+                    tokens.append(URLToken(line, column, value, repr))
+                if error is not None:
+                    tokens.append(ParseError(line, column, *error))
                 continue
             arguments = []
             tokens.append(FunctionBlock(line, column, value, arguments))
@@ -149,11 +158,14 @@ def parse_component_value_list(css, skip_comments=False):
             tokens.append(ParseError(line, column, c, 'Unmatched ' + c))
             pos += 1
         elif c in ('"', "'"):
-            value, pos = _consume_quoted_string(css, pos)
-            tokens.append(
-                StringToken(line, column, value) if value is not None
-                else ParseError(line, column, 'bad-string',
-                                'bad string token'))
+            value, pos, error = _consume_quoted_string(css, pos)
+            if value is not None:
+                repr = '"{}"'.format(serialize_string_value(value))
+                if error is not None:
+                    repr = repr[:-1]
+                tokens.append(StringToken(line, column, value, repr))
+            if error is not None:
+                tokens.append(ParseError(line, column, *error))
         elif css.startswith('/*', pos):  # Comment
             pos = css.find('*/', pos + 2)
             if pos == -1:
@@ -241,6 +253,7 @@ def _consume_ident(css, pos):
 def _consume_quoted_string(css, pos):
     """Return (unescaped_value, new_pos)."""
     # http://dev.w3.org/csswg/css-syntax/#consume-a-string-token
+    error = None
     quote = css[pos]
     assert quote in ('"', "'")
     pos += 1
@@ -265,12 +278,13 @@ def _consume_quoted_string(css, pos):
             # else: Escaped EOF, do nothing
             start_pos = pos
         elif c == '\n':  # Unescaped newline
-            return None, pos  # bad-string
+            return None, pos, ('bad-string', 'Bad string token')
         else:
             pos += 1
     else:
+        error = ('eof-in-string', 'EOF in string')
         chunks.append(css[start_pos:pos])
-    return ''.join(chunks), pos
+    return ''.join(chunks), pos, error
 
 
 def _consume_escape(css, pos):
@@ -298,30 +312,31 @@ def _consume_url(css, pos):
     The given pos is assumed to be just after the '(' of 'url('.
 
     """
+    error = None
     length = len(css)
     # http://dev.w3.org/csswg/css-syntax/#consume-a-url-token
     # Skip whitespace
     while css.startswith((' ', '\n', '\t'), pos):
         pos += 1
     if pos >= length:  # EOF
-        return '', pos
+        return '', pos, ('eof-in-url', 'EOF in URL')
     c = css[pos]
     if c in ('"', "'"):
-        value, pos = _consume_quoted_string(css, pos)
+        value, pos, error = _consume_quoted_string(css, pos)
     elif c == ')':
-        return '', pos + 1
+        return '', pos + 1, error
     else:
         chunks = []
         start_pos = pos
         while 1:
             if pos >= length:  # EOF
                 chunks.append(css[start_pos:pos])
-                return ''.join(chunks), pos
+                return ''.join(chunks), pos, ('eof-in-url', 'EOF in URL')
             c = css[pos]
             if c == ')':
                 chunks.append(css[start_pos:pos])
                 pos += 1
-                return ''.join(chunks), pos
+                return ''.join(chunks), pos, error
             elif c in ' \n\t':
                 chunks.append(css[start_pos:pos])
                 value = ''.join(chunks)
@@ -350,9 +365,11 @@ def _consume_url(css, pos):
             pos += 1
         if pos < length:
             if css[pos] == ')':
-                return value, pos + 1
+                return value, pos + 1, error
         else:
-            return value, pos
+            if error is None:
+                error = ('eof-in-url', 'EOF in URL')
+            return value, pos, error
 
     # http://dev.w3.org/csswg/css-syntax/#consume-the-remnants-of-a-bad-url0
     while pos < length:
@@ -363,7 +380,7 @@ def _consume_url(css, pos):
             break
         else:
             pos += 1
-    return None, pos  # bad-url
+    return None, pos, ('bad-url', 'bad URL token')
 
 
 def _consume_unicode_range(css, pos):

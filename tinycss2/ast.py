@@ -8,8 +8,7 @@ from __future__ import unicode_literals
 
 from webencodings import ascii_lower
 
-from .serializer import (_serialize_to, serialize_identifier, serialize_name,
-                         serialize_string_value)
+from .serializer import _serialize_to, serialize_identifier, serialize_name
 
 
 class Node(object):
@@ -115,6 +114,8 @@ class ParseError(Node):
             write('url([bad url])')
         elif self.kind in ')]}':
             write(self.kind)
+        elif self.kind in ('eof-in-string', 'eof-in-url'):
+            pass
         else:  # pragma: no cover
             raise TypeError('Can not serialize %r' % self)
 
@@ -348,18 +349,17 @@ class StringToken(Node):
         The unescaped value, as an Unicode string, without the quotes.
 
     """
-    __slots__ = ['value']
+    __slots__ = ['value', 'representation']
     type = 'string'
-    repr_format = '<{self.__class__.__name__} "{self.value}">'
+    repr_format = '<{self.__class__.__name__} {self.representation}>'
 
-    def __init__(self, line, column, value):
+    def __init__(self, line, column, value, representation):
         Node.__init__(self, line, column)
         self.value = value
+        self.representation = representation
 
     def _serialize_to(self, write):
-        write('"')
-        write(serialize_string_value(self.value))
-        write('"')
+        write(self.representation)
 
 
 class URLToken(Node):
@@ -377,18 +377,17 @@ class URLToken(Node):
         without the ``url(`` and ``)`` markers or the optional quotes.
 
     """
-    __slots__ = ['value']
+    __slots__ = ['value', 'representation']
     type = 'url'
-    repr_format = '<{self.__class__.__name__} url({self.value})>'
+    repr_format = '<{self.__class__.__name__} {self.representation}>'
 
-    def __init__(self, line, column, value):
+    def __init__(self, line, column, value, representation):
         Node.__init__(self, line, column)
         self.value = value
+        self.representation = representation
 
     def _serialize_to(self, write):
-        write('url("')
-        write(serialize_string_value(self.value))
-        write('")')
+        write(self.representation)
 
 
 class UnicodeRangeToken(Node):
