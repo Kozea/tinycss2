@@ -14,9 +14,11 @@ matrix:
     - os: osx
       language: generic
       env: PYTHON_VERSION=3
-
-before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew upgrade python; fi
+      addons:
+        homebrew:
+          packages:
+            - python
+          update: yes
 
 install:
   - pip$PYTHON_VERSION install --upgrade setuptools
