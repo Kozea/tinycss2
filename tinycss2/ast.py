@@ -4,14 +4,13 @@ Data structures for the CSS abstract syntax tree.
 
 """
 
-from __future__ import unicode_literals
 
 from webencodings import ascii_lower
 
 from .serializer import _serialize_to, serialize_identifier, serialize_name
 
 
-class Node(object):
+class Node:
     """Every node type inherits from this class,
     which is never instantiated directly.
 
