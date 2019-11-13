@@ -20,6 +20,8 @@ from .ast import (AtKeywordToken, AtRule, Comment, CurlyBracketsBlock,
 from .color3 import RGBA, parse_color
 from .nth import parse_nth
 
+DATA_DIR = os.path.join(os.path.dirname(__file__), 'css-parsing-tests')
+
 
 def generic(func):
     implementations = func()
@@ -77,9 +79,9 @@ def to_json():
 
 
 def load_json(filename):
-    json_data = json.load(open(os.path.join(
-        os.path.dirname(__file__), 'css-parsing-tests', filename),
-        encoding='utf-8'))
+    path = os.path.join(DATA_DIR, filename)
+    with open(path, encoding='utf-8') as fp:
+        json_data = json.load(fp)
     return list(zip(json_data[::2], json_data[1::2]))
 
 
