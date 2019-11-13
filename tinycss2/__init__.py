@@ -1,4 +1,12 @@
-from pathlib import Path
+"""
+tinycss2
+========
+
+tinycss2 is a low-level CSS parser and generator: it can parse strings, return
+Python objects representing tokens and blocks, and generate CSS strings
+corresponding to these objects.
+
+"""
 
 from .bytes import parse_stylesheet_bytes  # noqa
 from .parser import (parse_declaration_list, parse_one_component_value,  # noqa
@@ -7,4 +15,4 @@ from .parser import (parse_declaration_list, parse_one_component_value,  # noqa
 from .serializer import serialize, serialize_identifier  # noqa
 from .tokenizer import parse_component_value_list  # noqa
 
-VERSION = __version__ = (Path(__file__).parent / 'VERSION').read_text()
+VERSION = __version__ = '1.0.2'
