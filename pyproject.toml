@@ -38,3 +38,7 @@ Donation = 'https://www.patreon.com/kozea'
 [tool.coverage.run]
 branch = true
 include = ['tests/*', 'tinycss2/*']
+
+[tool.isort]
+default_section = 'THIRDPARTY'
+multi_line_output = 4

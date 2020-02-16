@@ -5,11 +5,11 @@ import sys
 
 from webencodings import ascii_lower
 
-from .ast import (AtKeywordToken, Comment, CurlyBracketsBlock, DimensionToken,
-                  FunctionBlock, HashToken, IdentToken, LiteralToken,
-                  NumberToken, ParenthesesBlock, ParseError, PercentageToken,
-                  SquareBracketsBlock, StringToken, UnicodeRangeToken,
-                  URLToken, WhitespaceToken)
+from .ast import (
+    AtKeywordToken, Comment, CurlyBracketsBlock, DimensionToken, FunctionBlock,
+    HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
+    ParseError, PercentageToken, SquareBracketsBlock, StringToken,
+    UnicodeRangeToken, URLToken, WhitespaceToken)
 from .serializer import serialize_string_value
 
 _NUMBER_RE = re.compile(r'[-+]?([0-9]*\.)?[0-9]+([eE][+-]?[0-9]+)?')
