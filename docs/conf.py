@@ -8,7 +8,6 @@ sys.path.append(str(PATH))
 sys.path.insert(0, str(PATH.parent))
 
 import tinycss2  # noqa isort:skip
-print(tinycss2.__file__)
 
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -27,7 +26,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'tinycss2'
-copyright = '2013-2019, Simon Sapin and contributors'
+copyright = 'Simon Sapin and contributors, see COPYRIGHT file'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
