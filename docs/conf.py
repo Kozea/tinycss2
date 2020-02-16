@@ -43,7 +43,7 @@ version = '.'.join(release.split('.')[:2])
 exclude_patterns = ['_build']
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = 'lovelace'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.

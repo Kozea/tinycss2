@@ -5,12 +5,9 @@ First Steps
 Installation
 ------------
 
-The easiest way to use tinycss2 is to install it in a virtual environment. If
-you are not familiar with Python’s virtual environments, please take the time
-to read `Python’s documentation`_.
-
-When your virtual environment is activated, you can then install tinycss2 with
-pip_::
+The easiest way to use tinycss2 is to install it in a Python `virtual
+environment`_. When your virtual environment is activated, you can then install
+tinycss2 with pip_::
 
     pip install tinycss2
 
@@ -21,12 +18,58 @@ Python implementation.
 tinycss2 also is packaged for many Linux distributions (Debian, Ubuntu, Fedora,
 Archlinux, Gentoo…).
 
-.. _Python’s documentation: https://docs.python.org/3/library/venv.html
+.. _virtual environment: https://packaging.python.org/tutorials/installing-packages/#creating-virtual-environments
 .. _pip: http://pip-installer.org/
 .. _webencodings: http://pythonhosted.org/webencodings/
 
 
-Simple Use
-----------
+Parsing CSS
+-----------
 
-TODO
+tinycss2’s main goal is to parse CSS into Python objects. Parsing CSS is done
+using the :func:`~tinycss2.parse_stylesheet` function.
+
+.. code-block:: python
+
+   import tinycss2
+
+   rules = tinycss2.parse_stylesheet('body div { width: 50% }')
+
+   print(rules)
+   # [<QualifiedRule … { … }>]
+   rule = rules[0]
+
+   print(rule.prelude)
+   # [
+   #     <IdentToken body>,
+   #     <WhitespaceToken>,
+   #     <IdentToken div>,
+   #     <WhitespaceToken>,
+   # ]
+
+   print(rule.content)
+   # [
+   #     <WhitespaceToken>,
+   #     <IdentToken width>,
+   #     <LiteralToken :>,
+   #     <WhitespaceToken>,
+   #     <PercentageToken 50%>,
+   #     <WhitespaceToken>,
+   # ]
+
+
+Serializing CSS
+---------------
+
+tinycss2 is also able to generate CSS strings out of abstact Python trees.
+
+.. code-block:: python
+
+   import tinycss2
+
+   rules = tinycss2.parse_stylesheet('body div { width: 50% }')
+   rule = rules[0]
+
+   print(rule.serialize())
+   # 'body div { width: 50% }'
+
