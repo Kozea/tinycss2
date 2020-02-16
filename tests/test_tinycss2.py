@@ -7,18 +7,18 @@ from io import open
 import pytest
 from webencodings import Encoding, lookup
 
-from . import (parse_component_value_list, parse_declaration_list,
-               parse_one_component_value, parse_one_declaration,
-               parse_one_rule, parse_rule_list, parse_stylesheet,
-               parse_stylesheet_bytes, serialize)
-from .ast import (AtKeywordToken, AtRule, Comment, CurlyBracketsBlock,
-                  Declaration, DimensionToken, FunctionBlock, HashToken,
-                  IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
-                  ParseError, PercentageToken, QualifiedRule,
-                  SquareBracketsBlock, StringToken, UnicodeRangeToken,
-                  URLToken, WhitespaceToken)
-from .color3 import RGBA, parse_color
-from .nth import parse_nth
+from tinycss2 import (parse_component_value_list, parse_declaration_list,
+                      parse_one_component_value, parse_one_declaration,
+                      parse_one_rule, parse_rule_list, parse_stylesheet,
+                      parse_stylesheet_bytes, serialize)
+from tinycss2.ast import (AtKeywordToken, AtRule, Comment, CurlyBracketsBlock,
+                          Declaration, DimensionToken, FunctionBlock,
+                          HashToken, IdentToken, LiteralToken, NumberToken,
+                          ParenthesesBlock, ParseError, PercentageToken,
+                          QualifiedRule, SquareBracketsBlock, StringToken,
+                          UnicodeRangeToken, URLToken, WhitespaceToken)
+from tinycss2.color3 import RGBA, parse_color
+from tinycss2.nth import parse_nth
 
 
 def generic(func):

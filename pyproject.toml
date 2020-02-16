@@ -27,7 +27,7 @@ classifiers = [
 
 [tool.flit.metadata.requires-extra]
 doc = ['sphinx', 'sphinx_rtd_theme']
-test = ['pytest', 'pytest-runner', 'pytest-cov', 'pytest-flake8', 'pytest-isort']
+test = ['pytest', 'pytest-cov', 'pytest-flake8', 'pytest-isort']
 
 [tool.flit.metadata.urls]
 Documentation = 'https://tinycss2.readthedocs.io/'
@@ -37,11 +37,12 @@ Donation = 'https://www.patreon.com/kozea'
 
 [tool.pytest]
 addopts = '--flake8 --isort'
-norecursedirs = 'build dist .cache .eggs .git'
+norecursedirs = 'build dist'
 
 [tool.coverage.run]
 branch = true
-include = 'tinycss2/*'
+include = ['tinycss2/*']
 
 [tool.isort]
 default_section = 'THIRDPARTY'
+multi_line_output = 4
