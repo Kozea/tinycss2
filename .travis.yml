@@ -12,6 +12,7 @@ matrix:
       language: generic
 
 install:
+  - pip3 install --upgrade pip setuptools
   - pip3 install .[test]
 
 script:
