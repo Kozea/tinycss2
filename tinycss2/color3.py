@@ -35,7 +35,7 @@ def parse_color(input):
     <http://www.w3.org/TR/css3-color/>`_.
 
     :param input:
-        A :term:`string`, or a single :term:`component value`.
+        A :obj:`string <str>`, or a single :term:`component value`.
     :returns:
         * :obj:`None` if the input is not a valid color value.
           (No exception is raised.)

@@ -7,22 +7,19 @@ def decode_stylesheet_bytes(css_bytes, protocol_encoding=None,
                             environment_encoding=None):
     """Determine the character encoding of a CSS stylesheet and decode it.
 
-    This is based on the presence of a ,
-    an ``@charset`` rule,
-    and encoding meta-information.
+    This is based on the presence of a :abbr:`BOM (Byte Order Mark)`,
+    a ``@charset`` rule, and encoding meta-information.
 
     :param css_bytes: A byte string.
     :param protocol_encoding:
-        The encoding label, if any, defined by HTTP or equivalent protocol.
-        (e.g. via the ``charset`` parameter of the ``Content-Type`` header.)
+        The encoding label, if any, defined by HTTP or equivalent protocol
+        (e.g. via the ``charset`` parameter of the ``Content-Type`` header).
     :param environment_encoding:
-        A :class:`webencodings.Encoding` object
-        for the `environment encoding
-        <http://www.w3.org/TR/css-syntax/#environment-encoding>`_,
-        if any.
+        A :class:`webencodings.Encoding` object for the `environment encoding
+        <http://www.w3.org/TR/css-syntax/#environment-encoding>`_, if any.
     :returns:
-        A 2-tuple of a decoded Unicode string
-        and the :class:`webencodings.Encoding` object that was used.
+        A 2-tuple of a decoded Unicode string and the
+        :class:`webencodings.Encoding` object that was used.
 
     """
     # http://dev.w3.org/csswg/css-syntax/#the-input-byte-stream
@@ -53,9 +50,8 @@ def parse_stylesheet_bytes(css_bytes, protocol_encoding=None,
 
     This is used when reading a file or fetching an URL.
     The character encoding is determined from the initial bytes
-    (a :abbr:`BOM (Byte Order Mark)` or an ``@charset`` rule)
-    as well as the parameters.
-    The ultimate fallback is UTF-8.
+    (a :abbr:`BOM (Byte Order Mark)` or a ``@charset`` rule)
+    as well as the parameters. The ultimate fallback is UTF-8.
 
     :param css_bytes: A byte string.
     :param protocol_encoding:

@@ -36,7 +36,7 @@ def parse_one_component_value(input, skip_comments=False):
     referred to by ``attr(foo length)``.
 
     :param input:
-        A :term:`string`, or an iterable of :term:`component values`.
+        A :obj:`string <str>`, or an iterable of :term:`component values`.
     :param skip_comments:
         If the input is a string, ignore all CSS comments.
     :returns:
@@ -64,7 +64,7 @@ def parse_one_declaration(input, skip_comments=False):
     <http://dev.w3.org/csswg/css-conditional/#at-supports>`_ test.
 
     :param input:
-        A :term:`string`, or an iterable of :term:`component values`.
+        A :obj:`string <str>`, or an iterable of :term:`component values`.
     :param skip_comments:
         If the input is a string, ignore all CSS comments.
     :returns:

@@ -22,7 +22,7 @@ def serialize(nodes):
 def serialize_identifier(value):
     """Serialize any string as a CSS identifier
 
-    :param value: a :term:`string`
+    :param value: a :obj:`string <str>`
     :returns:
         an Unicode string
         that would parse as an :class:`~tinycss2.ast.IdentToken`

@@ -14,7 +14,7 @@ def parse_nth(input):
     on top of a CSS tokenizer.
 
     :param input:
-        A :term:`string`, or an iterable yielding :term:`component values`
+        A :obj:`string <str>`, or an iterable yielding :term:`component values`
         (eg. the :attr:`~tinycss2.ast.FunctionBlock.arguments`
         of a functional pseudo-class.)
     :returns:

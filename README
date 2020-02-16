@@ -11,7 +11,7 @@ CSS but doesn't know specific rules, properties or values supported in various
 CSS modules.
 
 * BSD licensed
-* For Python 3.5+ (tested on CPython and Pypy3)
+* For Python 3.5+, tested on CPython and PyPy3
 * Latest documentation: http://tinycss2.readthedocs.io/
 * Source code and issue tracker: https://github.com/Kozea/tinycss2
 * PyPI releases: https://pypi.python.org/pypi/tinycss2/
