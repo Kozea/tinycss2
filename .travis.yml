@@ -15,4 +15,4 @@ install:
   - pip3 install .[test]
 
 script:
-  - pytest
+  - python3 -m pytest --isort --flake8
