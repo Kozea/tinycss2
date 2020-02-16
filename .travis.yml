@@ -1,5 +1,6 @@
 language: python
 sudo: false
+env: PYTHON=python3
 
 matrix:
   include:
@@ -10,10 +11,14 @@ matrix:
     - python: pypy3
     - os: osx
       language: generic
+    - os: windows
+      language: shell
+      env: PYTHON=/c/Python38/python
 
 install:
-  - pip3 install --upgrade pip setuptools
-  - pip3 install .[test]
+  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then choco install -y python; fi
+  - $PYTHON -m pip install --upgrade pip setuptools
+  - $PYTHON -m pip install .[test]
 
 script:
-  - python3 -m pytest --isort --flake8
+  - $PYTHON -m pytest --isort --flake8
