@@ -22,4 +22,5 @@
    :maxdepth: 3
 
    changelog
+   contribute
    authors
