@@ -1,9 +1,7 @@
 *.pyc
-*.egg-info
 .cache
 .coverage
-.eggs
-/htmlcov
-/dist
 /build
+/dist
 /docs/_build
+/venv
