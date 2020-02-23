@@ -185,7 +185,7 @@ print(',\n'.join(
         (replace(keyword, i, lambda c: r'\\%X ' % ord(c)), True, True),
         (replace(keyword, i, lambda c: ''), False, True),
         # Kelving sign: u'K'.lower() == u'k', but should not match in CSS
-        (keyword.replace('k', u'K'), False, 'k' in keyword)
+        (keyword.replace('k', 'K'), False, 'k' in keyword)
     ]
     if run
 ))

@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-
-
 def serialize(nodes):
     """Serialize nodes to CSS syntax.
 
