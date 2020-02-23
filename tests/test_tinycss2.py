@@ -1,8 +1,7 @@
 import functools
 import json
-import os.path
 import pprint
-from io import open
+from pathlib import Path
 
 import pytest
 from tinycss2 import (
@@ -76,9 +75,8 @@ def to_json():
 
 
 def load_json(filename):
-    json_data = json.load(open(os.path.join(
-        os.path.dirname(__file__), 'css-parsing-tests', filename),
-        encoding='utf-8'))
+    path = Path(__file__).parent / 'css-parsing-tests' / filename
+    json_data = json.loads(path.read_text())
     return list(zip(json_data[::2], json_data[1::2]))
 
 
