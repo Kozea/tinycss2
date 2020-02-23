@@ -225,3 +225,8 @@ def test_backslash_delim():
     del tokens[1]
     assert [t.type for t in tokens] == ['literal', 'ident']
     assert serialize(tokens) == source
+
+
+def test_bad_unicode():
+    parse_one_declaration('background:\udca9')
+    parse_rule_list('@\udca9')
