@@ -76,7 +76,7 @@ def to_json():
 
 def load_json(filename):
     path = Path(__file__).parent / 'css-parsing-tests' / filename
-    json_data = json.loads(path.read_text())
+    json_data = json.loads(path.read_text(encoding='utf-8'))
     return list(zip(json_data[::2], json_data[1::2]))
 
 
