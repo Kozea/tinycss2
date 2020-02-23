@@ -184,7 +184,7 @@ print(',\n'.join(
             keyword[i % len(keyword)] not in 'abcdef'),
         (replace(keyword, i, lambda c: r'\\%X ' % ord(c)), True, True),
         (replace(keyword, i, lambda c: ''), False, True),
-        # Kelving sign: u'K'.lower() == u'k', but should not match in CSS
+        # Kelving sign: 'K'.lower() == u'k', but should not match in CSS
         (keyword.replace('k', 'K'), False, 'k' in keyword)
     ]
     if run
