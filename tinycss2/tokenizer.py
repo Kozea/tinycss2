@@ -76,7 +76,8 @@ def parse_component_value_list(css, skip_comments=False):
                         error_key = error[0]
                         if error_key == 'eof-in-string':
                             repr = repr[:-2]
-                        elif error_key == 'eof-in-url':
+                        else:
+                            assert error_key == 'eof-in-url'
                             repr = repr[:-1]
                     tokens.append(URLToken(line, column, value, repr))
                 if error is not None:
