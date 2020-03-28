@@ -1,5 +1,6 @@
 import collections
 import re
+from colorsys import hls_to_rgb
 
 from .parser import parse_one_component_value
 
@@ -111,46 +112,9 @@ def _parse_hsl(args, alpha):
     """
     types = [arg.type for arg in args]
     if types == ['number', 'percentage', 'percentage'] and args[0].is_integer:
-        r, g, b = _hsl_to_rgb(args[0].int_value, args[1].value, args[2].value)
+        r, g, b = hls_to_rgb(
+            args[0].int_value / 360, args[2].value / 100, args[1].value / 100)
         return RGBA(r, g, b, alpha)
-
-
-def _hsl_to_rgb(hue, saturation, lightness):
-    """
-    :param hue: degrees
-    :param saturation: percentage
-    :param lightness: percentage
-    :returns: (r, g, b) as floats in the 0..1 range
-    """
-    hue = (hue / 360) % 1
-    saturation = min(1, max(0, saturation / 100))
-    lightness = min(1, max(0, lightness / 100))
-
-    # Translated from ABC: http://www.w3.org/TR/css3-color/#hsl-color
-
-    def hue_to_rgb(m1, m2, h):
-        if h < 0:
-            h += 1
-        if h > 1:
-            h -= 1
-        if h * 6 < 1:
-            return m1 + (m2 - m1) * h * 6
-        if h * 2 < 1:
-            return m2
-        if h * 3 < 2:
-            return m1 + (m2 - m1) * (2 / 3 - h) * 6
-        return m1
-
-    if lightness <= 0.5:
-        m2 = lightness * (saturation + 1)
-    else:
-        m2 = lightness + saturation - lightness * saturation
-    m1 = lightness * 2 - m2
-    return (
-        hue_to_rgb(m1, m2, hue + 1 / 3),
-        hue_to_rgb(m1, m2, hue),
-        hue_to_rgb(m1, m2, hue - 1 / 3),
-    )
 
 
 def _parse_comma_separated(tokens):
