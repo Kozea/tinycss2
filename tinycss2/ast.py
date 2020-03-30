@@ -700,6 +700,15 @@ class FunctionBlock(Node):
         write(serialize_identifier(self.name))
         write('(')
         _serialize_to(self.arguments, write)
+        if self.arguments:
+            function = self
+            while isinstance(function, FunctionBlock):
+                eof_in_string = (
+                    isinstance(function.arguments[-1], ParseError) and
+                    function.arguments[-1].kind == 'eof-in-string')
+                if eof_in_string:
+                    return
+                function = function.arguments[-1]
         write(')')
 
 
