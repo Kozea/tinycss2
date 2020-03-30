@@ -57,9 +57,12 @@ def parse_color(input):
         for multiplier, regexp in _HASH_REGEXPS:
             match = regexp(token.value)
             if match:
-                r, g, b = [int(group * multiplier, 16) / 255
-                           for group in match.groups()]
-                return RGBA(r, g, b, 1.)
+                channels = [
+                    int(group * multiplier, 16) / 255
+                    for group in match.groups()]
+                if len(channels) == 3:
+                    channels.append(1.)
+                return RGBA(*channels)
     elif token.type == 'function':
         args = _parse_comma_separated(token.arguments)
         if args:
@@ -135,8 +138,10 @@ def _parse_comma_separated(tokens):
 
 
 _HASH_REGEXPS = (
-    (2, re.compile('^([\\da-f])([\\da-f])([\\da-f])$', re.I).match),
-    (1, re.compile('^([\\da-f]{2})([\\da-f]{2})([\\da-f]{2})$', re.I).match),
+    (2, re.compile('^{}$'.format(4 * '([\\da-f])'), re.I).match),
+    (1, re.compile('^{}$'.format(4 * '([\\da-f]{2})'), re.I).match),
+    (2, re.compile('^{}$'.format(3 * '([\\da-f])'), re.I).match),
+    (1, re.compile('^{}$'.format(3 * '([\\da-f]{2})'), re.I).match),
 )
 
 
