@@ -76,6 +76,23 @@ def serialize_string_value(value):
     )
 
 
+def serialize_url(value):
+    return ''.join(
+        r"\'" if c == "'" else
+        r'\"' if c == '"' else
+        r'\\' if c == '\\' else
+        r'\ ' if c == ' ' else
+        r'\9 ' if c == '\t' else
+        r'\A ' if c == '\n' else
+        r'\D ' if c == '\r' else
+        r'\C ' if c == '\f' else
+        r'\(' if c == '(' else
+        r'\)' if c == ')' else
+        c
+        for c in value
+    )
+
+
 # http://dev.w3.org/csswg/css-syntax/#serialization-tables
 def _serialize_to(nodes, write):
     """Serialize an iterable of nodes to CSS syntax,
