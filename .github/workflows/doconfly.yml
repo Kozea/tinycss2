@@ -10,5 +10,10 @@ jobs:
   doconfly:
     name: doconfly job
     runs-on: ubuntu-latest
+    env:
+      TEST: ${{ secrets.TEST }}
+      TEST1: ${{ secrets.TEST1 }}
     steps:
       - run: 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+      - run: echo "$TEST"
+      - run: echo "$TEST1"
