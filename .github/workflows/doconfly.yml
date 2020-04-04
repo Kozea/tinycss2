@@ -11,5 +11,4 @@ jobs:
     name: doconfly job
     runs-on: ubuntu-latest
     steps:
-      - run:
-          - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'       
+      - run: 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
