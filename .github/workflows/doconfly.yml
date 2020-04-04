@@ -16,11 +16,12 @@ jobs:
       TAKOYAKI: ${{ secrets.TAKOYAKI }}
       USER: ${{ secrets.USER }}
     steps:
-      - run: 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
-      - run: eval $(ssh-agent -s)
-      - run: echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-      - run: mkdir -p ~/.ssh
-      - run: chmod 700 ~/.ssh
-      - run: ssh-keyscan -p $PORT $TAKOYAKI >> ~/.ssh/known_hosts
-      - run: chmod 644 ~/.ssh/known_hosts
-      - run: ssh $USER@$TAKOYAKI -p $PORT "less toto"
+      - run: |
+          'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+          eval $(ssh-agent -s)
+          echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -p $PORT $TAKOYAKI >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          ssh $USER@$TAKOYAKI -p $PORT "less toto"
