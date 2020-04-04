@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PORT: ${{ secrets.PORT }}
-      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY" }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       TAKOYAKI: ${{ secrets.TAKOYAKI }}
       USER: ${{ secrets.USER }}
     steps:
