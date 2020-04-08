@@ -3,12 +3,13 @@ from .tokenizer import parse_component_value_list
 
 
 def _to_token_iterator(input, skip_comments=False):
-    """
+    """Iterate component values out of string or component values iterable.
 
+    :type input: :obj:`str` or :term:`iterable`
     :param input: A string or an iterable of :term:`component values`.
-    :param skip_comments:
-        If the input is a string, ignore all CSS comments.
-    :returns: A iterator yielding :term:`component values`.
+    :type skip_comments: :obj:`bool`
+    :param skip_comments: If the input is a string, ignore all CSS comments.
+    :returns: An iterator yielding :term:`component values`.
 
     """
     # Accept ASCII-only byte strings on Python 2, with implicit conversion.
@@ -20,7 +21,8 @@ def _to_token_iterator(input, skip_comments=False):
 def _next_significant(tokens):
     """Return the next significant (neither whitespace or comment) token.
 
-    :param tokens: An *iterator* yielding :term:`component values`.
+    :type tokens: :term:`iterator`
+    :param tokens: An iterator yielding :term:`component values`.
     :returns: A :term:`component value`, or :obj:`None`.
 
     """
@@ -35,10 +37,10 @@ def parse_one_component_value(input, skip_comments=False):
     This is used e.g. for an attribute value
     referred to by ``attr(foo length)``.
 
-    :param input:
-        A :obj:`string <str>`, or an iterable of :term:`component values`.
-    :param skip_comments:
-        If the input is a string, ignore all CSS comments.
+    :type input: :obj:`str` or :term:`iterable`
+    :param input: A string or an iterable of :term:`component values`.
+    :type skip_comments: :obj:`bool`
+    :param skip_comments: If the input is a string, ignore all CSS comments.
     :returns:
         A :term:`component value` (that is neither whitespace or comment),
         or a :class:`~tinycss2.ast.ParseError`.
@@ -63,10 +65,10 @@ def parse_one_declaration(input, skip_comments=False):
     This is used e.g. for a declaration in an `@supports
     <http://dev.w3.org/csswg/css-conditional/#at-supports>`_ test.
 
-    :param input:
-        A :obj:`string <str>`, or an iterable of :term:`component values`.
-    :param skip_comments:
-        If the input is a string, ignore all CSS comments.
+    :type input: :obj:`str` or :term:`iterable`
+    :param input: A string or an iterable of :term:`component values`.
+    :type skip_comments: :obj:`bool`
+    :param skip_comments: If the input is a string, ignore all CSS comments.
     :returns:
         A :class:`~tinycss2.ast.Declaration`
         or :class:`~tinycss2.ast.ParseError`.
@@ -86,8 +88,10 @@ def _parse_declaration(first_token, tokens):
 
     Consume :obj:`tokens` until the end of the declaration or the first error.
 
-    :param first_token: The first :term:`component value` of the rule.
-    :param tokens: An *iterator* yielding :term:`component values`.
+    :type first_token: :term:`component value`
+    :param first_token: The first component value of the rule.
+    :type tokens: :term:`iterator`
+    :param tokens: An iterator yielding :term:`component values`.
     :returns:
         A :class:`~tinycss2.ast.Declaration`
         or :class:`~tinycss2.ast.ParseError`.
@@ -149,10 +153,13 @@ def parse_declaration_list(input, skip_comments=False, skip_whitespace=False):
     all :class:`~tinycss2.ast.AtRule` objects
     should simply be rejected as invalid.
 
+    :type input: :obj:`str` or :term:`iterable`
     :param input: A string or an iterable of :term:`component values`.
+    :type skip_comments: :obj:`bool`
     :param skip_comments:
         Ignore CSS comments at the top-level of the list.
         If the input is a string, ignore all comments.
+    :type skip_whitespace: :obj:`bool`
     :param skip_whitespace:
         Ignore whitespace at the top-level of the list.
         Whitespace is still preserved
@@ -192,7 +199,9 @@ def parse_one_rule(input, skip_comments=False):
     <http://dev.w3.org/csswg/cssom/#dom-cssstylesheet-insertrule>`_
     in an implementation of CSSOM.
 
+    :type input: :obj:`str` or :term:`iterable`
     :param input: A string or an iterable of :term:`component values`.
+    :type skip_comments: :obj:`bool`
     :param skip_comments:
         If the input is a string, ignore all CSS comments.
     :returns:
@@ -225,10 +234,13 @@ def parse_rule_list(input, skip_comments=False, skip_whitespace=False):
     This differs from :func:`parse_stylesheet` in that
     top-level ``<!--`` and ``-->`` tokens are not ignored.
 
+    :type input: :obj:`str` or :term:`iterable`
     :param input: A string or an iterable of :term:`component values`.
+    :type skip_comments: :obj:`bool`
     :param skip_comments:
         Ignore CSS comments at the top-level of the list.
         If the input is a string, ignore all comments.
+    :type skip_whitespace: :obj:`bool`
     :param skip_whitespace:
         Ignore whitespace at the top-level of the list.
         Whitespace is still preserved
@@ -267,10 +279,13 @@ def parse_stylesheet(input, skip_comments=False, skip_whitespace=False):
     top-level ``<!--`` and ``-->`` tokens are ignored.
     This is a legacy quirk for the ``<style>`` HTML element.
 
+    :type input: :obj:`str` or :term:`iterable`
     :param input: A string or an iterable of :term:`component values`.
+    :type skip_comments: :obj:`bool`
     :param skip_comments:
         Ignore CSS comments at the top-level of the stylesheet.
         If the input is a string, ignore all comments.
+    :type skip_whitespace: :obj:`bool`
     :param skip_whitespace:
         Ignore whitespace at the top-level of the stylesheet.
         Whitespace is still preserved
@@ -305,8 +320,10 @@ def _consume_rule(first_token, tokens):
 
     Consume just enough of :obj:`tokens` for this rule.
 
-    :param first_token: The first :term:`component value` of the rule.
-    :param tokens: An *iterator* yielding :term:`component values`.
+    :type first_token: :term:`component value`
+    :param first_token: The first component value of the rule.
+    :type tokens: :term:`iterator`
+    :param tokens: An iterator yielding :term:`component values`.
     :returns:
         A :class:`~tinycss2.ast.QualifiedRule`,
         :class:`~tinycss2.ast.AtRule`,
@@ -338,8 +355,10 @@ def _consume_at_rule(at_keyword, tokens):
 
     Consume just enough of :obj:`tokens` for this rule.
 
-    :param at_keyword: The :class:`AtKeywordToken` object starting this rule.
-    :param tokens: An *iterator* yielding :term:`component values`.
+    :type at_keyword: :class:`AtKeywordToken`
+    :param at_keyword: The at-rule keyword token starting this rule.
+    :type tokens: :term:`iterator`
+    :param tokens: An iterator yielding :term:`component values`.
     :returns:
         A :class:`~tinycss2.ast.QualifiedRule`,
         or :class:`~tinycss2.ast.ParseError`.

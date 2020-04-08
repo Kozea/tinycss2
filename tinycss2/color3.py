@@ -33,12 +33,12 @@ def parse_color(input):
     """Parse a color value as defined in `CSS Color Level 3
     <http://www.w3.org/TR/css3-color/>`_.
 
-    :param input:
-        A :obj:`string <str>`, or a single :term:`component value`.
+    :type input: :obj:`str` or :term:`iterable`
+    :param input: A string or an iterable of :term:`component values`.
     :returns:
         * :obj:`None` if the input is not a valid color value.
           (No exception is raised.)
-        * The string ``'currentColor'`` for the *currentColor* keyword
+        * The string ``'currentColor'`` for the ``currentColor`` keyword
         * Or a :class:`RGBA` object for every other values
           (including keywords, HSL and HSLA.)
           The alpha channel is clipped to [0, 1]
@@ -82,20 +82,22 @@ def parse_color(input):
 
 
 def _parse_alpha(args):
-    """
+    """Parse a list of one alpha value.
+
     If args is a list of a single INTEGER or NUMBER token,
-    retur its value clipped to the 0..1 range
-    Otherwise, return None.
+    return its value clipped to the 0..1 range. Otherwise, return None.
+
     """
     if len(args) == 1 and args[0].type == 'number':
         return min(1, max(0, args[0].value))
 
 
 def _parse_rgb(args, alpha):
-    """
-    If args is a list of 3 INTEGER tokens or 3 PERCENTAGE tokens,
-    return RGB values as a tuple of 3 floats in 0..1.
-    Otherwise, return None.
+    """Parse a list of RGB channels.
+
+    If args is a list of 3 INTEGER tokens or 3 PERCENTAGE tokens, return RGB
+    values as a tuple of 3 floats in 0..1. Otherwise, return None.
+
     """
     types = [arg.type for arg in args]
     if (types == ['number', 'number', 'number'] and
@@ -108,10 +110,11 @@ def _parse_rgb(args, alpha):
 
 
 def _parse_hsl(args, alpha):
-    """
-    If args is a list of 1 INTEGER token and 2 PERCENTAGE tokens,
-    return RGB values as a tuple of 3 floats in 0..1.
-    Otherwise, return None.
+    """Parse a list of HSL channels.
+
+    If args is a list of 1 INTEGER token and 2 PERCENTAGE tokens, return RGB
+    values as a tuple of 3 floats in 0..1. Otherwise, return None.
+
     """
     types = [arg.type for arg in args]
     if types == ['number', 'percentage', 'percentage'] and args[0].is_integer:

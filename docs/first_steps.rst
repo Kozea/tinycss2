@@ -23,7 +23,7 @@ Archlinux, Gentoo…).
 .. _webencodings: http://pythonhosted.org/webencodings/
 
 
-Parsing CSS
+CSS Parsing
 -----------
 
 tinycss2’s main goal is to parse CSS into Python objects. Parsing CSS is done
@@ -56,20 +56,3 @@ using the :func:`~tinycss2.parse_stylesheet` function.
    #     <PercentageToken 50%>,
    #     <WhitespaceToken>,
    # ]
-
-
-Serializing CSS
----------------
-
-tinycss2 is also able to generate CSS strings out of abstact Python trees.
-
-.. code-block:: python
-
-   import tinycss2
-
-   rules = tinycss2.parse_stylesheet('body div { width: 50% }')
-   rule = rules[0]
-
-   print(rule.serialize())
-   # 'body div { width: 50% }'
-

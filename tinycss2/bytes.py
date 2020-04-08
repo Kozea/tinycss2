@@ -10,13 +10,16 @@ def decode_stylesheet_bytes(css_bytes, protocol_encoding=None,
     This is based on the presence of a :abbr:`BOM (Byte Order Mark)`,
     a ``@charset`` rule, and encoding meta-information.
 
-    :param css_bytes: A byte string.
+    :type css_bytes: :obj:`bytes`
+    :param css_bytes: A CSS byte string.
+    :type protocol_encoding: :obj:`str`
     :param protocol_encoding:
-        The encoding label, if any, defined by HTTP or equivalent protocol
-        (e.g. via the ``charset`` parameter of the ``Content-Type`` header).
+        The encoding label, if any, defined by HTTP or equivalent protocol.
+        (e.g. via the ``charset`` parameter of the ``Content-Type`` header.)
+    :type environment_encoding: :class:`webencodings.Encoding`
     :param environment_encoding:
-        A :class:`webencodings.Encoding` object for the `environment encoding
-        <http://www.w3.org/TR/css-syntax/#environment-encoding>`_, if any.
+        The `environment encoding
+        <https://www.w3.org/TR/css-syntax/#environment-encoding>`_, if any.
     :returns:
         A 2-tuple of a decoded Unicode string and the
         :class:`webencodings.Encoding` object that was used.
@@ -48,23 +51,25 @@ def parse_stylesheet_bytes(css_bytes, protocol_encoding=None,
     """Parse :diagram:`stylesheet` from bytes,
     determining the character encoding as web browsers do.
 
-    This is used when reading a file or fetching an URL.
+    This is used when reading a file or fetching a URL.
     The character encoding is determined from the initial bytes
     (a :abbr:`BOM (Byte Order Mark)` or a ``@charset`` rule)
     as well as the parameters. The ultimate fallback is UTF-8.
 
-    :param css_bytes: A byte string.
+    :type css_bytes: :obj:`bytes`
+    :param css_bytes: A CSS byte string.
+    :type protocol_encoding: :obj:`str`
     :param protocol_encoding:
-        A string.
         The encoding label, if any, defined by HTTP or equivalent protocol.
         (e.g. via the ``charset`` parameter of the ``Content-Type`` header.)
+    :type environment_encoding: :class:`webencodings.Encoding`
     :param environment_encoding:
-        A :class:`webencodings.Encoding` object
-        for the `environment encoding`_,
-        if any.
+        The `environment encoding`_, if any.
+    :type skip_comments: :obj:`bool`
     :param skip_comments:
         Ignore CSS comments at the top-level of the stylesheet.
         If the input is a string, ignore all comments.
+    :type skip_whitespace: :obj:`bool`
     :param skip_whitespace:
         Ignore whitespace at the top-level of the stylesheet.
         Whitespace is still preserved

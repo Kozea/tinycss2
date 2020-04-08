@@ -17,7 +17,9 @@ _HEX_ESCAPE_RE = re.compile(r'([0-9A-Fa-f]{1,6})[ \n\t]?')
 def parse_component_value_list(css, skip_comments=False):
     """Parse a list of component values.
 
-    :param css: A :obj:`string <str>`.
+    :type css: :obj:`str`
+    :param css: A CSS string.
+    :type skip_comments: :obj:`bool`
     :param skip_comments:
         Ignore CSS comments.
         The return values (and recursively its blocks and functions)

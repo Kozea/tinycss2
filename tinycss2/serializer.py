@@ -7,8 +7,9 @@ def serialize(nodes):
     and consecutive identifiers
     that would otherwise parse back as the same token.
 
-    :param nodes: an iterable of :class:`~tinycss2.ast.Node` objects
-    :returns: an Unicode string
+    :type nodes: :term:`iterable`
+    :param nodes: An iterable of :class:`~tinycss2.ast.Node` objects.
+    :returns: A :obj:`string <str>` representing the nodes.
 
     """
     chunks = []
@@ -19,12 +20,13 @@ def serialize(nodes):
 def serialize_identifier(value):
     """Serialize any string as a CSS identifier
 
-    :param value: a :obj:`string <str>`
+    :type value: :obj:`str`
+    :param value: A string representing a CSS value.
     :returns:
-        an Unicode string
-        that would parse as an :class:`~tinycss2.ast.IdentToken`
-        whose :attr:`~tinycss2.ast.IdentToken.value` attribute
-        equals the passed :obj:`value` argument.
+        A :obj:`string <str>` that would parse as an
+        :class:`~tinycss2.ast.IdentToken` whose
+        :attr:`~tinycss2.ast.IdentToken.value` attribute equals the passed
+        :obj:`value` argument.
 
     """
     if value == '-':
@@ -95,9 +97,9 @@ def serialize_url(value):
 
 # http://dev.w3.org/csswg/css-syntax/#serialization-tables
 def _serialize_to(nodes, write):
-    """Serialize an iterable of nodes to CSS syntax,
-    writing chunks as Unicode string
-    by calling the provided :obj:`write` callback.
+    """Serialize an iterable of nodes to CSS syntax.
+
+    White chunks as a string by calling the provided :obj:`write` callback.
 
     """
     bad_pairs = BAD_PAIRS
