@@ -1,7 +1,7 @@
 Common Use Cases
 ================
 
-Tinycss2 has been created for WeasyPrint_, and many common use cases can thus
+tinycss2 has been created for WeasyPrint_, and many common use cases can thus
 be found in `its repository`_.
 
 .. _WeasyPrint: https://weasyprint.org/
