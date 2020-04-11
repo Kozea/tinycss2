@@ -69,7 +69,7 @@ The prelude contains 4 parts, called tokens_:
 - an identifier token (``div``),
 - a whitespace token (after ``div``).
 
-The content, that is between ``{`` and ``}``, contains 5 tokens:
+The content, that is between ``{`` and ``}``, contains 6 tokens:
 
 - a whitespace token (before ``width``),
 - an identifier token (``width``),
