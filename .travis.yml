@@ -20,4 +20,4 @@ install:
   - $PYTHON -m pip install .[test]
 
 script:
-  - $PYTHON -m pytest --isort --flake8
+  - $PYTHON -m pytest --isort --flake8 --ignore=tests/css-parsing-tests
