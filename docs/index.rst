@@ -23,4 +23,3 @@
 
    changelog
    contribute
-   authors

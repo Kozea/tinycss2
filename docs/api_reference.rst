@@ -100,8 +100,8 @@ Glossary
 .. currentmodule:: tinycss2.ast
 .. glossary::
 
-    Component value
-    Component values
+    component value
+    component values
         A :class:`ParseError`,
         :class:`WhitespaceToken`,
         :class:`LiteralToken`,
