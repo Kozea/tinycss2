@@ -7,7 +7,7 @@ CSS but doesn't know specific rules, properties or values supported in various
 CSS modules.
 
 * BSD licensed
-* For Python 3.5+, tested on CPython and PyPy3
+* For Python 3.6+, tested on CPython and PyPy3
 * Documentation: https://tinycss2.readthedocs.io/
 * Changelog: https://tinycss2.readthedocs.io/changelog
 * Code and issues: https://github.com/Kozea/tinycss2
