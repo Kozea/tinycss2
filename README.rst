@@ -10,8 +10,7 @@ CSS modules.
 * For Python 3.6+, tested on CPython and PyPy3
 * Documentation: https://tinycss2.readthedocs.io/
 * Changelog: https://tinycss2.readthedocs.io/changelog
-* Code and issues: https://github.com/Kozea/tinycss2
-* Releases: https://pypi.python.org/pypi/tinycss2/
+* Code, issues, tests: https://github.com/Kozea/tinycss2
 * Code of conduct: https://www.contributor-covenant.org/version/2/0/code_of_conduct/
 
 tinycss2 is free software, released under BSD 3-clause license, see LICENSE to
