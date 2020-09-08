@@ -1,5 +1,6 @@
 import collections
 import re
+from colorsys import hls_to_rgb
 
 from .parser import parse_one_component_value
 
@@ -32,12 +33,12 @@ def parse_color(input):
     """Parse a color value as defined in `CSS Color Level 3
     <http://www.w3.org/TR/css3-color/>`_.
 
-    :param input:
-        A :term:`string`, or a single :term:`component value`.
+    :type input: :obj:`str` or :term:`iterable`
+    :param input: A string or an iterable of :term:`component values`.
     :returns:
         * :obj:`None` if the input is not a valid color value.
           (No exception is raised.)
-        * The string ``'currentColor'`` for the *currentColor* keyword
+        * The string ``'currentColor'`` for the ``currentColor`` keyword
         * Or a :class:`RGBA` object for every other values
           (including keywords, HSL and HSLA.)
           The alpha channel is clipped to [0, 1]
@@ -56,9 +57,12 @@ def parse_color(input):
         for multiplier, regexp in _HASH_REGEXPS:
             match = regexp(token.value)
             if match:
-                r, g, b = [int(group * multiplier, 16) / 255
-                           for group in match.groups()]
-                return RGBA(r, g, b, 1.)
+                channels = [
+                    int(group * multiplier, 16) / 255
+                    for group in match.groups()]
+                if len(channels) == 3:
+                    channels.append(1.)
+                return RGBA(*channels)
     elif token.type == 'function':
         args = _parse_comma_separated(token.arguments)
         if args:
@@ -78,20 +82,22 @@ def parse_color(input):
 
 
 def _parse_alpha(args):
-    """
+    """Parse a list of one alpha value.
+
     If args is a list of a single INTEGER or NUMBER token,
-    retur its value clipped to the 0..1 range
-    Otherwise, return None.
+    return its value clipped to the 0..1 range. Otherwise, return None.
+
     """
     if len(args) == 1 and args[0].type == 'number':
         return min(1, max(0, args[0].value))
 
 
 def _parse_rgb(args, alpha):
-    """
-    If args is a list of 3 INTEGER tokens or 3 PERCENTAGE tokens,
-    return RGB values as a tuple of 3 floats in 0..1.
-    Otherwise, return None.
+    """Parse a list of RGB channels.
+
+    If args is a list of 3 INTEGER tokens or 3 PERCENTAGE tokens, return RGB
+    values as a tuple of 3 floats in 0..1. Otherwise, return None.
+
     """
     types = [arg.type for arg in args]
     if (types == ['number', 'number', 'number'] and
@@ -104,53 +110,17 @@ def _parse_rgb(args, alpha):
 
 
 def _parse_hsl(args, alpha):
-    """
-    If args is a list of 1 INTEGER token and 2 PERCENTAGE tokens,
-    return RGB values as a tuple of 3 floats in 0..1.
-    Otherwise, return None.
+    """Parse a list of HSL channels.
+
+    If args is a list of 1 INTEGER token and 2 PERCENTAGE tokens, return RGB
+    values as a tuple of 3 floats in 0..1. Otherwise, return None.
+
     """
     types = [arg.type for arg in args]
     if types == ['number', 'percentage', 'percentage'] and args[0].is_integer:
-        r, g, b = _hsl_to_rgb(args[0].int_value, args[1].value, args[2].value)
+        r, g, b = hls_to_rgb(
+            args[0].int_value / 360, args[2].value / 100, args[1].value / 100)
         return RGBA(r, g, b, alpha)
-
-
-def _hsl_to_rgb(hue, saturation, lightness):
-    """
-    :param hue: degrees
-    :param saturation: percentage
-    :param lightness: percentage
-    :returns: (r, g, b) as floats in the 0..1 range
-    """
-    hue = (hue / 360) % 1
-    saturation = min(1, max(0, saturation / 100))
-    lightness = min(1, max(0, lightness / 100))
-
-    # Translated from ABC: http://www.w3.org/TR/css3-color/#hsl-color
-
-    def hue_to_rgb(m1, m2, h):
-        if h < 0:
-            h += 1
-        if h > 1:
-            h -= 1
-        if h * 6 < 1:
-            return m1 + (m2 - m1) * h * 6
-        if h * 2 < 1:
-            return m2
-        if h * 3 < 2:
-            return m1 + (m2 - m1) * (2 / 3 - h) * 6
-        return m1
-
-    if lightness <= 0.5:
-        m2 = lightness * (saturation + 1)
-    else:
-        m2 = lightness + saturation - lightness * saturation
-    m1 = lightness * 2 - m2
-    return (
-        hue_to_rgb(m1, m2, hue + 1 / 3),
-        hue_to_rgb(m1, m2, hue),
-        hue_to_rgb(m1, m2, hue - 1 / 3),
-    )
 
 
 def _parse_comma_separated(tokens):
@@ -171,8 +141,10 @@ def _parse_comma_separated(tokens):
 
 
 _HASH_REGEXPS = (
-    (2, re.compile('^([\\da-f])([\\da-f])([\\da-f])$', re.I).match),
-    (1, re.compile('^([\\da-f]{2})([\\da-f]{2})([\\da-f]{2})$', re.I).match),
+    (2, re.compile('^{}$'.format(4 * '([\\da-f])'), re.I).match),
+    (1, re.compile('^{}$'.format(4 * '([\\da-f]{2})'), re.I).match),
+    (2, re.compile('^{}$'.format(3 * '([\\da-f])'), re.I).match),
+    (1, re.compile('^{}$'.format(3 * '([\\da-f]{2})'), re.I).match),
 )
 
 

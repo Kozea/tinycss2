@@ -1,26 +1,23 @@
 import functools
 import json
-import os.path
 import pprint
-from io import open
+from pathlib import Path
 
 import pytest
 from webencodings import Encoding, lookup
 
-from . import (parse_component_value_list, parse_declaration_list,
-               parse_one_component_value, parse_one_declaration,
-               parse_one_rule, parse_rule_list, parse_stylesheet,
-               parse_stylesheet_bytes, serialize)
-from .ast import (AtKeywordToken, AtRule, Comment, CurlyBracketsBlock,
-                  Declaration, DimensionToken, FunctionBlock, HashToken,
-                  IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
-                  ParseError, PercentageToken, QualifiedRule,
-                  SquareBracketsBlock, StringToken, UnicodeRangeToken,
-                  URLToken, WhitespaceToken)
-from .color3 import RGBA, parse_color
-from .nth import parse_nth
-
-DATA_DIR = os.path.join(os.path.dirname(__file__), 'css-parsing-tests')
+from tinycss2 import (
+    parse_component_value_list, parse_declaration_list,
+    parse_one_component_value, parse_one_declaration, parse_one_rule,
+    parse_rule_list, parse_stylesheet, parse_stylesheet_bytes, serialize)
+from tinycss2.ast import (
+    AtKeywordToken, AtRule, Comment, CurlyBracketsBlock, Declaration,
+    DimensionToken, FunctionBlock, HashToken, IdentToken, LiteralToken,
+    NumberToken, ParenthesesBlock, ParseError, PercentageToken, QualifiedRule,
+    SquareBracketsBlock, StringToken, UnicodeRangeToken, URLToken,
+    WhitespaceToken)
+from tinycss2.color3 import RGBA, parse_color
+from tinycss2.nth import parse_nth
 
 
 def generic(func):
@@ -79,9 +76,8 @@ def to_json():
 
 
 def load_json(filename):
-    path = os.path.join(DATA_DIR, filename)
-    with open(path, encoding='utf-8') as fp:
-        json_data = json.load(fp)
+    path = Path(__file__).parent / 'css-parsing-tests' / filename
+    json_data = json.loads(path.read_text(encoding='utf-8'))
     return list(zip(json_data[::2], json_data[1::2]))
 
 
@@ -230,3 +226,8 @@ def test_backslash_delim():
     del tokens[1]
     assert [t.type for t in tokens] == ['literal', 'ident']
     assert serialize(tokens) == source
+
+
+def test_bad_unicode():
+    parse_one_declaration('background:\udca9')
+    parse_rule_list('@\udca9')

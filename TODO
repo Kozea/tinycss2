@@ -1,4 +1,0 @@
-Test preserve_comments=True
-
-Test declaration corner cases: top-level ! and ;
-    … once that is all figured out in the spec

@@ -17,7 +17,7 @@ class Node:
     .. attribute:: type
 
         Each child class has a :attr:`type` class attribute
-        with an unique string value.
+        with a unique string value.
         This allows checking for the node type with code like:
 
         .. code-block:: python
@@ -62,7 +62,7 @@ class Node:
             return self.repr_format.format(self=self)
 
     def serialize(self):
-        """Serialize this node to CSS syntax and return an Unicode string."""
+        """Serialize this node to CSS syntax and return a Unicode string."""
         chunks = []
         self._serialize_to(chunks.append)
         return ''.join(chunks)
@@ -122,14 +122,11 @@ class ParseError(Node):
 class Comment(Node):
     """A CSS comment.
 
-    .. code-block:: text
-
-        '/*' <value> '*/'
-
     Comments can be ignored by passing ``skip_comments=True``
     to functions such as :func:`~tinycss2.parse_component_value_list`.
 
     .. autoattribute:: type
+
     .. attribute:: value
 
         The content of the comment, between ``/*`` and ``*/``, as a string.
@@ -153,6 +150,7 @@ class WhitespaceToken(Node):
     """A :diagram:`whitespace-token`.
 
     .. autoattribute:: type
+
     .. attribute:: value
 
         The whitespace sequence, as a string, as in the original CSS source.
@@ -231,7 +229,7 @@ class IdentToken(Node):
 
     .. attribute:: value
 
-        The unescaped value, as an Unicode string.
+        The unescaped value, as a Unicode string.
 
     .. attribute:: lower_value
 
@@ -267,7 +265,7 @@ class AtKeywordToken(Node):
 
     .. attribute:: value
 
-        The unescaped value, as an Unicode string, without the preceding ``@``.
+        The unescaped value, as a Unicode string, without the preceding ``@``.
 
     .. attribute:: lower_value
 
@@ -308,7 +306,7 @@ class HashToken(Node):
 
     .. attribute:: value
 
-        The unescaped value, as an Unicode string, without the preceding ``#``.
+        The unescaped value, as a Unicode string, without the preceding ``#``.
 
     .. attribute:: is_identifier
 
@@ -345,7 +343,7 @@ class StringToken(Node):
 
     .. attribute:: value
 
-        The unescaped value, as an Unicode string, without the quotes.
+        The unescaped value, as a Unicode string, without the quotes.
 
     """
     __slots__ = ['value', 'representation']
@@ -372,7 +370,7 @@ class URLToken(Node):
 
     .. attribute:: value
 
-        The unescaped URL, as an Unicode string,
+        The unescaped URL, as a Unicode string,
         without the ``url(`` and ``)`` markers or the optional quotes.
 
     """
@@ -440,7 +438,7 @@ class NumberToken(Node):
 
     .. attribute:: representation
 
-        The CSS representation of the value, as an Unicode string.
+        The CSS representation of the value, as a Unicode string.
 
     """
     __slots__ = ['value', 'int_value', 'is_integer', 'representation']
@@ -484,7 +482,7 @@ class PercentageToken(Node):
     .. attribute:: representation
 
         The CSS representation of the value without the unit,
-        as an Unicode string.
+        as a Unicode string.
 
     """
     __slots__ = ['value', 'int_value', 'is_integer', 'representation']
@@ -529,11 +527,11 @@ class DimensionToken(Node):
     .. attribute:: representation
 
         The CSS representation of the value without the unit,
-        as an Unicode string.
+        as a Unicode string.
 
     .. attribute:: unit
 
-        The unescaped unit, as an Unicode string.
+        The unescaped unit, as a Unicode string.
 
     .. attribute:: lower_unit
 
@@ -670,7 +668,7 @@ class FunctionBlock(Node):
 
     .. attribute:: name
 
-        The unescaped name of the function, as an Unicode string.
+        The unescaped name of the function, as a Unicode string.
 
     .. attribute:: lower_name
 
@@ -700,6 +698,15 @@ class FunctionBlock(Node):
         write(serialize_identifier(self.name))
         write('(')
         _serialize_to(self.arguments, write)
+        if self.arguments:
+            function = self
+            while isinstance(function, FunctionBlock):
+                eof_in_string = (
+                    isinstance(function.arguments[-1], ParseError) and
+                    function.arguments[-1].kind == 'eof-in-string')
+                if eof_in_string:
+                    return
+                function = function.arguments[-1]
         write(')')
 
 
@@ -715,9 +722,7 @@ class Declaration(Node):
 
     .. attribute:: name
 
-        The unescaped name, as an Unicode string.
-
-    .. autoattribute:: type
+        The unescaped name, as a Unicode string.
 
     .. attribute:: lower_name
 
@@ -824,7 +829,7 @@ class AtRule(Node):
     .. attribute:: at_keyword
 
         The unescaped value of the rule’s at-keyword,
-        without the ``@`` symbol, as an Unicode string.
+        without the ``@`` symbol, as a Unicode string.
 
     .. attribute:: lower_at_keyword
 

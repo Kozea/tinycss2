@@ -3,12 +3,12 @@ import sys
 
 from webencodings import ascii_lower
 
-from .ast import (AtKeywordToken, Comment, CurlyBracketsBlock, DimensionToken,
-                  FunctionBlock, HashToken, IdentToken, LiteralToken,
-                  NumberToken, ParenthesesBlock, ParseError, PercentageToken,
-                  SquareBracketsBlock, StringToken, UnicodeRangeToken,
-                  URLToken, WhitespaceToken)
-from .serializer import serialize_string_value
+from .ast import (
+    AtKeywordToken, Comment, CurlyBracketsBlock, DimensionToken, FunctionBlock,
+    HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
+    ParseError, PercentageToken, SquareBracketsBlock, StringToken,
+    UnicodeRangeToken, URLToken, WhitespaceToken)
+from .serializer import serialize_string_value, serialize_url
 
 _NUMBER_RE = re.compile(r'[-+]?([0-9]*\.)?[0-9]+([eE][+-]?[0-9]+)?')
 _HEX_ESCAPE_RE = re.compile(r'([0-9A-Fa-f]{1,6})[ \n\t]?')
@@ -17,7 +17,9 @@ _HEX_ESCAPE_RE = re.compile(r'([0-9A-Fa-f]{1,6})[ \n\t]?')
 def parse_component_value_list(css, skip_comments=False):
     """Parse a list of component values.
 
-    :param css: A :term:`string`.
+    :type css: :obj:`str`
+    :param css: A CSS string.
+    :type skip_comments: :obj:`bool`
     :param skip_comments:
         Ignore CSS comments.
         The return values (and recursively its blocks and functions)
@@ -69,19 +71,24 @@ def parse_component_value_list(css, skip_comments=False):
                 continue
             pos += 1  # Skip the '('
             if ascii_lower(value) == 'url':
-                value, pos, error = _consume_url(css, pos)
-                if value is not None:
-                    repr = 'url("{}")'.format(serialize_string_value(value))
+                url_pos = pos
+                while css.startswith((' ', '\n', '\t'), url_pos):
+                    url_pos += 1
+                if url_pos >= length or css[url_pos] not in ('"', "'"):
+                    value, pos, error = _consume_url(css, pos)
+                    if value is not None:
+                        repr = 'url({})'.format(serialize_url(value))
+                        if error is not None:
+                            error_key = error[0]
+                            if error_key == 'eof-in-string':
+                                repr = repr[:-2]
+                            else:
+                                assert error_key == 'eof-in-url'
+                                repr = repr[:-1]
+                        tokens.append(URLToken(line, column, value, repr))
                     if error is not None:
-                        error_key = error[0]
-                        if error_key == 'eof-in-string':
-                            repr = repr[:-2]
-                        elif error_key == 'eof-in-url':
-                            repr = repr[:-1]
-                    tokens.append(URLToken(line, column, value, repr))
-                if error is not None:
-                    tokens.append(ParseError(line, column, *error))
-                continue
+                        tokens.append(ParseError(line, column, *error))
+                    continue
             arguments = []
             tokens.append(FunctionBlock(line, column, value, arguments))
             stack.append((tokens, end_char))

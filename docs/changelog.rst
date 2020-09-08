@@ -1,5 +1,5 @@
-tinycss2 changelog
-==================
+Changelog
+=========
 
 
 Version 1.0.2
@@ -84,7 +84,7 @@ Version 0.3
 Released on 2013-12-27.
 
 * Document all the things!
-* Add :ref:`serialization`
+* Add serialization
 * Merge :func:`tinycss2.color3.parse_color_string` behavior into
   :func:`~tinycss2.color3.parse_color`.
 * Fix and test parsing form bytes and tokenization of <unicode-range>.

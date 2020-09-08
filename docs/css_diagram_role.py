@@ -8,7 +8,7 @@ from docutils import nodes
 
 
 def role_fn(_name, rawtext, text, lineno, inliner, options={}, content=()):
-    ref = 'http://dev.w3.org/csswg/css-syntax-3/#%s-diagram' % text.replace(
+    ref = 'https://www.w3.org/TR/css-syntax-3/#%s-diagram' % text.replace(
         ' ', '-')
     if text.endswith(('-token', '-block')):
         text = '<%s>' % text
