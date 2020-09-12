@@ -1,11 +1,9 @@
-==========
- tinycss2
+tinycss2
 ==========
 
 .. currentmodule:: tinycss2
 
-.. include:: ../README
-   :start-line: 3
+.. include:: ../README.rst
 
 .. toctree::
    :caption: Documentation
@@ -18,7 +16,6 @@
 
 .. toctree::
    :caption: Extra Information
-   :hidden:
    :maxdepth: 3
 
    changelog

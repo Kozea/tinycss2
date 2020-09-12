@@ -3,12 +3,10 @@
 import sys
 from pathlib import Path
 
-PATH = Path(__file__).parent
-sys.path.append(str(PATH))
-sys.path.insert(0, str(PATH.parent))
+import tinycss2
 
-import tinycss2  # noqa isort:skip
-
+# Add current path for css_diagram_role
+sys.path.append(str(Path(__file__).parent))
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
@@ -26,7 +24,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'tinycss2'
-copyright = 'Simon Sapin and contributors, see COPYRIGHT file'
+copyright = 'Simon Sapin and contributors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
