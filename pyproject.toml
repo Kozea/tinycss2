@@ -5,9 +5,9 @@ build-backend = 'flit.buildapi'
 [tool.flit.metadata]
 module = 'tinycss2'
 author = 'Simon Sapin'
-author-email = 'community@kozea.fr'
+author-email = 'simon.sapin@exyr.org'
 maintainer = 'Guillaume Ayoub'
-maintainer-email = 'guillaume@yabz.fr'
+maintainer-email = 'guillaume@courtbouillon.org'
 home-page = 'https://tinycss2.readthedocs.io/'
 requires = ['webencodings >=0.4']
 requires-python = '>=3.6'
@@ -23,6 +23,7 @@ classifiers = [
   'Programming Language :: Python :: 3.6',
   'Programming Language :: Python :: 3.7',
   'Programming Language :: Python :: 3.8',
+  'Programming Language :: Python :: 3.9',
   'Programming Language :: Python :: Implementation :: CPython',
   'Programming Language :: Python :: Implementation :: PyPy',
   'Topic :: Text Processing',
@@ -38,10 +39,14 @@ Code = 'https://github.com/Kozea/tinycss2/'
 Issues = 'https://github.com/Kozea/tinycss2/issues'
 Donation = 'https://www.patreon.com/kozea'
 
+[tool.pytest.ini_options]
+addopts = '--isort --flake8 --cov'
+norecursedirs = ['tests/css-parsing-tests']
+
 [tool.coverage.run]
 branch = true
 include = ['tests/*', 'tinycss2/*']
 
 [tool.isort]
-default_section = 'THIRDPARTY'
+default_section = 'FIRSTPARTY'
 multi_line_output = 4
