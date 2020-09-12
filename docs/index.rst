@@ -1,5 +1,5 @@
 tinycss2
-==========
+========
 
 .. currentmodule:: tinycss2
 
