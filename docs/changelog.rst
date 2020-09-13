@@ -7,7 +7,7 @@ Version 1.0.2
 
 Released on 2019-03-21.
 
-* Don't crash when indent tokens have no lowercase equivalent name
+* Don't crash when indent tokens have no lowercase equivalent name.
 
 
 Version 1.0.1
@@ -15,8 +15,8 @@ Version 1.0.1
 
 Released on 2019-03-06.
 
-* Fix tests launched by CI
-* Parse "--" ident tokens correctly
+* Fix tests launched by CI.
+* Parse "--" ident tokens correctly.
 
 
 Version 1.0.0
@@ -84,7 +84,7 @@ Version 0.3
 Released on 2013-12-27.
 
 * Document all the things!
-* Add serialization
+* Add serialization.
 * Merge ``tinycss2.color3.parse_color_string`` behavior into
   :func:`tinycss2.color3.parse_color`.
 * Fix and test parsing form bytes and tokenization of <unicode-range>.
@@ -95,8 +95,8 @@ Version 0.2
 
 Released on 2013-09-02.
 
-Add parsing for <An+B>,
-as in ``:nth-child()`` and related Selectors pseudo-classes.
+* Add parsing for <An+B>, as in ``:nth-child()`` and related Selectors
+  pseudo-classes.
 
 
 Version 0.1
@@ -106,8 +106,8 @@ Released on 2013-08-31.
 
 First PyPI release. Contains:
 
-* Decoding from bytes (``@charset``, etc.)
-* Tokenization
-* Parsing for "generic" rules and declarations
-* Parsing for CSS Color Level 3
+* Decoding from bytes using ``@charset``.
+* Tokenization.
+* Parsing for "generic" rules and declarations.
+* Parsing for CSS Color Level 3.
 * Tests for all of the above, except for decoding from bytes.
