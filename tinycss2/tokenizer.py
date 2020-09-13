@@ -257,7 +257,7 @@ def _consume_ident(css, pos):
 
 def _consume_quoted_string(css, pos):
     """Return (unescaped_value, new_pos)."""
-    # http://dev.w3.org/csswg/css-syntax/#consume-a-string-token
+    # https://drafts.csswg.org/css-syntax/#consume-a-string-token
     error = None
     quote = css[pos]
     assert quote in ('"', "'")
@@ -298,7 +298,7 @@ def _consume_escape(css, pos):
     Assumes a valid escape: pos is just after '\' and not followed by '\n'.
 
     """
-    # http://dev.w3.org/csswg/css-syntax/#consume-an-escaped-character
+    # https://drafts.csswg.org/css-syntax/#consume-an-escaped-character
     hex_match = _HEX_ESCAPE_RE.match(css, pos)
     if hex_match:
         codepoint = int(hex_match.group(1), 16)
@@ -319,7 +319,7 @@ def _consume_url(css, pos):
     """
     error = None
     length = len(css)
-    # http://dev.w3.org/csswg/css-syntax/#consume-a-url-token
+    # https://drafts.csswg.org/css-syntax/#consume-a-url-token
     # Skip whitespace
     while css.startswith((' ', '\n', '\t'), pos):
         pos += 1
@@ -355,7 +355,7 @@ def _consume_url(css, pos):
                 start_pos = pos
             elif (c in
                   '"\'('
-                  # http://dev.w3.org/csswg/css-syntax/#non-printable-character
+                  # https://drafts.csswg.org/css-syntax/#non-printable-character
                   '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x0b\x0e'
                   '\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19'
                   '\x1a\x1b\x1c\x1d\x1e\x1f\x7f'):
@@ -376,7 +376,7 @@ def _consume_url(css, pos):
                 error = ('eof-in-url', 'EOF in URL')
             return value, pos, error
 
-    # http://dev.w3.org/csswg/css-syntax/#consume-the-remnants-of-a-bad-url0
+    # https://drafts.csswg.org/css-syntax/#consume-the-remnants-of-a-bad-url0
     while pos < length:
         if css.startswith('\\)', pos):
             pos += 2
@@ -394,7 +394,7 @@ def _consume_unicode_range(css, pos):
     The given pos is assume to be just after the '+' of 'U+' or 'u+'.
 
     """
-    # http://dev.w3.org/csswg/css-syntax/#consume-a-unicode-range-token
+    # https://drafts.csswg.org/css-syntax/#consume-a-unicode-range-token
     length = len(css)
     start_pos = pos
     max_pos = min(pos + 6, length)

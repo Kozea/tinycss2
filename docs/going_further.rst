@@ -31,7 +31,7 @@ support exactly the parts of CSS you’re interested in, including new or
 non-standard rules or properties, without modifying tinycss2 or having a
 complex hook or plugin system.
 
-.. _tinycss: http://pythonhosted.org/tinycss/
+.. _tinycss: https://pythonhosted.org/tinycss/
 .. _CSS Syntax Level 3 specification: https://www.w3.org/TR/css-syntax-3/
 .. _WeasyPrint: https://weasyprint.org/
 .. _Reddit: https://www.reddit.com/r/cssnews/comments/24anzb/css_change_the_filter_has_been_rewritten/

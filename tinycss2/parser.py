@@ -63,7 +63,7 @@ def parse_one_declaration(input, skip_comments=False):
     """Parse a single :diagram:`declaration`.
 
     This is used e.g. for a declaration in an `@supports
-    <http://dev.w3.org/csswg/css-conditional/#at-supports>`_ test.
+    <https://drafts.csswg.org/css-conditional/#at-supports>`_ test.
 
     :type input: :obj:`str` or :term:`iterable`
     :param input: A string or an iterable of :term:`component values`.
@@ -196,7 +196,7 @@ def parse_one_rule(input, skip_comments=False):
     """Parse a single :diagram:`qualified rule` or :diagram:`at-rule`.
 
     This would be used e.g. by `insertRule()
-    <http://dev.w3.org/csswg/cssom/#dom-cssstylesheet-insertrule>`_
+    <https://drafts.csswg.org/cssom/#dom-cssstylesheet-insertrule>`_
     in an implementation of CSSOM.
 
     :type input: :obj:`str` or :term:`iterable`

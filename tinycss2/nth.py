@@ -4,9 +4,9 @@ from .parser import _next_significant, _to_token_iterator
 
 
 def parse_nth(input):
-    """Parse `<An+B> <http://dev.w3.org/csswg/css-syntax-3/#anb>`_,
+    """Parse `<An+B> <https://drafts.csswg.org/css-syntax-3/#anb>`_,
     as found in `:nth-child()
-    <http://dev.w3.org/csswg/selectors/#nth-child-pseudo>`_
+    <https://drafts.csswg.org/selectors/#nth-child-pseudo>`_
     and related Selector pseudo-classes.
 
     Although tinycss2 does not include a full Selector parser,

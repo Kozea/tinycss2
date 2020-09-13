@@ -56,10 +56,10 @@ Version 0.5
 Released on 2014-08-19.
 
 * Update for spec changes.
-* Add a :attr:`~tinycss2.ast.WhitespaceToken.value` attribute
-  to :class:`~tinycss2.ast.WhitespaceToken`.
+* Add a :attr:`tinycss2.ast.WhitespaceToken.value` attribute
+  to :class:`tinycss2.ast.WhitespaceToken`.
 * **Breaking change**: CSS comments are now preserved
-  as :class:`~tinycss2.ast.Comment` objects by default.
+  as :class:`tinycss2.ast.Comment` objects by default.
   Pass ``skip_comments=True`` to parsing functions to get the old behavior.
 * **Breaking change**: Top-level comments and whitespace are now preserved
   when parsing a stylesheet, rule list, or declaration list.
@@ -74,7 +74,7 @@ Version 0.4
 
 Released on 2014-01-04.
 
-* Fix :class:`~tinycss2.ast.HashToken` starting with a non-ASCII character.
+* Fix :class:`tinycss2.ast.HashToken` starting with a non-ASCII character.
 * Fix :func:`repr` on AST nodes.
 
 
@@ -85,8 +85,8 @@ Released on 2013-12-27.
 
 * Document all the things!
 * Add serialization
-* Merge :func:`tinycss2.color3.parse_color_string` behavior into
-  :func:`~tinycss2.color3.parse_color`.
+* Merge ``tinycss2.color3.parse_color_string`` behavior into
+  :func:`tinycss2.color3.parse_color`.
 * Fix and test parsing form bytes and tokenization of <unicode-range>.
 
 

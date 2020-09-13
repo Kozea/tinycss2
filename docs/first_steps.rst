@@ -19,8 +19,8 @@ tinycss2 also is packaged for many Linux distributions (Debian, Ubuntu, Fedora,
 Archlinux, Gentoo…).
 
 .. _virtual environment: https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/
-.. _pip: http://pip-installer.org/
-.. _webencodings: http://pythonhosted.org/webencodings/
+.. _pip: https://pip.pypa.io/
+.. _webencodings: https://pythonhosted.org/webencodings/
 
 
 CSS Parsing
@@ -78,9 +78,8 @@ The content, that is between ``{`` and ``}``, contains 6 tokens:
 - a percentage token (``50%``),
 - a whitespace token (after ``50%``).
 
-You can find what you can do with this rule and these tokens on the `Common Use
-Cases`_ page.
+You can find what you can do with this rule and these tokens on the
+:ref:`Common Use Cases` page.
 
 .. _qualified rule: https://www.w3.org/TR/css-syntax-3/#qualified-rule
 .. _tokens: https://www.w3.org/TR/css-syntax-3/#tokenization
-.. _Common Use Cases: common_use_cases

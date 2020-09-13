@@ -25,7 +25,7 @@ def decode_stylesheet_bytes(css_bytes, protocol_encoding=None,
         :class:`webencodings.Encoding` object that was used.
 
     """
-    # http://dev.w3.org/csswg/css-syntax/#the-input-byte-stream
+    # https://drafts.csswg.org/css-syntax/#the-input-byte-stream
     if protocol_encoding:
         fallback = lookup(protocol_encoding)
         if fallback:
@@ -78,20 +78,20 @@ def parse_stylesheet_bytes(css_bytes, protocol_encoding=None,
     :returns:
         A ``(rules, encoding)`` tuple.
 
-        * :obj:`rules` is a list of
+        * ``rules`` is a list of
           :class:`~tinycss2.ast.QualifiedRule`,
           :class:`~tinycss2.ast.AtRule`,
           :class:`~tinycss2.ast.Comment` (if ``skip_comments`` is false),
           :class:`~tinycss2.ast.WhitespaceToken`
           (if ``skip_whitespace`` is false),
           and :class:`~tinycss2.ast.ParseError` objects.
-        * :obj:`encoding` is the :class:`webencodings.Encoding` object
+        * ``encoding`` is the :class:`webencodings.Encoding` object
           that was used.
           If ``rules`` contains an ``@import`` rule, this is
           the `environment encoding`_ for the imported stylesheet.
 
     .. _environment encoding:
-            http://www.w3.org/TR/css-syntax/#environment-encoding
+            https://www.w3.org/TR/css-syntax/#environment-encoding
 
     .. code-block:: python
 

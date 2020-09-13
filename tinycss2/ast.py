@@ -188,7 +188,7 @@ class LiteralToken(Node):
 
     This regroups what `the specification`_ defines as separate token types:
 
-    .. _the specification: http://dev.w3.org/csswg/css-syntax-3/
+    .. _the specification: https://drafts.csswg.org/css-syntax-3/
 
     * *<colon-token>* ``:``
     * *<semicolon-token>* ``;``
@@ -388,7 +388,7 @@ class URLToken(Node):
 
 
 class UnicodeRangeToken(Node):
-    """An :diagram:`unicode-range-token`.
+    """A `unicode-range token <https://www.w3.org/TR/css-syntax-3/#urange>`_.
 
     .. autoattribute:: type
 
@@ -419,7 +419,7 @@ class UnicodeRangeToken(Node):
 
 
 class NumberToken(Node):
-    """A :diagram:`numer-token`.
+    """A :diagram:`number-token`.
 
     .. autoattribute:: type
 

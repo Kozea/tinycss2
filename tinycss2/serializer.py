@@ -2,13 +2,13 @@ def serialize(nodes):
     """Serialize nodes to CSS syntax.
 
     This should be used for :term:`component values`
-    instead of just :meth:`~tinycss2.ast.Node.serialize` on each node
+    instead of just :meth:`tinycss2.ast.Node.serialize` on each node
     as it takes care of corner cases such as ``;`` between declarations,
     and consecutive identifiers
     that would otherwise parse back as the same token.
 
     :type nodes: :term:`iterable`
-    :param nodes: An iterable of :class:`~tinycss2.ast.Node` objects.
+    :param nodes: An iterable of :class:`tinycss2.ast.Node` objects.
     :returns: A :obj:`string <str>` representing the nodes.
 
     """
@@ -24,9 +24,9 @@ def serialize_identifier(value):
     :param value: A string representing a CSS value.
     :returns:
         A :obj:`string <str>` that would parse as an
-        :class:`~tinycss2.ast.IdentToken` whose
-        :attr:`~tinycss2.ast.IdentToken.value` attribute equals the passed
-        :obj:`value` argument.
+        :class:`tinycss2.ast.IdentToken` whose
+        :attr:`tinycss2.ast.IdentToken.value` attribute equals the passed
+        ``value`` argument.
 
     """
     if value == '-':
@@ -95,7 +95,7 @@ def serialize_url(value):
     )
 
 
-# http://dev.w3.org/csswg/css-syntax/#serialization-tables
+# https://drafts.csswg.org/css-syntax/#serialization-tables
 def _serialize_to(nodes, write):
     """Serialize an iterable of nodes to CSS syntax.
 
