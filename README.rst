@@ -12,11 +12,11 @@ CSS modules.
 * Changelog: https://github.com/Kozea/tinycss2/releases
 * Code, issues, tests: https://github.com/Kozea/tinycss2
 * Code of conduct: https://www.courtbouillon.org/code-of-conduct.html
-* Professional support: https://www.courtbouillon.org/support.html
+* Professional support: https://www.courtbouillon.org/
 
 tinycss2 has been created and developed by Kozea (https://kozea.fr/).
 Professional support, maintenance and community management is provided by
-CourtBouillon (https://www.courtbouillon.org/support.html).
+CourtBouillon (https://www.courtbouillon.org/).
 
 Copyrights are retained by their contributors, no copyright assignment is
 required to contribute to tinycss2. Unless explicitly stated otherwise, any
