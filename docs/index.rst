@@ -20,3 +20,4 @@ tinycss2
 
    changelog
    contribute
+   support
