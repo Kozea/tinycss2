@@ -42,7 +42,7 @@ version = '.'.join(release.split('.')[:2])
 exclude_patterns = ['_build']
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'lovelace'
+pygments_style = 'monokai'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
@@ -56,6 +56,12 @@ html_theme_options = {
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = []
+
+# These paths are either relative to html_static_path
+# or fully qualified paths (eg. https://...)
+html_css_files = [
+    'https://www.courtbouillon.org/static/docs.css',
+]
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'tinycss2doc'
@@ -72,11 +78,13 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'tinycss2', 'tinycss2 Documentation',
-   'Simon Sapin', 'tinycss2', 'One line description of project.',
+   'Simon Sapin', 'tinycss2',
+   'A low-level CSS parser and generator written in Python.',
    'Miscellaneous'),
 ]
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
     'python': ('https://docs.python.org/', None),
-    'webencodings': ('https://pythonhosted.org/webencodings/', None)}
+    'webencodings': ('https://pythonhosted.org/webencodings/', None),
+}
