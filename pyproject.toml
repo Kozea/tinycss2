@@ -40,6 +40,9 @@ Code = 'https://github.com/Kozea/tinycss2/'
 Issues = 'https://github.com/Kozea/tinycss2/issues'
 Donation = 'https://opencollective.com/courtbouillon'
 
+[tool.flit.sdist]
+exclude = ['.*']
+
 [tool.pytest.ini_options]
 addopts = '--isort --flake8 --cov'
 norecursedirs = ['tests/css-parsing-tests']
