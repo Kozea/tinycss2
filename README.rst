@@ -8,15 +8,16 @@ CSS modules.
 
 * Free software: BSD license
 * For Python 3.6+, tested on CPython and PyPy
-* Documentation: https://tinycss2.readthedocs.io/
+* Documentation: https://tinycss2.readthedocs.io
 * Changelog: https://github.com/Kozea/tinycss2/releases
 * Code, issues, tests: https://github.com/Kozea/tinycss2
-* Code of conduct: https://www.courtbouillon.org/code-of-conduct.html
-* Professional support: https://www.courtbouillon.org/
+* Code of conduct: https://www.courtbouillon.org/code-of-conduct
+* Professional support: https://www.courtbouillon.org
+* Donation: https://opencollective.com/courtbouillon
 
-tinycss2 has been created and developed by Kozea (https://kozea.fr/).
+tinycss2 has been created and developed by Kozea (https://kozea.fr).
 Professional support, maintenance and community management is provided by
-CourtBouillon (https://www.courtbouillon.org/).
+CourtBouillon (https://www.courtbouillon.org).
 
 Copyrights are retained by their contributors, no copyright assignment is
 required to contribute to tinycss2. Unless explicitly stated otherwise, any
