@@ -8,7 +8,7 @@ CSS modules.
 
 * Free software: BSD license
 * For Python 3.6+, tested on CPython and PyPy
-* Documentation: https://tinycss2.readthedocs.io
+* Documentation: https://doc.courtbouillon.org/tinycss2
 * Changelog: https://github.com/Kozea/tinycss2/releases
 * Code, issues, tests: https://github.com/Kozea/tinycss2
 * Code of conduct: https://www.courtbouillon.org/code-of-conduct
