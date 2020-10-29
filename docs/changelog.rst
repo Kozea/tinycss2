@@ -2,6 +2,18 @@ Changelog
 =========
 
 
+Version 1.1.0
+-------------
+
+Released on 2020-10-29.
+
+* Drop support of Python 3.5, add support of Python 3.9.
+* Fix ResourceWarning in tests.
+* Use Python standard librarie’s HSL to RGB converter.
+* Use GitHub Actions for tests.
+* New code structure, new packaging, new documentation.
+
+
 Version 1.0.2
 -------------
 
