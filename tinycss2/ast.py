@@ -364,14 +364,14 @@ class URLToken(Node):
 
     .. code-block:: text
 
-        'url("' <value> '")'
+        'url(' <value> ')'
 
     .. autoattribute:: type
 
     .. attribute:: value
 
-        The unescaped URL, as a Unicode string,
-        without the ``url(`` and ``)`` markers or the optional quotes.
+        The unescaped URL, as a Unicode string, without the ``url(`` and ``)``
+        markers.
 
     """
     __slots__ = ['value', 'representation']
