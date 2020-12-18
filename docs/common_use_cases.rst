@@ -43,7 +43,7 @@ in a file, it may solve many decoding problems for you.
 
    with open('file.css', 'rb') as fd:
        css = fd.read()
-   tinycss2.parse_stylesheet_bytes(css, )
+   tinycss2.parse_stylesheet_bytes(css)
    # [<QualifiedRule … { … }>]
 
 :func:`tinycss2.parse_stylesheet_bytes` allows two extra optional arguments:
