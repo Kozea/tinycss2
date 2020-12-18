@@ -7,7 +7,7 @@ Why tinycss2?
 
 tinycss2 is the rewrite of tinycss_ with a simpler API, based on the more
 recent `CSS Syntax Level 3 specification`_. tinycss has itself been created to
-replace `cssutils <https://cthedot.de/cssutils/>`.
+replace `cssutils <https://cthedot.de/cssutils/>`_.
 
 Its main purpose is to be WeasyPrint_’s CSS parser, but it’s been used by many
 other projects, including Reddit_.
