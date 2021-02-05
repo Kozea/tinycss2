@@ -1,7 +1,7 @@
 Contribute
 ==========
 
-You want to add some code to tinycss2, launch its tests or improve its
+You want to add some code to tinycss2, launch its tests or improve its
 documentation? Thank you very much! Here are some tips to help you play with
 tinycss2 in good conditions.
 
@@ -30,7 +30,7 @@ Code & Issues
 If you’ve found a bug in tinycss2, it’s time to report it, and to fix it if you
 can!
 
-You can report bugs and feature requests on `GitHub`_. If you want to add or
+You can report bugs and feature requests on GitHub_. If you want to add or
 fix some code, please fork the repository and create a pull request, we’ll be
 happy to review your work.
 
@@ -41,11 +41,11 @@ Tests
 -----
 
 Tests are stored in the ``tests`` folder at the top of the repository. They use
-the `pytest`_ library.
+the pytest_ library.
 
 You can launch tests (with code coverage and lint) using the following command::
 
-  venv/bin/python -m pytest --flake8 --isort --cov=tinycss2 --cov=tests
+  venv/bin/python -m pytest
 
 .. _pytest: https://docs.pytest.org/
 
@@ -54,7 +54,7 @@ Documentation
 -------------
 
 Documentation is stored in the ``docs`` folder at the top of the repository. It
-relies on the `Sphinx`_ library.
+relies on the Sphinx_ library.
 
 You can build the documentation using the following command::
 
