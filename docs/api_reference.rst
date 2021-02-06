@@ -9,7 +9,7 @@ tinycss2 is “low-level” in that it doesn’t parse all of CSS: it doesn’t 
 about the syntax of any specific properties or at-rules. Instead, it provides
 a set of functions that can be composed to support exactly the parts of CSS
 you’re interested in, including new or non-standard rules or properties,
-without modifying tinycss or having a complex hook/plugin system.
+without modifying tinycss2 or having a complex hook/plugin system.
 
 In many cases, parts of the parsed values (such as the
 :attr:`~tinycss2.ast.AtRule.content` of a :class:`~tinycss2.ast.AtRule`) is

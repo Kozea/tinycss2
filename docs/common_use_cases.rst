@@ -55,7 +55,7 @@ Parsing Rules
 -------------
 
 Parsing a list of declarations is possible from a list of tokens (given by the
-`content` attribute of :func:`tinycss2.parse_stylesheet` rules) or from a
+``content`` attribute of :func:`tinycss2.parse_stylesheet` rules) or from a
 string (given by the ``style`` attribute of an HTML element, for example).
 
 The high-level function used to parse declarations is
