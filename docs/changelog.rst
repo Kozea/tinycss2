@@ -2,6 +2,15 @@ Changelog
 =========
 
 
+Version 1.1.1
+-------------
+
+Released on 2021-11-22.
+
+* Add support of Python 3.10.
+* Include tests in source package.
+
+
 Version 1.1.0
 -------------
 
