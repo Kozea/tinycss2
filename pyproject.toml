@@ -8,7 +8,7 @@ description = 'A tiny CSS parser'
 keywords = ['css', 'parser']
 authors = [{name = 'Simon Sapin', email = 'simon.sapin@exyr.org'}]
 maintainers = [{name = 'CourtBouillon', email = 'contact@courtbouillon.org'}]
-requires-python = '>=3.6'
+requires-python = '>=3.7'
 readme = {file = 'README.rst', content-type = 'text/x-rst'}
 license = {file = 'LICENSE'}
 dependencies = ['webencodings >=0.4']
@@ -20,7 +20,6 @@ classifiers = [
   'Programming Language :: Python',
   'Programming Language :: Python :: 3',
   'Programming Language :: Python :: 3 :: Only',
-  'Programming Language :: Python :: 3.6',
   'Programming Language :: Python :: 3.7',
   'Programming Language :: Python :: 3.8',
   'Programming Language :: Python :: 3.9',
