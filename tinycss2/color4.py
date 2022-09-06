@@ -1,3 +1,4 @@
+import re
 from colorsys import hls_to_rgb
 from math import tau
 
@@ -136,6 +137,11 @@ def _parse_hwb(args, alpha):
         r, g, b = ((channel * (1 - white - black)) + white for channel in rgb)
         return RGBA(r, g, b, alpha)
 
+
+_HASH_REGEXPS += (
+    (2, re.compile('^{}$'.format(4 * '([\\da-f])'), re.I).match),
+    (1, re.compile('^{}$'.format(4 * '([\\da-f]{2})'), re.I).match),
+)
 
 # (r, g, b) in 0..255
 _EXTENDED_COLOR_KEYWORDS = _EXTENDED_COLOR_KEYWORDS.copy()
