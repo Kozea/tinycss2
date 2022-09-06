@@ -4,7 +4,7 @@ from math import tau
 
 from .color3 import (
     _BASIC_COLOR_KEYWORDS, _EXTENDED_COLOR_KEYWORDS, _HASH_REGEXPS,
-    _SPECIAL_COLOR_KEYWORDS, RGBA, _parse_hsl, _parse_rgb)
+    _SPECIAL_COLOR_KEYWORDS, RGBA)
 from .parser import parse_one_component_value
 
 
@@ -52,15 +52,15 @@ def parse_color(input):
         args = _parse_separated_args(token.arguments)
         if args and len(args) in (3, 4):
             name = token.lower_name
-            alpha = _parse_alpha(args[3:])
+            args, alpha = args[:3], _parse_alpha(args[3:])
             if alpha is None:
-                alpha = 1.
+                return
             if name in ('rgb', 'rgba'):
-                return _parse_rgb(args[:3], alpha)
+                return _parse_rgb(args, alpha)
             elif name in ('hsl', 'hsla'):
-                return _parse_hsl(args[:3], alpha)
+                return _parse_hsl(args, alpha)
             elif name == 'hwb':
-                return _parse_hwb(args[:3], alpha)
+                return _parse_hwb(args, alpha)
 
 
 def _parse_separated_args(tokens):
@@ -83,7 +83,7 @@ def _parse_separated_args(tokens):
             token.type in ('number', 'percentage') for token in tokens):
         return tokens
     elif len(tokens) == 5 and tokens[3] == '/':
-        tokens.pop(4)
+        tokens.pop(3)
         return tokens
 
 
@@ -94,36 +94,66 @@ def _parse_alpha(args):
     return its value clipped to the 0..1 range. Otherwise, return None.
 
     """
-    if len(args) == 1:
+    if len(args) == 0:
+        return 1.
+    elif len(args) == 1:
         if args[0].type == 'number':
             return min(1, max(0, args[0].value))
         elif args[0].type == 'percentage':
             return min(1, max(0, args[0].value / 100))
 
 
-def _parse_hwb(args, alpha):
-    """Parse a list of HWB channels.
+def _parse_rgb(args, alpha):
+    """Parse a list of RGB channels.
 
-    If args is a list of 1 NUMBER or DIMENSION (angle) token and 2 PERCENTAGE
-    tokens, return RGB values as a tuple of 3 floats clipped to the 0..1 range.
-    Otherwise, return None.
+    If args is a list of 3 NUMBER tokens or 3 PERCENTAGE tokens, return RGB
+    values as a tuple of 3 floats in 0..1. Otherwise, return None.
 
     """
-    if {args[1].type, args[2].type} != {'percentage'}:
+    types = [arg.type for arg in args]
+    if types == ['number', 'number', 'number']:
+        return RGBA(*[arg.value / 255 for arg in args], alpha)
+    elif types == ['percentage', 'percentage', 'percentage']:
+        return RGBA(*[arg.value / 100 for arg in args], alpha)
+
+
+def _parse_hsl(args, alpha):
+    """Parse a list of HSL channels.
+
+    If args is a list of 1 NUMBER or ANGLE token and 2 PERCENTAGE tokens,
+    return RGB values as a tuple of 3 floats in 0..1. Otherwise, return None.
+
+    """
+    if (args[1].type, args[2].type) != ('percentage', 'percentage'):
         return
 
     if args[0].type == 'number':
         hue = args[0].value / 360
     elif args[0].type == 'dimension':
-        if args[0].unit == 'deg':
-            hue = args[0].value / 360
-        elif args[0].unit == 'grad':
-            hue = args[0].value / 400
-        elif args[0].unit == 'rad':
-            hue = args[0].value / tau
-        elif args[0].unit == 'turn':
-            hue = args[0].value
-        else:
+        hue = _angle_to_turn(args[0])
+        if hue is None:
+            return
+    else:
+        return
+    r, g, b = hls_to_rgb(hue, args[2].value / 100, args[1].value / 100)
+    return RGBA(r, g, b, alpha)
+
+
+def _parse_hwb(args, alpha):
+    """Parse a list of HWB channels.
+
+    If args is a list of 1 NUMBER or ANGLE token and 2 PERCENTAGE tokens,
+    return RGB values as a tuple of 3 floats in 0..1. Otherwise, return None.
+
+    """
+    if (args[1].type, args[2].type) != ('percentage', 'percentage'):
+        return
+
+    if args[0].type == 'number':
+        hue = args[0].value / 360
+    elif args[0].type == 'dimension':
+        hue = _angle_to_turn(args[0])
+        if hue is None:
             return
     else:
         return
@@ -136,6 +166,17 @@ def _parse_hwb(args, alpha):
         rgb = hls_to_rgb(hue, 0.5, 1)
         r, g, b = ((channel * (1 - white - black)) + white for channel in rgb)
         return RGBA(r, g, b, alpha)
+
+
+def _angle_to_turn(token):
+    if token.unit == 'deg':
+        return token.value / 360
+    elif token.unit == 'grad':
+        return token.value / 400
+    elif token.unit == 'rad':
+        return token.value / tau
+    elif token.unit == 'turn':
+        return token.value
 
 
 _HASH_REGEXPS += (
