@@ -14,7 +14,8 @@ from tinycss2.ast import (
     NumberToken, ParenthesesBlock, ParseError, PercentageToken, QualifiedRule,
     SquareBracketsBlock, StringToken, UnicodeRangeToken, URLToken,
     WhitespaceToken)
-from tinycss2.color3 import RGBA, parse_color
+from tinycss2.color3 import RGBA, parse_color as parse_color3
+from tinycss2.color3 import parse_color as parse_color4
 from tinycss2.nth import parse_nth
 from webencodings import Encoding, lookup
 
@@ -132,25 +133,45 @@ def test_one_rule(input):
     return parse_one_rule(input, skip_comments=True)
 
 
-@json_test()
-def test_color3(input):
-    return parse_color(input)
-
-
 @json_test(filename='An+B.json')
 def test_nth(input):
     return parse_nth(input)
 
 
+@json_test()
+def test_color3(input):
+    return parse_color3(input)
+
+
 # Do not use @pytest.mark.parametrize because it is slow with that many values.
 def test_color3_hsl():
     for css, expected in load_json('color3_hsl.json'):
-        assert to_json(parse_color(css)) == expected
+        assert to_json(parse_color3(css)) == expected
 
 
 def test_color3_keywords():
     for css, expected in load_json('color3_keywords.json'):
-        result = parse_color(css)
+        result = parse_color3(css)
+        if result is not None:
+            r, g, b, a = result
+            result = [r * 255, g * 255, b * 255, a]
+        assert result == expected
+
+
+@json_test(filename='color3.json')
+def test_color4_compatibility(input):
+    return parse_color4(input)
+
+
+# Do not use @pytest.mark.parametrize because it is slow with that many values.
+def test_color4_hsl_compatibility():
+    for css, expected in load_json('color3_hsl.json'):
+        assert to_json(parse_color4(css)) == expected
+
+
+def test_color4_keywords_compatibility():
+    for css, expected in load_json('color3_keywords.json'):
+        result = parse_color4(css)
         if result is not None:
             r, g, b, a = result
             result = [r * 255, g * 255, b * 255, a]
@@ -201,7 +222,8 @@ def test_parse_declaration_value_color():
     source = 'color:#369'
     declaration = parse_one_declaration(source)
     (value_token,) = declaration.value
-    assert parse_color(value_token) == (.2, .4, .6, 1)
+    assert parse_color3(value_token) == (.2, .4, .6, 1)
+    assert parse_color4(value_token) == (.2, .4, .6, 1)
     assert declaration.serialize() == source
 
 
