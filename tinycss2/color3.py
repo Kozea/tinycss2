@@ -30,8 +30,9 @@ class RGBA(collections.namedtuple('RGBA', ['red', 'green', 'blue', 'alpha'])):
 
 
 def parse_color(input):
-    """Parse a color value as defined in `CSS Color Level 3
-    <https://www.w3.org/TR/css-color-3/>`_.
+    """Parse a color value as defined in CSS Color Level 3.
+
+    https://www.w3.org/TR/css-color-3/
 
     :type input: :obj:`str` or :term:`iterable`
     :param input: A string or an iterable of :term:`component values`.
