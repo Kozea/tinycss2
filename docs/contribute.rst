@@ -13,11 +13,9 @@ install tinycss2 dependencies.
    git clone https://github.com/Kozea/tinycss2.git
    cd tinycss2
    python -m venv venv
-   venv/bin/pip install .[doc,test]
+   venv/bin/pip install -e .[doc,test]
 
-You can then let your terminal in the current directory and launch Python to
-test your changes. ``import tinycss2`` will then import the working directory
-code, so that you can modify it and test your changes.
+You can then launch Python to test your changes.
 
 .. code-block:: shell
 
@@ -27,8 +25,8 @@ code, so that you can modify it and test your changes.
 Code & Issues
 -------------
 
-If you’ve found a bug in tinycss2, it’s time to report it, and to fix it if you
-can!
+If you’ve found a bug in tinycss2, it’s time to report it, and to fix it if
+you can!
 
 You can report bugs and feature requests on GitHub_. If you want to add or
 fix some code, please fork the repository and create a pull request, we’ll be
@@ -43,11 +41,19 @@ Tests
 Tests are stored in the ``tests`` folder at the top of the repository. They use
 the pytest_ library.
 
-You can launch tests (with code coverage and lint) using the following command::
+You can launch tests using the following command::
 
   venv/bin/python -m pytest
 
+tinycss2 also uses isort_ to check imports and flake8_ to check the coding
+style::
+
+  venv/bin/python -m isort . --check --diff
+  venv/bin/python -m flake8 --exclude tests/css-parsing-tests
+
 .. _pytest: https://docs.pytest.org/
+.. _isort: https://pycqa.github.io/isort/
+.. _flake8: https://flake8.pycqa.org/
 
 
 Documentation
@@ -60,8 +66,7 @@ You can build the documentation using the following command::
 
   venv/bin/sphinx-build docs docs/_build
 
-The documentation home page can now be found in the
-``/path/to/tinycss2/docs/_build/index.html`` file. You can open this file in a
-browser to see the final rendering.
+The documentation home page can now be found in the ``docs/_build/index.html``
+file. You can open this file in a browser to see the final rendering.
 
 .. _Sphinx: https://www.sphinx-doc.org/
