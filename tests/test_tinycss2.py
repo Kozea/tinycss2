@@ -14,8 +14,9 @@ from tinycss2.ast import (
     NumberToken, ParenthesesBlock, ParseError, PercentageToken, QualifiedRule,
     SquareBracketsBlock, StringToken, UnicodeRangeToken, URLToken,
     WhitespaceToken)
-from tinycss2.color3 import RGBA, parse_color as parse_color3
-from tinycss2.color3 import parse_color as parse_color4
+from tinycss2.color3 import RGBA
+from tinycss2.color3 import parse_color as parse_color3
+from tinycss2.color4 import parse_color as parse_color4
 from tinycss2.nth import parse_nth
 from webencodings import Encoding, lookup
 
