@@ -54,12 +54,8 @@ class Node:
         self.source_line = source_line
         self.source_column = source_column
 
-    if str is bytes:  # pragma: no cover
-        def __repr__(self):
-            return self.repr_format.format(self=self).encode('utf8')
-    else:  # pragma: no cover
-        def __repr__(self):
-            return self.repr_format.format(self=self)
+    def __repr__(self):
+        return self.repr_format.format(self=self)
 
     def serialize(self):
         """Serialize this node to CSS syntax and return a Unicode string."""
