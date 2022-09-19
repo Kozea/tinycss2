@@ -24,10 +24,8 @@ class Color:
         self.alpha = float(alpha)
 
     def __repr__(self):
-        return (
-            f'color({self.space} '
-            f'{" ".join(str(param) for param in self.params)} '
-            f'/ {self.alpha})')
+        params = ' '.join(str(param) for param in self.params)
+        return f'color({self.space} {params} / {self.alpha})'
 
     def __iter__(self):
         yield from self.params
@@ -84,7 +82,7 @@ def parse_color(input):
                     int(group * multiplier, 16) / 255
                     for group in match.groups()]
                 if len(channels) == 3:
-                    channels.append(1.)
+                    channels.append(1)
                 return srgb(*channels)
     elif token.type == 'function':
         tokens = [
@@ -119,21 +117,6 @@ def parse_color(input):
             return _parse_oklab(args, alpha)
         elif name == 'oklch' and not old_syntax:
             return _parse_oklch(args, alpha)
-
-
-def _parse_separated_args(tokens):
-    """Parse a list of tokens given to a color function.
-
-    According to CSS Color Level 4, arguments must be made of a single token
-    each, either comma seperated or space-seperated with an optional
-    slash-seperated opacity.
-
-    Return a tuple containing:
-    * the argument list without commas or white spaces, or None if the
-      function token content do not match the description above; and
-    * a boolean telling if a comma was found in the function parameters.
-
-    """
 
 
 def _parse_alpha(args):
@@ -175,7 +158,6 @@ def _parse_hsl(args, alpha):
     """
     if (args[1].type, args[2].type) != ('percentage', 'percentage'):
         return
-
     hue = _parse_hue(args[0])
     if hue is None:
         return
@@ -192,11 +174,9 @@ def _parse_hwb(args, alpha):
     """
     if (args[1].type, args[2].type) != ('percentage', 'percentage'):
         return
-
     hue = _parse_hue(args[0])
     if hue is None:
         return
-
     white, black = (arg.value / 100 for arg in args[1:])
     if white + black >= 1:
         gray = white / (white + black)
@@ -278,9 +258,8 @@ def _parse_oklch(args, alpha):
     token, return xyz-d65 :class:`Color`. Otherwise, return None.
 
     """
-    if len(args) != 3:
-        return
-    if {args[0].type, args[1].type} > {'number', 'percentage'}:
+    if len(args) != 3 or (
+            {args[0].type, args[1].type} > {'number', 'percentage'}):
         return
     L = args[0].value
     C = args[1].value * (1 if args[1].type == 'number' else 1.5)
@@ -296,11 +275,9 @@ def _oklab_to_xyz(L, a, b):
     # Code from https://www.w3.org/TR/css-color-4/#color-conversion-code
     lab = (L / 100, a, b)
     lms = [
-        sum(_OKLAB_TO_LMS[i][j] * lab[j] for j in range(3))
-        for i in range(3)]
+        sum(_OKLAB_TO_LMS[i][j] * lab[j] for j in range(3)) for i in range(3)]
     X, Y, Z = [
-        sum(_LMS_TO_XYZ[i][j] * lms[j] ** 3 for j in range(3))
-        for i in range(3)]
+        sum(_LMS_TO_XYZ[i][j] * lms[j]**3 for j in range(3)) for i in range(3)]
     return X, Y, Z
 
 
