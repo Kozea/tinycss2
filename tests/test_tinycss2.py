@@ -217,6 +217,19 @@ def test_serialize_declarations():
     assert serialize(rules) == source
 
 
+def test_serialize_rules_with_functions():
+    source = '''
+        foo#bar.baz {
+            background: url();
+            color: rgb(0, 0, 0);
+            width: calc(calc());
+            height: calc(calc(calc()));
+        }
+    '''
+    rules = parse_rule_list(source)
+    assert serialize(rules) == source
+
+
 def test_backslash_delim():
     source = '\\\nfoo'
     tokens = parse_component_value_list(source)
