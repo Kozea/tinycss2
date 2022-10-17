@@ -2,6 +2,16 @@ Changelog
 =========
 
 
+Version 1.2.0
+-------------
+
+Released on 2022-10-17.
+
+* Drop support of Python 3.6
+* Fix serialization of nested functions with no parameters
+* Don’t use pytest plugins by default
+
+
 Version 1.1.1
 -------------
 
