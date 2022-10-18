@@ -2,6 +2,14 @@ Changelog
 =========
 
 
+Version 1.2.1
+-------------
+
+Released on 2022-10-18.
+
+* Fix tests included in the source tarball
+
+
 Version 1.2.0
 -------------
 
