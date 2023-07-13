@@ -39,8 +39,8 @@ def to_json():
         type(None): lambda _: None,
         str: lambda s: s,
         int: lambda s: s,
-        list: lambda l: [to_json(el) for el in l],
-        tuple: lambda l: [to_json(el) for el in l],
+        list: lambda li: [to_json(el) for el in li],
+        tuple: lambda li: [to_json(el) for el in li],
         Encoding: lambda e: e.name,
         ParseError: lambda e: ['error', e.kind],
 
