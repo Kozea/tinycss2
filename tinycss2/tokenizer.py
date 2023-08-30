@@ -165,7 +165,8 @@ def parse_component_value_list(css, skip_comments=False):
         elif c in ('"', "'"):
             value, pos, error = _consume_quoted_string(css, pos)
             if value is not None:
-                repr = '"{}"'.format(serialize_string_value(value))
+                format = ('"{}"' if c == '"' else "'{}'")
+                repr = format.format(serialize_string_value(value))
                 if error is not None:
                     repr = repr[:-1]
                 tokens.append(StringToken(line, column, value, repr))
