@@ -1,6 +1,8 @@
 from .ast import AtRule, Declaration, ParseError, QualifiedRule
 from .tokenizer import parse_component_value_list
 
+from itertools import chain
+
 
 def _to_token_iterator(input, skip_comments=False):
     """Iterate component values out of string or component values iterable.
@@ -139,7 +141,11 @@ def _consume_declaration_in_list(first_token, tokens):
         if token == ';':
             break
         other_declaration_tokens.append(token)
-    return _parse_declaration(first_token, iter(other_declaration_tokens))
+    declaration = _parse_declaration(first_token, iter(other_declaration_tokens))
+    if isinstance(declaration, Declaration):
+        return declaration
+    else:
+        return _consume_rule(first_token, chain(other_declaration_tokens, tokens))
 
 
 def parse_declaration_list(input, skip_comments=False, skip_whitespace=False):
@@ -302,6 +308,10 @@ def parse_stylesheet(input, skip_comments=False, skip_whitespace=False):
 
     """
     tokens = _to_token_iterator(input, skip_comments)
+    return _consume_stylesheet_content(tokens, skip_comments, skip_whitespace)
+
+
+def _consume_stylesheet_content(tokens, skip_comments, skip_whitespace):
     result = []
     for token in tokens:
         if token.type == 'whitespace':
