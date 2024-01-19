@@ -141,11 +141,13 @@ def _consume_declaration_in_list(first_token, tokens, allow_nested):
         if token == ';':
             break
         other_declaration_tokens.append(token)
-    declaration = _parse_declaration(first_token, iter(other_declaration_tokens))
+    declaration = _parse_declaration(
+        first_token, iter(other_declaration_tokens))
     if not allow_nested or isinstance(declaration, Declaration):
         return declaration
     else:
-        return _consume_rule(first_token, chain(other_declaration_tokens, tokens))
+        return _consume_rule(
+            first_token, chain(other_declaration_tokens, tokens))
 
 
 def parse_blocks_contents(input, skip_comments=False, skip_whitespace=False):
