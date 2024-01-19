@@ -134,7 +134,7 @@ def _parse_declaration(first_token, tokens):
                        name.lower_value, value, state == 'important')
 
 
-def _consume_declaration_in_list(first_token, tokens):
+def _consume_declaration_in_list(first_token, tokens, allow_nested):
     """Like :func:`_parse_declaration`, but stop at the first ``;``."""
     other_declaration_tokens = []
     for token in tokens:
@@ -142,13 +142,53 @@ def _consume_declaration_in_list(first_token, tokens):
             break
         other_declaration_tokens.append(token)
     declaration = _parse_declaration(first_token, iter(other_declaration_tokens))
-    if isinstance(declaration, Declaration):
+    if not allow_nested or isinstance(declaration, Declaration):
         return declaration
     else:
         return _consume_rule(first_token, chain(other_declaration_tokens, tokens))
 
 
-def parse_declaration_list(input, skip_comments=False, skip_whitespace=False):
+def parse_blocks_contents(input, skip_comments=False, skip_whitespace=False):
+    """Parse a block’s contents.
+
+    This is used e.g. for the :attr:`~tinycss2.ast.QualifiedRule.content`
+    of a style rule or ``@page`` rule,
+    or for the ``style`` attribute of an HTML element.
+
+    In contexts that don’t expect any at-rule or nested style rule,
+    all :class:`~tinycss2.ast.AtRule` and
+    :class:`~tinycss2.ast.QualifiedRule` objects
+    should simply be rejected as invalid.
+
+    :type input: :obj:`str` or :term:`iterable`
+    :param input: A string or an iterable of :term:`component values`.
+    :type skip_comments: :obj:`bool`
+    :param skip_comments:
+        Ignore CSS comments at the top-level of the list.
+        If the input is a string, ignore all comments.
+    :type skip_whitespace: :obj:`bool`
+    :param skip_whitespace:
+        Ignore whitespace at the top-level of the list.
+        Whitespace is still preserved
+        in the :attr:`~tinycss2.ast.Declaration.value` of declarations
+        and the :attr:`~tinycss2.ast.AtRule.prelude`
+        and :attr:`~tinycss2.ast.AtRule.content` of at-rules.
+    :returns:
+        A list of
+        :class:`~tinycss2.ast.Declaration`,
+        :class:`~tinycss2.ast.AtRule`,
+        :class:`~tinycss2.ast.QualifiedRule`,
+        :class:`~tinycss2.ast.Comment` (if ``skip_comments`` is false),
+        :class:`~tinycss2.ast.WhitespaceToken`
+        (if ``skip_whitespace`` is false),
+        and :class:`~tinycss2.ast.ParseError` objects
+
+    """
+    return parse_declaration_list(input, skip_comments, skip_whitespace, True)
+
+
+def parse_declaration_list(input, skip_comments=False, skip_whitespace=False,
+                           _allow_nested=False):
     """Parse a :diagram:`declaration list` (which may also contain at-rules).
 
     This is used e.g. for the :attr:`~tinycss2.ast.QualifiedRule.content`
@@ -194,7 +234,8 @@ def parse_declaration_list(input, skip_comments=False, skip_whitespace=False):
         elif token.type == 'at-keyword':
             result.append(_consume_at_rule(token, tokens))
         elif token != ';':
-            result.append(_consume_declaration_in_list(token, tokens))
+            result.append(
+                _consume_declaration_in_list(token, tokens, _allow_nested))
     return result
 
 
@@ -308,10 +349,6 @@ def parse_stylesheet(input, skip_comments=False, skip_whitespace=False):
 
     """
     tokens = _to_token_iterator(input, skip_comments)
-    return _consume_stylesheet_content(tokens, skip_comments, skip_whitespace)
-
-
-def _consume_stylesheet_content(tokens, skip_comments, skip_whitespace):
     result = []
     for token in tokens:
         if token.type == 'whitespace':
