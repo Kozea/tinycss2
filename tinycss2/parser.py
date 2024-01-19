@@ -1,7 +1,7 @@
+from itertools import chain
+
 from .ast import AtRule, Declaration, ParseError, QualifiedRule
 from .tokenizer import parse_component_value_list
-
-from itertools import chain
 
 
 def _to_token_iterator(input, skip_comments=False):
