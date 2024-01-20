@@ -136,18 +136,19 @@ def _parse_declaration(first_token, tokens):
 
 def _consume_declaration_in_list(first_token, tokens, allow_nested):
     """Like :func:`_parse_declaration`, but stop at the first ``;``."""
-    other_declaration_tokens = []
+    declaration_tokens = []
+    semicolon_token = []
     for token in tokens:
         if token == ';':
+            semicolon_token.append(token)
             break
-        other_declaration_tokens.append(token)
-    declaration = _parse_declaration(
-        first_token, iter(other_declaration_tokens))
-    if not allow_nested or isinstance(declaration, Declaration):
+        declaration_tokens.append(token)
+    declaration = _parse_declaration(first_token, iter(declaration_tokens))
+    if not allow_nested or declaration.type == Declaration:
         return declaration
     else:
-        return _consume_rule(
-            first_token, chain(other_declaration_tokens, tokens))
+        tokens = chain(declaration_tokens, semicolon_token, tokens)
+        return _consume_rule(first_token, tokens, stop_token=';', nested=True)
 
 
 def parse_blocks_contents(input, skip_comments=False, skip_whitespace=False):
@@ -234,7 +235,7 @@ def parse_declaration_list(input, skip_comments=False, skip_whitespace=False,
             if not skip_comments:
                 result.append(token)
         elif token.type == 'at-keyword':
-            result.append(_consume_at_rule(token, tokens))
+            result.append(_consume_at_rule(token, tokens, nested=True))
         elif token != ';':
             result.append(
                 _consume_declaration_in_list(token, tokens, _allow_nested))
@@ -315,7 +316,8 @@ def parse_rule_list(input, skip_comments=False, skip_whitespace=False):
             if not skip_comments:
                 result.append(token)
         else:
-            result.append(_consume_rule(token, tokens))
+            result.append(_consume_rule(
+                token, tokens, stop_token=';', nested=True))
     return result
 
 
@@ -364,7 +366,14 @@ def parse_stylesheet(input, skip_comments=False, skip_whitespace=False):
     return result
 
 
-def _consume_rule(first_token, tokens):
+def _rule_error(token, name):
+    """Create rule parse error raised because of given token."""
+    return ParseError(
+        token.source_line, token.source_column, 'invalid',
+        f'{name} reached before {{}} block for a qualified rule.')
+
+
+def _consume_rule(first_token, tokens, nested=False, stop_token=None):
     """Parse a qualified rule or at-rule.
 
     Consume just enough of :obj:`tokens` for this rule.
@@ -373,12 +382,18 @@ def _consume_rule(first_token, tokens):
     :param first_token: The first component value of the rule.
     :type tokens: :term:`iterator`
     :param tokens: An iterator yielding :term:`component values`.
+    :type nested: :obj:`bool`
+    :param nested: Whether the rule is nested or top-level.
+    :type stop_token: :class:`~tinycss2.ast.Node`
+    :param stop_token: A token that ends rule parsing when met.
     :returns:
         A :class:`~tinycss2.ast.QualifiedRule`,
         :class:`~tinycss2.ast.AtRule`,
         or :class:`~tinycss2.ast.ParseError`.
 
     """
+    if first_token == stop_token:
+        return _rule_error(first_token, 'Stop token')
     if first_token.type == 'at-keyword':
         return _consume_at_rule(first_token, tokens)
     if first_token.type == '{} block':
@@ -387,19 +402,21 @@ def _consume_rule(first_token, tokens):
     else:
         prelude = [first_token]
         for token in tokens:
+            if token == stop_token:
+                return _rule_error(token, 'Stop token')
             if token.type == '{} block':
                 block = token
+                # TODO: handle special case for CSS variables (using "nested")
+                # https://drafts.csswg.org/css-syntax-3/#consume-qualified-rule
                 break
             prelude.append(token)
         else:
-            return ParseError(
-                prelude[-1].source_line, prelude[-1].source_column, 'invalid',
-                'EOF reached before {} block for a qualified rule.')
+            return _rule_error(prelude[-1], 'EOF')
     return QualifiedRule(first_token.source_line, first_token.source_column,
                          prelude, block.content)
 
 
-def _consume_at_rule(at_keyword, tokens):
+def _consume_at_rule(at_keyword, tokens, nested=False):
     """Parse an at-rule.
 
     Consume just enough of :obj:`tokens` for this rule.
@@ -408,6 +425,8 @@ def _consume_at_rule(at_keyword, tokens):
     :param at_keyword: The at-rule keyword token starting this rule.
     :type tokens: :term:`iterator`
     :param tokens: An iterator yielding :term:`component values`.
+    :type nested: :obj:`bool`
+    :param nested: Whether the at-rule is nested or top-level.
     :returns:
         A :class:`~tinycss2.ast.QualifiedRule`,
         or :class:`~tinycss2.ast.ParseError`.
@@ -417,6 +436,8 @@ def _consume_at_rule(at_keyword, tokens):
     content = None
     for token in tokens:
         if token.type == '{} block':
+            # TODO: handle nested at-rules
+            # https://drafts.csswg.org/css-syntax-3/#consume-at-rule
             content = token.content
             break
         elif token == ';':
