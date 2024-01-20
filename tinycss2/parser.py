@@ -144,7 +144,7 @@ def _consume_declaration_in_list(first_token, tokens, allow_nested):
             break
         declaration_tokens.append(token)
     declaration = _parse_declaration(first_token, iter(declaration_tokens))
-    if not allow_nested or declaration.type == Declaration:
+    if not allow_nested or declaration.type == 'declaration':
         return declaration
     else:
         tokens = chain(declaration_tokens, semicolon_token, tokens)
