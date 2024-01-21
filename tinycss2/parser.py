@@ -143,7 +143,7 @@ def _consume_declaration_in_list(first_token, tokens, allow_nested):
             semicolon_token.append(token)
             break
         declaration_tokens.append(token)
-        if token.type == '{} block':
+        if allow_nested and token.type == '{} block':
             break
     declaration = _parse_declaration(first_token, iter(declaration_tokens))
     if not allow_nested or declaration.type == 'declaration':
