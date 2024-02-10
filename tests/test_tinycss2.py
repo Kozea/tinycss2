@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 from tinycss2 import (
-    parse_component_value_list, parse_declaration_list,
+    parse_blocks_contents, parse_component_value_list, parse_declaration_list,
     parse_one_component_value, parse_one_declaration, parse_one_rule,
     parse_rule_list, parse_stylesheet, parse_stylesheet_bytes, serialize)
 from tinycss2.ast import (
@@ -110,6 +110,11 @@ def test_one_component_value(input):
 @json_test()
 def test_declaration_list(input):
     return parse_declaration_list(input, **SKIP)
+
+
+@json_test()
+def test_blocks_contents(input):
+    return parse_blocks_contents(input, **SKIP)
 
 
 @json_test()
