@@ -138,13 +138,14 @@ def _consume_declaration_in_list(first_token, tokens):
     """Like :func:`_parse_declaration`, but stop at the first ``;``."""
     declaration_tokens = []
     semicolon_token = []
-    for token in tokens:
-        if token == ';':
-            semicolon_token.append(token)
-            break
-        declaration_tokens.append(token)
-        if token.type == '{} block':
-            break
+    if first_token != ';' and first_token.type != '{} block':
+        for token in tokens:
+            if token == ';':
+                semicolon_token.append(token)
+                break
+            declaration_tokens.append(token)
+            if token.type == '{} block':
+                break
     declaration = _parse_declaration(first_token, iter(declaration_tokens))
     if declaration.type == 'declaration':
         return declaration
