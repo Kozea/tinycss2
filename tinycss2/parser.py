@@ -134,7 +134,7 @@ def _parse_declaration(first_token, tokens):
                        name.lower_value, value, state == 'important')
 
 
-def _consume_declaration_in_list(first_token, tokens, allow_nested):
+def _consume_declaration_in_list(first_token, tokens):
     """Like :func:`_parse_declaration`, but stop at the first ``;``."""
     declaration_tokens = []
     semicolon_token = []
@@ -143,27 +143,41 @@ def _consume_declaration_in_list(first_token, tokens, allow_nested):
             semicolon_token.append(token)
             break
         declaration_tokens.append(token)
-        if allow_nested and token.type == '{} block':
+        if token.type == '{} block':
             break
     declaration = _parse_declaration(first_token, iter(declaration_tokens))
-    if not allow_nested or declaration.type == 'declaration':
+    if declaration.type == 'declaration':
         return declaration
     else:
         tokens = chain(declaration_tokens, semicolon_token, tokens)
         return _consume_rule(first_token, tokens, stop_token=';', nested=True)
 
 
+def _consume_declaration_in_list_deprecated(first_token, tokens):
+    """Like :func:`_parse_declaration`, but stop at the first ``;``.
+
+    Deprecated, use :func:`_consume_declaration_in_list` instead.
+
+    """
+    other_declaration_tokens = []
+    for token in tokens:
+        if token == ';':
+            break
+        other_declaration_tokens.append(token)
+    return _parse_declaration(first_token, iter(other_declaration_tokens))
+
+
 def parse_blocks_contents(input, skip_comments=False, skip_whitespace=False):
     """Parse a block’s contents.
 
     This is used e.g. for the :attr:`~tinycss2.ast.QualifiedRule.content`
-    of a style rule or ``@page`` rule,
-    or for the ``style`` attribute of an HTML element.
+    of a style rule or ``@page`` rule, or for the ``style`` attribute of an
+    HTML element.
 
-    In contexts that don’t expect any at-rule or nested style rule,
-    all :class:`~tinycss2.ast.AtRule` and
-    :class:`~tinycss2.ast.QualifiedRule` objects
-    should simply be rejected as invalid.
+    In contexts that don’t expect any at-rule and/or qualified rule,
+    all :class:`~tinycss2.ast.AtRule` and/or
+    :class:`~tinycss2.ast.QualifiedRule` objects should simply be rejected as
+    invalid.
 
     :type input: :obj:`str` or :term:`iterable`
     :param input: A string or an iterable of :term:`component values`.
@@ -189,20 +203,34 @@ def parse_blocks_contents(input, skip_comments=False, skip_whitespace=False):
         and :class:`~tinycss2.ast.ParseError` objects
 
     """
-    return parse_declaration_list(input, skip_comments, skip_whitespace, True)
+    tokens = _to_token_iterator(input, skip_comments)
+    result = []
+    for token in tokens:
+        if token.type == 'whitespace':
+            if not skip_whitespace:
+                result.append(token)
+        elif token.type == 'comment':
+            if not skip_comments:
+                result.append(token)
+        elif token.type == 'at-keyword':
+            result.append(_consume_at_rule(token, tokens))
+        elif token != ';':
+            result.append(_consume_declaration_in_list(token, tokens))
+    return result
 
 
-def parse_declaration_list(input, skip_comments=False, skip_whitespace=False,
-                           _allow_nested=False):
+def parse_declaration_list(input, skip_comments=False, skip_whitespace=False):
     """Parse a :diagram:`declaration list` (which may also contain at-rules).
 
-    This is used e.g. for the :attr:`~tinycss2.ast.QualifiedRule.content`
-    of a style rule or ``@page`` rule,
-    or for the ``style`` attribute of an HTML element.
+    Deprecated and removed from CSS Syntax Level 3. Use
+    :func:`parse_blocks_contents` instead.
 
-    In contexts that don’t expect any at-rule,
-    all :class:`~tinycss2.ast.AtRule` objects
-    should simply be rejected as invalid.
+    This is used e.g. for the :attr:`~tinycss2.ast.QualifiedRule.content`
+    of a style rule or ``@page`` rule, or for the ``style`` attribute of an
+    HTML element.
+
+    In contexts that don’t expect any at-rule, all
+    :class:`~tinycss2.ast.AtRule` objects should simply be rejected as invalid.
 
     :type input: :obj:`str` or :term:`iterable`
     :param input: A string or an iterable of :term:`component values`.
@@ -237,10 +265,10 @@ def parse_declaration_list(input, skip_comments=False, skip_whitespace=False,
             if not skip_comments:
                 result.append(token)
         elif token.type == 'at-keyword':
-            result.append(_consume_at_rule(token, tokens, nested=True))
+            result.append(_consume_at_rule_deprecated(token, tokens))
         elif token != ';':
             result.append(
-                _consume_declaration_in_list(token, tokens, _allow_nested))
+                _consume_declaration_in_list_deprecated(token, tokens))
     return result
 
 
@@ -418,7 +446,7 @@ def _consume_rule(first_token, tokens, nested=False, stop_token=None):
                          prelude, block.content)
 
 
-def _consume_at_rule(at_keyword, tokens, nested=False):
+def _consume_at_rule(at_keyword, tokens):
     """Parse an at-rule.
 
     Consume just enough of :obj:`tokens` for this rule.
@@ -440,6 +468,35 @@ def _consume_at_rule(at_keyword, tokens, nested=False):
         if token.type == '{} block':
             # TODO: handle nested at-rules
             # https://drafts.csswg.org/css-syntax-3/#consume-at-rule
+            content = token.content
+            break
+        elif token == ';':
+            break
+        prelude.append(token)
+    return AtRule(at_keyword.source_line, at_keyword.source_column,
+                  at_keyword.value, at_keyword.lower_value, prelude, content)
+
+
+def _consume_at_rule_deprecated(at_keyword, tokens):
+    """Parse an at-rule.
+
+    Deprecated, use :func:`_consume_at_rule` instead.
+
+    Consume just enough of :obj:`tokens` for this rule.
+
+    :type at_keyword: :class:`AtKeywordToken`
+    :param at_keyword: The at-rule keyword token starting this rule.
+    :type tokens: :term:`iterator`
+    :param tokens: An iterator yielding :term:`component values`.
+    :returns:
+        A :class:`~tinycss2.ast.QualifiedRule`,
+        or :class:`~tinycss2.ast.ParseError`.
+
+    """
+    prelude = []
+    content = None
+    for token in tokens:
+        if token.type == '{} block':
             content = token.content
             break
         elif token == ';':
