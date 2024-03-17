@@ -45,15 +45,12 @@ You can launch tests using the following command::
 
   venv/bin/python -m pytest
 
-tinycss2 also uses isort_ to check imports and flake8_ to check the coding
-style::
+tinycss2 also uses ruff_ to check the coding style::
 
-  venv/bin/python -m isort . --check --diff
-  venv/bin/python -m flake8 --exclude tests/css-parsing-tests
+  venv/bin/python -m ruff check
 
 .. _pytest: https://docs.pytest.org/
-.. _isort: https://pycqa.github.io/isort/
-.. _flake8: https://flake8.pycqa.org/
+.. _ruff: https://docs.astral.sh/ruff/
 
 
 Documentation

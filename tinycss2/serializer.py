@@ -121,8 +121,7 @@ def _serialize_to(nodes, write):
 
 BAD_PAIRS = set(
     [(a, b)
-        for a in ('ident', 'at-keyword', 'hash', 'dimension', '#', '-',
-                  'number')
+        for a in ('ident', 'at-keyword', 'hash', 'dimension', '#', '-', 'number')
         for b in ('ident', 'function', 'url', 'number', 'percentage',
                   'dimension', 'unicode-range')] +
     [(a, b)

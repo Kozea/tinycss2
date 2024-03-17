@@ -4,19 +4,19 @@ import pprint
 from pathlib import Path
 
 import pytest
-from tinycss2 import (
+from webencodings import Encoding, lookup
+
+from tinycss2 import (  # isort:skip
     parse_blocks_contents, parse_component_value_list, parse_declaration_list,
-    parse_one_component_value, parse_one_declaration, parse_one_rule,
-    parse_rule_list, parse_stylesheet, parse_stylesheet_bytes, serialize)
-from tinycss2.ast import (
-    AtKeywordToken, AtRule, Comment, CurlyBracketsBlock, Declaration,
-    DimensionToken, FunctionBlock, HashToken, IdentToken, LiteralToken,
-    NumberToken, ParenthesesBlock, ParseError, PercentageToken, QualifiedRule,
-    SquareBracketsBlock, StringToken, UnicodeRangeToken, URLToken,
-    WhitespaceToken)
+    parse_one_component_value, parse_one_declaration, parse_one_rule, parse_rule_list,
+    parse_stylesheet, parse_stylesheet_bytes, serialize)
+from tinycss2.ast import (  # isort:skip
+    AtKeywordToken, AtRule, Comment, CurlyBracketsBlock, Declaration, DimensionToken,
+    FunctionBlock, HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
+    ParseError, PercentageToken, QualifiedRule, SquareBracketsBlock, StringToken,
+    UnicodeRangeToken, URLToken, WhitespaceToken)
 from tinycss2.color3 import RGBA, parse_color
 from tinycss2.nth import parse_nth
-from webencodings import Encoding, lookup
 
 
 def generic(func):
@@ -49,26 +49,25 @@ def to_json():
         LiteralToken: lambda t: t.value,
         IdentToken: lambda t: ['ident', t.value],
         AtKeywordToken: lambda t: ['at-keyword', t.value],
-        HashToken: lambda t: ['hash', t.value,
-                              'id' if t.is_identifier else 'unrestricted'],
+        HashToken: lambda t: [
+            'hash', t.value, 'id' if t.is_identifier else 'unrestricted'],
         StringToken: lambda t: ['string', t.value],
         URLToken: lambda t: ['url', t.value],
-        NumberToken: lambda t: ['number'] + numeric(t),
-        PercentageToken: lambda t: ['percentage'] + numeric(t),
-        DimensionToken: lambda t: ['dimension'] + numeric(t) + [t.unit],
+        NumberToken: lambda t: ['number', *numeric(t)],
+        PercentageToken: lambda t: ['percentage', *numeric(t)],
+        DimensionToken: lambda t: ['dimension', *numeric(t), t.unit],
         UnicodeRangeToken: lambda t: ['unicode-range', t.start, t.end],
 
-        CurlyBracketsBlock: lambda t: ['{}'] + to_json(t.content),
-        SquareBracketsBlock: lambda t: ['[]'] + to_json(t.content),
-        ParenthesesBlock: lambda t: ['()'] + to_json(t.content),
-        FunctionBlock: lambda t: ['function', t.name] + to_json(t.arguments),
+        CurlyBracketsBlock: lambda t: ['{}', *to_json(t.content)],
+        SquareBracketsBlock: lambda t: ['[]', *to_json(t.content)],
+        ParenthesesBlock: lambda t: ['()', *to_json(t.content)],
+        FunctionBlock: lambda t: ['function', t.name, *to_json(t.arguments)],
 
-        Declaration: lambda d: ['declaration', d.name,
-                                to_json(d.value), d.important],
-        AtRule: lambda r: ['at-rule', r.at_keyword, to_json(r.prelude),
-                           to_json(r.content)],
-        QualifiedRule: lambda r: ['qualified rule', to_json(r.prelude),
-                                  to_json(r.content)],
+        Declaration: lambda d: ['declaration', d.name, to_json(d.value), d.important],
+        AtRule: lambda r: [
+            'at-rule', r.at_keyword, to_json(r.prelude), to_json(r.content)],
+        QualifiedRule: lambda r: [
+            'qualified rule', to_json(r.prelude), to_json(r.content)],
 
         RGBA: lambda v: [round(c, 10) for c in v],
     }

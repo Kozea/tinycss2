@@ -135,8 +135,8 @@ def _parse_declaration(first_token, tokens, nested=True):
         if state == 'value' and token == '!':
             state = 'bang'
             bang_position = i
-        elif state == 'bang' and token.type == 'ident' \
-                and token.lower_value == 'important':
+        elif (state == 'bang' and token.type == 'ident'
+                and token.lower_value == 'important'):
             state = 'important'
         elif token.type not in ('whitespace', 'comment'):
             state = 'value'
@@ -161,8 +161,9 @@ def _parse_declaration(first_token, tokens, nested=True):
 
     # TODO: Handle unicode-range
 
-    return Declaration(name.source_line, name.source_column, name.value,
-                       name.lower_value, value, state == 'important')
+    return Declaration(
+        name.source_line, name.source_column, name.value, name.lower_value,
+        value, state == 'important')
 
 
 def _consume_blocks_content(first_token, tokens):
@@ -183,8 +184,7 @@ def _consume_blocks_content(first_token, tokens):
         return declaration
     else:
         tokens = chain(declaration_tokens, semicolon_token, tokens)
-        return _consume_qualified_rule(
-            first_token, tokens, stop_token=';', nested=True)
+        return _consume_qualified_rule(first_token, tokens, stop_token=';', nested=True)
 
 
 def _consume_declaration_in_list(first_token, tokens):
@@ -478,8 +478,9 @@ def _consume_at_rule(at_keyword, tokens):
         elif token == ';':
             break
         prelude.append(token)
-    return AtRule(at_keyword.source_line, at_keyword.source_column,
-                  at_keyword.value, at_keyword.lower_value, prelude, content)
+    return AtRule(
+        at_keyword.source_line, at_keyword.source_column, at_keyword.value,
+        at_keyword.lower_value, prelude, content)
 
 
 def _rule_error(token, name):
@@ -523,5 +524,5 @@ def _consume_qualified_rule(first_token, tokens, nested=False,
             prelude.append(token)
         else:
             return _rule_error(prelude[-1], 'EOF')
-    return QualifiedRule(first_token.source_line, first_token.source_column,
-                         prelude, block.content)
+    return QualifiedRule(
+        first_token.source_line, first_token.source_column, prelude, block.content)
