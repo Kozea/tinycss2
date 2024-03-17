@@ -59,22 +59,22 @@ Parsing a list of declarations is possible from a list of tokens (given by the
 string (given by the ``style`` attribute of an HTML element, for example).
 
 The high-level function used to parse declarations is
-:func:`tinycss2.parse_declaration_list`.
+:func:`tinycss2.parse_blocks_contents`.
 
 .. code-block:: python
 
    rules = tinycss2.parse_stylesheet('body div {width: 50%;height: 50%}')
-   tinycss2.parse_declaration_list(rules[0].content)
+   tinycss2.parse_blocks_contents(rules[0].content)
    # [<Declaration width: …>, <Declaration height: …>]
 
-   tinycss2.parse_declaration_list('width: 50%;height: 50%')
+   tinycss2.parse_blocks_contents('width: 50%;height: 50%')
    # [<Declaration width: …>, <Declaration height: …>]
 
 You can then get the name and value of each declaration:
 
 .. code-block:: python
 
-   declarations = tinycss2.parse_declaration_list('width: 50%;height: 50%')
+   declarations = tinycss2.parse_blocks_contents('width: 50%;height: 50%')
    declarations[0].name, declarations[0].value
    # ('width', [<WhitespaceToken>, <PercentageToken 50%>])
 

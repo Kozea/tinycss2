@@ -21,6 +21,7 @@ functions.
 .. autofunction:: parse_stylesheet
 .. autofunction:: parse_rule_list
 .. autofunction:: parse_one_rule
+.. autofunction:: parse_blocks_contents
 .. autofunction:: parse_declaration_list
 .. autofunction:: parse_one_declaration
 .. autofunction:: parse_component_value_list

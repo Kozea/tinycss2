@@ -218,7 +218,7 @@ def test_serialize_rules():
 
 def test_serialize_declarations():
     source = 'color: #123; /**/ @top-left {} width:7px !important;'
-    rules = parse_declaration_list(source)
+    rules = parse_blocks_contents(source)
     assert serialize(rules) == source
 
 
