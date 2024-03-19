@@ -3,11 +3,11 @@ import sys
 
 from webencodings import ascii_lower
 
-from .ast import (
+from .ast import (  # isort: skip
     AtKeywordToken, Comment, CurlyBracketsBlock, DimensionToken, FunctionBlock,
-    HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
-    ParseError, PercentageToken, SquareBracketsBlock, StringToken,
-    UnicodeRangeToken, URLToken, WhitespaceToken)
+    HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock, ParseError,
+    PercentageToken, SquareBracketsBlock, StringToken, UnicodeRangeToken, URLToken,
+    WhitespaceToken)
 from .serializer import serialize_string_value, serialize_url
 
 _NUMBER_RE = re.compile(r'[-+]?([0-9]*\.)?[0-9]+([eE][+-]?[0-9]+)?')
@@ -108,11 +108,9 @@ def parse_component_value_list(css, skip_comments=False):
                     line, column, value, int_value, repr_, unit))
             elif css.startswith('%', pos):
                 pos += 1
-                tokens.append(PercentageToken(
-                    line, column, value, int_value, repr_))
+                tokens.append(PercentageToken(line, column, value, int_value, repr_))
             else:
-                tokens.append(NumberToken(
-                    line, column, value, int_value, repr_))
+                tokens.append(NumberToken(line, column, value, int_value, repr_))
         elif c == '@':
             pos += 1
             if pos < length and _is_ident_start(css, pos):
@@ -175,12 +173,10 @@ def parse_component_value_list(css, skip_comments=False):
             pos = css.find('*/', pos + 2)
             if pos == -1:
                 if not skip_comments:
-                    tokens.append(
-                        Comment(line, column, css[token_start_pos + 2:]))
+                    tokens.append(Comment(line, column, css[token_start_pos + 2:]))
                 break
             if not skip_comments:
-                tokens.append(
-                    Comment(line, column, css[token_start_pos + 2:pos]))
+                tokens.append(Comment(line, column, css[token_start_pos + 2:pos]))
             pos += 2
         elif css.startswith('<!--', pos):
             tokens.append(LiteralToken(line, column, '<!--'))
@@ -219,8 +215,7 @@ def _is_ident_start(css, pos):
         pos += 1
         return (
             # Name-start code point or hyphen:
-            (pos < len(css) and (
-                _is_name_start(css, pos) or css[pos] == '-')) or
+            (pos < len(css) and (_is_name_start(css, pos) or css[pos] == '-')) or
             # Valid escape:
             (css.startswith('\\', pos) and not css.startswith('\\\n', pos)))
     elif css[pos] == '\\':
