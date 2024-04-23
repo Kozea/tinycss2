@@ -2,6 +2,15 @@ Changelog
 =========
 
 
+Version 1.3.0
+-------------
+
+Released on 2024-04-23.
+
+* Support CSS nesting
+* Deprecate parse_declaration_list, use parse_blocks_contents instead
+
+
 Version 1.2.1
 -------------
 
