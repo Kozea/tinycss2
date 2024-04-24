@@ -342,14 +342,15 @@ class StringToken(Node):
         The unescaped value, as a Unicode string, without the quotes.
 
     """
-    __slots__ = ['value', 'representation']
+    __slots__ = ['value', 'representation', 'is_double_quoted']
     type = 'string'
     repr_format = '<{self.__class__.__name__} {self.representation}>'
 
-    def __init__(self, line, column, value, representation):
+    def __init__(self, line, column, value, representation, is_double_quoted):
         Node.__init__(self, line, column)
         self.value = value
         self.representation = representation
+        self.is_double_quoted = is_double_quoted
 
     def _serialize_to(self, write):
         write(self.representation)

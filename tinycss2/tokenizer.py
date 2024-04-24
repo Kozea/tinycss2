@@ -166,7 +166,7 @@ def parse_component_value_list(css, skip_comments=False):
                 repr = '"{}"'.format(serialize_string_value(value))
                 if error is not None:
                     repr = repr[:-1]
-                tokens.append(StringToken(line, column, value, repr))
+                tokens.append(StringToken(line, column, value, repr, c=='"'))
             if error is not None:
                 tokens.append(ParseError(line, column, *error))
         elif css.startswith('/*', pos):  # Comment
