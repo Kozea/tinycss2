@@ -384,7 +384,7 @@ class URLToken(Node):
 
 
 class UnicodeRangeToken(Node):
-    """A `unicode-range token <https://www.w3.org/TR/css-syntax-3/#urange>`_.
+    """A :diagram:`unicode-range-token`.
 
     .. autoattribute:: type
 
