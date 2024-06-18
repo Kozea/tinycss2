@@ -18,6 +18,7 @@ from tinycss2.ast import (  # isort:skip
     WhitespaceToken)
 from tinycss2.color3 import RGBA  # isort:skip
 from tinycss2.color3 import parse_color as parse_color3  # isort:skip
+from tinycss2.color4 import Color  # isort:skip
 from tinycss2.color4 import parse_color as parse_color4  # isort:skip
 from tinycss2.nth import parse_nth  # isort:skip
 
@@ -73,6 +74,7 @@ def to_json():
             'qualified rule', to_json(r.prelude), to_json(r.content)],
 
         RGBA: lambda v: [round(c, 10) for c in v],
+        Color: lambda v: [round(c, 10) for c in v],
     }
 
 
@@ -144,40 +146,47 @@ def test_nth(input):
     return parse_nth(input)
 
 
+@json_test(filename='color.json')
+def test_color_parse3(input):
+    return parse_color3(input)
+
+
+@json_test(filename='color.json')
+def test_color_common_parse3(input):
+    return parse_color3(input)
+
+
+@json_test(filename='color.json')
+def test_color_common_parse4(input):
+    return parse_color4(input)
+
+
 @json_test()
 def test_color3(input):
     return parse_color3(input)
 
 
-# Do not use @pytest.mark.parametrize because it is slow with that many values.
-def test_color3_hsl():
-    for css, expected in load_json('color3_hsl.json'):
-        assert to_json(parse_color3(css)) == expected
-
-
-def test_color3_keywords():
-    for css, expected in load_json('color3_keywords.json'):
-        result = parse_color3(css)
-        if result is not None:
-            r, g, b, a = result
-            result = [r * 255, g * 255, b * 255, a]
-        assert result == expected
-
-
-@json_test(filename='color3.json')
-def test_color4_compatibility(input):
+@json_test()
+def test_color4(input):
     return parse_color4(input)
 
 
-# Do not use @pytest.mark.parametrize because it is slow with that many values.
-def test_color4_hsl_compatibility():
-    for css, expected in load_json('color3_hsl.json'):
-        assert to_json(parse_color4(css)) == expected
+# Do not use @json_test because parametrize is slow with that many values.
+@pytest.mark.parametrize(('parse_color'), (parse_color3, parse_color4))
+def test_color_hsl(parse_color):
+    for css, expected in load_json('color_hsl.json'):
+        assert to_json(parse_color(css)) == expected
 
 
-def test_color4_keywords_compatibility():
-    for css, expected in load_json('color3_keywords.json'):
-        result = parse_color4(css)
+@pytest.mark.parametrize(('filename', 'parse_color'), (
+    ('color_keywords.json', parse_color3),
+    ('color_keywords.json', parse_color4),
+    ('color3_keywords.json', parse_color3),
+    ('color4_keywords.json', parse_color4),
+))
+def test_color_keywords(filename, parse_color):
+    for css, expected in load_json(filename):
+        result = parse_color(css)
         if result is not None:
             r, g, b, a = result
             result = [r * 255, g * 255, b * 255, a]
