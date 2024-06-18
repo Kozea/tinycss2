@@ -342,7 +342,7 @@ def parse_one_rule(input, skip_comments=False):
 def parse_rule_list(input, skip_comments=False, skip_whitespace=False):
     """Parse a non-top-level :diagram:`rule list`.
 
-    Deprecated and removed from CSS Syntax. Use :func:`parse_blocks_content`
+    Deprecated and removed from CSS Syntax. Use :func:`parse_blocks_contents`
     instead.
 
     This is used for parsing the :attr:`~tinycss2.ast.AtRule.content`
