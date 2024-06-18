@@ -1,8 +1,7 @@
 from colorsys import hls_to_rgb
 from math import cos, sin, tau
 
-from .color3 import (
-    _BASIC_COLOR_KEYWORDS, _EXTENDED_COLOR_KEYWORDS, _HASH_REGEXPS)
+from .color3 import _BASIC_COLOR_KEYWORDS, _EXTENDED_COLOR_KEYWORDS, _HASH_REGEXPS
 from .parser import parse_one_component_value
 
 
@@ -32,7 +31,7 @@ class Color:
         yield self.alpha
 
     def __getitem__(self, key):
-        return (self.params + (self.alpha,))[key]
+        return (*self.params, self.alpha)[key]
 
     def __hash__(self):
         return hash(f'{self.space}{self.params}{self.alpha}')
@@ -258,8 +257,7 @@ def _parse_oklch(args, alpha):
     token, return xyz-d65 :class:`Color`. Otherwise, return None.
 
     """
-    if len(args) != 3 or (
-            {args[0].type, args[1].type} > {'number', 'percentage'}):
+    if len(args) != 3 or {args[0].type, args[1].type} > {'number', 'percentage'}:
         return
     L = args[0].value
     C = args[1].value * (1 if args[1].type == 'number' else 1.5)
@@ -274,10 +272,8 @@ def _parse_oklch(args, alpha):
 def _oklab_to_xyz(L, a, b):
     # Code from https://www.w3.org/TR/css-color-4/#color-conversion-code
     lab = (L / 100, a, b)
-    lms = [
-        sum(_OKLAB_TO_LMS[i][j] * lab[j] for j in range(3)) for i in range(3)]
-    X, Y, Z = [
-        sum(_LMS_TO_XYZ[i][j] * lms[j]**3 for j in range(3)) for i in range(3)]
+    lms = [sum(_OKLAB_TO_LMS[i][j] * lab[j] for j in range(3)) for i in range(3)]
+    X, Y, Z = [sum(_LMS_TO_XYZ[i][j] * lms[j]**3 for j in range(3)) for i in range(3)]
     return X, Y, Z
 
 
