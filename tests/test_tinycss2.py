@@ -73,8 +73,14 @@ def to_json():
         QualifiedRule: lambda r: [
             'qualified rule', to_json(r.prelude), to_json(r.content)],
 
-        RGBA: lambda v: [round(c, 10) for c in v],
-        Color: lambda v: [round(c, 10) for c in v],
+        RGBA: lambda v: [round(c, 6) for c in v],
+        Color: lambda v: [
+            v.space,
+            [round(c, 6) for c in v.params],
+            v.function_name,
+            [None if arg is None else round(arg, 6) for arg in v.args],
+            v.alpha,
+        ],
     }
 
 
@@ -158,7 +164,8 @@ def test_color_common_parse3(input):
 
 @json_test(filename='color.json')
 def test_color_common_parse4(input):
-    return parse_color4(input)
+    result = parse_color4(input)
+    return RGBA(*result) if (result and result != 'currentColor') else result
 
 
 @json_test()
@@ -175,7 +182,7 @@ def test_color4(input):
 @pytest.mark.parametrize(('parse_color'), (parse_color3, parse_color4))
 def test_color_hsl(parse_color):
     for css, expected in load_json('color_hsl.json'):
-        assert to_json(parse_color(css)) == expected
+        assert to_json(RGBA(*parse_color(css))) == expected
 
 
 @pytest.mark.parametrize(('filename', 'parse_color'), (

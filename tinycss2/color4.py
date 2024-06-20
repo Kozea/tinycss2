@@ -1,8 +1,57 @@
 from colorsys import hls_to_rgb
-from math import cos, sin, tau
+from math import cbrt, cos, sin, tau
 
 from .color3 import _BASIC_COLOR_KEYWORDS, _EXTENDED_COLOR_KEYWORDS, _HASH_REGEXPS
 from .parser import parse_one_component_value
+
+# Code adapted from https://www.w3.org/TR/css-color-4/#color-conversion-code.
+κ = 24389 / 27
+ε = 216 / 24389
+D50 = (0.3457 / 0.3585, 1, (1 - 0.3457 - 0.3585) / 0.3585)
+D65 = (0.3127 / 0.3290, 1, (1 - 0.3127 - 0.3290) / 0.3290)
+_LMS_TO_XYZ = (
+    (1.2268798733741557, -0.5578149965554813, 0.28139105017721583),
+    (-0.04057576262431372, 1.1122868293970594, -0.07171106666151701),
+    (-0.07637294974672142, -0.4214933239627914, 1.5869240244272418),
+)
+_OKLAB_TO_LMS = (
+    (0.99999999845051981432, 0.39633779217376785678, 0.21580375806075880339),
+    (1.0000000088817607767, -0.1055613423236563494, -0.063854174771705903402),
+    (1.0000000546724109177, -0.089484182094965759684, -1.2914855378640917399),
+)
+
+
+def xyz_to_lab(X, Y, Z, d=(1, 1, 1)):
+    x = X / d[0]
+    y = Y / d[1]
+    z = Z / d[2]
+    f0 = cbrt(x) if x > ε else (κ * x + 16) / 116
+    f1 = cbrt(y) if y > ε else (κ * y + 16) / 116
+    f2 = cbrt(z) if z > ε else (κ * z + 16) / 116
+    L = (116 * f1) - 16
+    a = 500 * (f0 - f1)
+    b = 200 * (f1 - f2)
+    return L, a, b
+
+
+def lab_to_xyz(L, a, b, d=(1, 1, 1)):
+    f1 = (L + 16) / 116
+    f0 = a / 500 + f1
+    f2 = f1 - b / 200
+    x = (f0 ** 3 if f0 ** 3 > ε else (116 * f0 - 16) / κ)
+    y = (((L + 16) / 116) ** 3 if L > κ * ε else L / κ)
+    z = (f2 ** 3 if f2 ** 3 > ε else (116 * f2 - 16) / κ)
+    X = x * d[0]
+    Y = y * d[1]
+    Z = z * d[2]
+    return X, Y, Z
+
+
+def _oklab_to_xyz(L, a, b):
+    lab = (L, a, b)
+    lms = [sum(_OKLAB_TO_LMS[i][j] * lab[j] for j in range(3)) for i in range(3)]
+    X, Y, Z = [sum(_LMS_TO_XYZ[i][j] * lms[j]**3 for j in range(3)) for i in range(3)]
+    return X, Y, Z
 
 
 class Color:
@@ -16,8 +65,13 @@ class Color:
     For example, ``rgb(-10%, 120%, 0%)`` is represented as
     ``'srgb', (-0.1, 1.2, 0, 1), 1``.
 
+    Original values, used for interpolation, are stored in ``function_names``
+    and ``args``.
+
     """
-    def __init__(self, space, params, alpha=1):
+    def __init__(self, function_name, args, space, params, alpha):
+        self.function_name = function_name
+        self.args = args
         self.space = space
         self.params = tuple(float(param) for param in params)
         self.alpha = float(alpha)
@@ -37,14 +91,13 @@ class Color:
         return hash(f'{self.space}{self.params}{self.alpha}')
 
     def __eq__(self, other):
-        return (
-            tuple(self) == other if isinstance(other, tuple)
-            else super().__eq__(other))
-
-
-def srgb(red, green, blue, alpha=1):
-    """Create a :class:`Color` whose color space is sRGB."""
-    return Color('srgb', (red, green, blue), alpha)
+        if isinstance(other, str):
+            return False
+        elif isinstance(other, tuple):
+            return tuple(self) == other
+        elif isinstance(other, Color):
+            return self.space == other.space and self.params == other.params
+        return super().__eq__(other)
 
 
 def parse_color(input):
@@ -52,18 +105,12 @@ def parse_color(input):
 
     https://www.w3.org/TR/css-color-4/
 
-    Implementation of Level 4 is currently limited to space-seperated arguments
-    with an optional slash-seperated opacity, definition of 'rebeccapurple',
-    percentages and numbers are accepted as opacity values, the hwb() function,
-    and hsla()/rgba() being aliases to hsl()/rgb().
-
     :type input: :obj:`str` or :term:`iterable`
     :param input: A string or an iterable of :term:`component values`.
     :returns:
         * :obj:`None` if the input is not a valid color value.
           (No exception is raised.)
         * The string ``'currentColor'`` for the ``currentColor`` keyword
-        * A :class:`SRGB` object for colors whose color space is sRGB
         * A :class:`Color` object for every other values, including keywords.
 
     """
@@ -72,7 +119,13 @@ def parse_color(input):
     else:
         token = input
     if token.type == 'ident':
-        return _COLOR_KEYWORDS.get(token.lower_value)
+        if token.lower_value == 'currentcolor':
+            return 'currentColor'
+        elif token.lower_value == 'transparent':
+            return Color('rgb', (0, 0, 0), 'srgb', (0, 0, 0), 0)
+        elif color := _COLOR_KEYWORDS.get(token.lower_value):
+            rgb = tuple(channel / 255 for channel in color)
+            return Color('rgb', rgb, 'srgb', rgb, 1)
     elif token.type == 'hash':
         for multiplier, regexp in _HASH_REGEXPS:
             match = regexp(token.value)
@@ -80,9 +133,8 @@ def parse_color(input):
                 channels = [
                     int(group * multiplier, 16) / 255
                     for group in match.groups()]
-                if len(channels) == 3:
-                    channels.append(1)
-                return srgb(*channels)
+                alpha = channels.pop() if len(channels) == 4 else 1
+                return Color('rgb', channels, 'srgb', channels, alpha)
     elif token.type == 'function':
         tokens = [
             token for token in token.arguments
@@ -141,11 +193,22 @@ def _parse_rgb(args, alpha):
     sRGB :class:`Color`. Otherwise, return None.
 
     """
+    if len(args) != 3:
+        return
     types = [arg.type for arg in args]
+    values = [arg.value for arg in args]
+    for i, arg in enumerate(args):
+        if arg.type == 'ident' and arg.lower_value == 'none':
+            types[i] = 'number' if 'number' in types else 'percentage'
+            values[i] = 0
     if types == ['number', 'number', 'number']:
-        return srgb(*[arg.value / 255 for arg in args], alpha)
+        params = tuple(value / 255 for value in values)
     elif types == ['percentage', 'percentage', 'percentage']:
-        return srgb(*[arg.value / 100 for arg in args], alpha)
+        params = tuple(value / 100 for value in values)
+    else:
+        return
+    args = [None if arg.type == 'ident' else param for arg, param in zip(args, params)]
+    return Color('rgb', args, 'srgb', params, alpha)
 
 
 def _parse_hsl(args, alpha):
@@ -155,13 +218,22 @@ def _parse_hsl(args, alpha):
     return sRGB :class:`Color`. Otherwise, return None.
 
     """
-    if (args[1].type, args[2].type) != ('percentage', 'percentage'):
+    if len(args) != 3:
         return
-    hue = _parse_hue(args[0])
-    if hue is None:
+    values = [arg.value for arg in args]
+    for i in (1, 2):
+        if args[i].type == 'ident' and args[i].lower_value == 'none':
+            values[i] = 0
+        elif args[i].type != 'percentage':
+            return
+    values[0] = _parse_hue(args[0])
+    if values[0] is None:
         return
-    r, g, b = hls_to_rgb(hue, args[2].value / 100, args[1].value / 100)
-    return srgb(r, g, b, alpha)
+    values[1] /= 100
+    values[2] /= 100
+    args = [None if arg.type == 'ident' else value for arg, value in zip(args, values)]
+    params = hls_to_rgb(values[0], values[2], values[1])
+    return Color('hsl', args, 'srgb', params, alpha)
 
 
 def _parse_hwb(args, alpha):
@@ -171,19 +243,26 @@ def _parse_hwb(args, alpha):
     return sRGB :class:`Color`. Otherwise, return None.
 
     """
-    if (args[1].type, args[2].type) != ('percentage', 'percentage'):
+    if len(args) != 3:
         return
-    hue = _parse_hue(args[0])
-    if hue is None:
+    values = [arg.value for arg in args]
+    for i in (1, 2):
+        if args[i].type == 'ident' and args[i].lower_value == 'none':
+            values[i] = 0
+        elif args[i].type != 'percentage':
+            return
+    values[0] = _parse_hue(args[0])
+    if values[0] is None:
         return
-    white, black = (arg.value / 100 for arg in args[1:])
+    values[1:] = (value / 100 for value in values[1:])
+    args = [None if arg.type == 'ident' else value for arg, value in zip(args, values)]
+    white, black = values[1:]
     if white + black >= 1:
-        gray = white / (white + black)
-        return srgb(gray, gray, gray, alpha)
+        params = (white / (white + black),) * 3
     else:
-        rgb = hls_to_rgb(hue, 0.5, 1)
-        r, g, b = ((channel * (1 - white - black)) + white for channel in rgb)
-        return srgb(r, g, b, alpha)
+        rgb = hls_to_rgb(values[0], 0.5, 1)
+        params = ((channel * (1 - white - black)) + white for channel in rgb)
+    return Color('hwb', args, 'srgb', params, alpha)
 
 
 def _parse_lab(args, alpha):
@@ -193,12 +272,22 @@ def _parse_lab(args, alpha):
     :class:`Color`. Otherwise, return None.
 
     """
-    if len(args) != 3 or {arg.type for arg in args} > {'number', 'percentage'}:
+    if len(args) != 3:
         return
-    L = args[0].value
-    a = args[1].value * (1 if args[1].type == 'number' else 1.25)
-    b = args[2].value * (1 if args[2].type == 'number' else 1.25)
-    return Color('xyz-d50', _lab_to_xyz(L, a, b), alpha)
+    values = [arg.value for arg in args]
+    for i in range(3):
+        if args[i].type == 'ident':
+            if args[i].lower_value == 'none':
+                values[i] = 0
+            else:
+                return
+        elif args[i].type not in ('percentage', 'number'):
+            return
+    L = values[0]
+    a = values[1] * (1 if args[1].type == 'number' else 1.25)
+    b = values[2] * (1 if args[2].type == 'number' else 1.25)
+    xyz = lab_to_xyz(L, a, b, D50)
+    return Color('lab', (L / 100, a / 125, b / 125), 'xyz-d50', xyz, alpha)
 
 
 def _parse_lch(args, alpha):
@@ -210,29 +299,24 @@ def _parse_lch(args, alpha):
     """
     if len(args) != 3:
         return
-    if {args[0].type, args[1].type} > {'number', 'percentage'}:
-        return
-    L = args[0].value
-    C = args[1].value * (1 if args[1].type == 'number' else 1.5)
+    values = [arg.value for arg in args]
+    for i in range(2):
+        if args[i].type == 'ident':
+            if args[i].lower_value == 'none':
+                values[i] = 0
+            else:
+                return
+        elif args[i].type not in ('percentage', 'number'):
+            return
+    L = values[0]
+    C = values[1] * (1 if args[1].type == 'number' else 1.5)
     H = _parse_hue(args[2])
     if H is None:
         return
     a = C * cos(H * tau)
     b = C * sin(H * tau)
-    return Color('xyz-d50', _lab_to_xyz(L, a, b), alpha)
-
-
-def _lab_to_xyz(L, a, b):
-    # Code from https://www.w3.org/TR/css-color-4/#color-conversion-code
-    κ = 24389 / 27
-    ε = 216 / 24389
-    f1 = (L + 16) / 116
-    f0 = a / 500 + f1
-    f2 = f1 - b / 200
-    X = (f0 ** 3 if f0 ** 3 > ε else (116 * f0 - 16) / κ) * 0.3457 / 0.3585
-    Y = (((L + 16) / 116) ** 3 if L > κ * ε else L / κ)
-    Z = (f2 ** 3 if f2 ** 3 > ε else (116 * f2 - 16) / κ) * 0.2958 / 0.3585
-    return X, Y, Z
+    xyz = lab_to_xyz(L, a, b, D50)
+    return Color('lch', (L / 100, C / 150, H), 'xyz-d50', xyz, alpha)
 
 
 def _parse_oklab(args, alpha):
@@ -242,12 +326,22 @@ def _parse_oklab(args, alpha):
     :class:`Color`. Otherwise, return None.
 
     """
-    if len(args) != 3 or {arg.type for arg in args} > {'number', 'percentage'}:
+    if len(args) != 3:
         return
-    L = args[0].value
-    a = args[1].value * (1 if args[1].type == 'number' else 0.004)
-    b = args[2].value * (1 if args[2].type == 'number' else 0.004)
-    return Color('xyz-d65', _oklab_to_xyz(L, a, b), alpha)
+    values = [arg.value for arg in args]
+    for i in range(3):
+        if args[i].type == 'ident':
+            if args[i].lower_value == 'none':
+                values[i] = 0
+            else:
+                return
+        elif args[i].type not in ('percentage', 'number'):
+            return
+    L = values[0] * (1 if args[0].type == 'number' else (1 / 100))
+    a = values[1] * (1 if args[1].type == 'number' else (0.4 / 100))
+    b = values[2] * (1 if args[2].type == 'number' else (0.4 / 100))
+    xyz = _oklab_to_xyz(L, a, b)
+    return Color('oklab', (L, a / 0.4, b / 0.4), 'xyz-d65', xyz, alpha)
 
 
 def _parse_oklch(args, alpha):
@@ -259,22 +353,24 @@ def _parse_oklch(args, alpha):
     """
     if len(args) != 3 or {args[0].type, args[1].type} > {'number', 'percentage'}:
         return
-    L = args[0].value
-    C = args[1].value * (1 if args[1].type == 'number' else 1.5)
+    values = [arg.value for arg in args]
+    for i in range(2):
+        if args[i].type == 'ident':
+            if args[i].lower_value == 'none':
+                values[i] = 0
+            else:
+                return
+        elif args[i].type not in ('percentage', 'number'):
+            return
+    L = values[0] * (1 if args[0].type == 'number' else (1 / 100))
+    C = values[1] * (1 if args[1].type == 'number' else (0.4 / 100))
     H = _parse_hue(args[2])
     if H is None:
         return
     a = C * cos(H * tau)
     b = C * sin(H * tau)
-    return Color('xyz-d65', _oklab_to_xyz(L, a, b), alpha)
-
-
-def _oklab_to_xyz(L, a, b):
-    # Code from https://www.w3.org/TR/css-color-4/#color-conversion-code
-    lab = (L / 100, a, b)
-    lms = [sum(_OKLAB_TO_LMS[i][j] * lab[j] for j in range(3)) for i in range(3)]
-    X, Y, Z = [sum(_LMS_TO_XYZ[i][j] * lms[j]**3 for j in range(3)) for i in range(3)]
-    return X, Y, Z
+    xyz = _oklab_to_xyz(L, a, b)
+    return Color('oklch', (L, C / 0.4, H), 'xyz-d65', xyz, alpha)
 
 
 def _parse_hue(token):
@@ -289,37 +385,11 @@ def _parse_hue(token):
             return token.value / tau
         elif token.unit == 'turn':
             return token.value
+    elif token.type == 'ident' and token.lower_value == 'none':
+        return 0
 
 
 # (r, g, b) in 0..255
 _EXTENDED_COLOR_KEYWORDS = _EXTENDED_COLOR_KEYWORDS.copy()
 _EXTENDED_COLOR_KEYWORDS.append(('rebeccapurple', (102, 51, 153)))
-
-
-# (r, g, b, a) in 0..1 or a string marker
-_SPECIAL_COLOR_KEYWORDS = {
-    'currentcolor': 'currentColor',
-    'transparent': srgb(0, 0, 0, 0),
-}
-
-
-# RGBA named tuples of (r, g, b, a) in 0..1 or a string marker
-_COLOR_KEYWORDS = _SPECIAL_COLOR_KEYWORDS.copy()
-_COLOR_KEYWORDS.update(
-    # 255 maps to 1, 0 to 0, the rest is linear.
-    (keyword, srgb(red / 255, green / 255, blue / 255, 1))
-    for keyword, (red, green, blue)
-    in _BASIC_COLOR_KEYWORDS + _EXTENDED_COLOR_KEYWORDS)
-
-
-# Transformation matrices for OKLab
-_LMS_TO_XYZ = (
-    (1.2268798733741557, -0.5578149965554813, 0.28139105017721583),
-    (-0.04057576262431372, 1.1122868293970594, -0.07171106666151701),
-    (-0.07637294974672142, -0.4214933239627914, 1.5869240244272418),
-)
-_OKLAB_TO_LMS = (
-    (0.99999999845051981432, 0.39633779217376785678, 0.21580375806075880339),
-    (1.0000000088817607767, -0.1055613423236563494, -0.063854174771705903402),
-    (1.0000000546724109177, -0.089484182094965759684, -1.2914855378640917399),
-)
+_COLOR_KEYWORDS = dict(_BASIC_COLOR_KEYWORDS + _EXTENDED_COLOR_KEYWORDS)
