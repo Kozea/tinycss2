@@ -9,6 +9,11 @@ from .parser import parse_one_component_value
 ε = 216 / 24389
 D50 = (0.3457 / 0.3585, 1, (1 - 0.3457 - 0.3585) / 0.3585)
 D65 = (0.3127 / 0.3290, 1, (1 - 0.3127 - 0.3290) / 0.3290)
+SPACES = {
+    'srgb', 'srgb-linear',
+    'display-p3', 'a98-rgb', 'prophoto-rgb', 'rec2020',
+    'xyz', 'xyz-d50', 'xyz-d65'
+}
 _LMS_TO_XYZ = (
     (1.2268798733741557, -0.5578149965554813, 0.28139105017721583),
     (-0.04057576262431372, 1.1122868293970594, -0.07171106666151701),
@@ -139,6 +144,9 @@ def parse_color(input):
         tokens = [
             token for token in token.arguments
             if token.type not in ('whitespace', 'comment')]
+        name = token.lower_name
+        if name == 'color':
+            space, *tokens = tokens
         length = len(tokens)
         if length in (5, 7) and all(token == ',' for token in tokens[1::2]):
             old_syntax = True
@@ -150,7 +158,6 @@ def parse_color(input):
             old_syntax = False
         else:
             return
-        name = token.lower_name
         args, alpha = tokens[:3], _parse_alpha(tokens[3:])
         if alpha is None:
             return
@@ -168,6 +175,8 @@ def parse_color(input):
             return _parse_oklab(args, alpha)
         elif name == 'oklch' and not old_syntax:
             return _parse_oklch(args, alpha)
+        elif name == 'color' and not old_syntax:
+            return _parse_color(space, args, alpha)
 
 
 def _parse_alpha(args):
@@ -193,8 +202,6 @@ def _parse_rgb(args, alpha):
     sRGB :class:`Color`. Otherwise, return None.
 
     """
-    if len(args) != 3:
-        return
     types = [arg.type for arg in args]
     values = [arg.value for arg in args]
     for i, arg in enumerate(args):
@@ -218,8 +225,6 @@ def _parse_hsl(args, alpha):
     return sRGB :class:`Color`. Otherwise, return None.
 
     """
-    if len(args) != 3:
-        return
     values = [arg.value for arg in args]
     for i in (1, 2):
         if args[i].type == 'ident' and args[i].lower_value == 'none':
@@ -243,8 +248,6 @@ def _parse_hwb(args, alpha):
     return sRGB :class:`Color`. Otherwise, return None.
 
     """
-    if len(args) != 3:
-        return
     values = [arg.value for arg in args]
     for i in (1, 2):
         if args[i].type == 'ident' and args[i].lower_value == 'none':
@@ -272,8 +275,6 @@ def _parse_lab(args, alpha):
     :class:`Color`. Otherwise, return None.
 
     """
-    if len(args) != 3:
-        return
     values = [arg.value for arg in args]
     for i in range(3):
         if args[i].type == 'ident':
@@ -286,8 +287,13 @@ def _parse_lab(args, alpha):
     L = values[0]
     a = values[1] * (1 if args[1].type == 'number' else 1.25)
     b = values[2] * (1 if args[2].type == 'number' else 1.25)
+    args = [
+        None if args[0].type == 'ident' else L / 100,
+        None if args[1].type == 'ident' else a / 125,
+        None if args[2].type == 'ident' else b / 125,
+    ]
     xyz = lab_to_xyz(L, a, b, D50)
-    return Color('lab', (L / 100, a / 125, b / 125), 'xyz-d50', xyz, alpha)
+    return Color('lab', args, 'xyz-d50', xyz, alpha)
 
 
 def _parse_lch(args, alpha):
@@ -297,8 +303,6 @@ def _parse_lch(args, alpha):
     token, return xyz-d50 :class:`Color`. Otherwise, return None.
 
     """
-    if len(args) != 3:
-        return
     values = [arg.value for arg in args]
     for i in range(2):
         if args[i].type == 'ident':
@@ -313,10 +317,15 @@ def _parse_lch(args, alpha):
     H = _parse_hue(args[2])
     if H is None:
         return
+    args = [
+        None if args[0].type == 'ident' else L / 100,
+        None if args[1].type == 'ident' else C / 150,
+        None if args[2].type == 'ident' else H,
+    ]
     a = C * cos(H * tau)
     b = C * sin(H * tau)
     xyz = lab_to_xyz(L, a, b, D50)
-    return Color('lch', (L / 100, C / 150, H), 'xyz-d50', xyz, alpha)
+    return Color('lch', args, 'xyz-d50', xyz, alpha)
 
 
 def _parse_oklab(args, alpha):
@@ -326,8 +335,6 @@ def _parse_oklab(args, alpha):
     :class:`Color`. Otherwise, return None.
 
     """
-    if len(args) != 3:
-        return
     values = [arg.value for arg in args]
     for i in range(3):
         if args[i].type == 'ident':
@@ -340,8 +347,13 @@ def _parse_oklab(args, alpha):
     L = values[0] * (1 if args[0].type == 'number' else (1 / 100))
     a = values[1] * (1 if args[1].type == 'number' else (0.4 / 100))
     b = values[2] * (1 if args[2].type == 'number' else (0.4 / 100))
+    args = [
+        None if args[0].type == 'ident' else L,
+        None if args[1].type == 'ident' else a / 0.4,
+        None if args[2].type == 'ident' else b / 0.4,
+    ]
     xyz = _oklab_to_xyz(L, a, b)
-    return Color('oklab', (L, a / 0.4, b / 0.4), 'xyz-d65', xyz, alpha)
+    return Color('oklab', args, 'xyz-d65', xyz, alpha)
 
 
 def _parse_oklch(args, alpha):
@@ -351,7 +363,7 @@ def _parse_oklch(args, alpha):
     token, return xyz-d65 :class:`Color`. Otherwise, return None.
 
     """
-    if len(args) != 3 or {args[0].type, args[1].type} > {'number', 'percentage'}:
+    if {args[0].type, args[1].type} > {'number', 'percentage'}:
         return
     values = [arg.value for arg in args]
     for i in range(2):
@@ -367,10 +379,37 @@ def _parse_oklch(args, alpha):
     H = _parse_hue(args[2])
     if H is None:
         return
+    args = [
+        None if args[0].type == 'ident' else L,
+        None if args[1].type == 'ident' else C / 0.4,
+        None if args[2].type == 'ident' else H,
+    ]
     a = C * cos(H * tau)
     b = C * sin(H * tau)
     xyz = _oklab_to_xyz(L, a, b)
-    return Color('oklch', (L, C / 0.4, H), 'xyz-d65', xyz, alpha)
+    return Color('oklch', args, 'xyz-d65', xyz, alpha)
+
+
+def _parse_color(space, args, alpha):
+    """Parse a color space name list of channels."""
+    values = [arg.value for arg in args]
+    for i in range(3):
+        if args[i].type == 'ident':
+            if args[i].lower_value == 'none':
+                values[i] = 0
+            else:
+                return
+        elif args[i].type == 'percentage':
+            values[i] /= 100
+        elif args[i].type != 'number':
+            return
+    args = [
+        None if args[0].type == 'ident' else values[0],
+        None if args[1].type == 'ident' else values[1],
+        None if args[2].type == 'ident' else values[2],
+    ]
+    if space.type == 'ident' and (space := space.lower_value) in SPACES:
+        return Color('color', args, space, values, alpha)
 
 
 def _parse_hue(token):
