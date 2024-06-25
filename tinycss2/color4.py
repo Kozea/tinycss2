@@ -4,16 +4,18 @@ from math import cbrt, cos, sin, tau
 from .color3 import _BASIC_COLOR_KEYWORDS, _EXTENDED_COLOR_KEYWORDS, _HASH_REGEXPS
 from .parser import parse_one_component_value
 
-# Code adapted from https://www.w3.org/TR/css-color-4/#color-conversion-code.
-κ = 24389 / 27
-ε = 216 / 24389
 D50 = (0.3457 / 0.3585, 1, (1 - 0.3457 - 0.3585) / 0.3585)
 D65 = (0.3127 / 0.3290, 1, (1 - 0.3127 - 0.3290) / 0.3290)
-SPACES = {
+_FUNCTION_SPACES = {
     'srgb', 'srgb-linear',
     'display-p3', 'a98-rgb', 'prophoto-rgb', 'rec2020',
     'xyz', 'xyz-d50', 'xyz-d65'
 }
+COLOR_SPACES = _FUNCTION_SPACES | {'hsl', 'hwb', 'lab', 'lch', 'oklab', 'oklch'}
+
+# Code adapted from https://www.w3.org/TR/css-color-4/#color-conversion-code.
+_κ = 24389 / 27
+_ε = 216 / 24389
 _LMS_TO_XYZ = (
     (1.2268798733741557, -0.5578149965554813, 0.28139105017721583),
     (-0.04057576262431372, 1.1122868293970594, -0.07171106666151701),
@@ -25,27 +27,26 @@ _OKLAB_TO_LMS = (
     (1.0000000546724109177, -0.089484182094965759684, -1.2914855378640917399),
 )
 
-
-def xyz_to_lab(X, Y, Z, d=(1, 1, 1)):
+def _xyz_to_lab(X, Y, Z, d):
     x = X / d[0]
     y = Y / d[1]
     z = Z / d[2]
-    f0 = cbrt(x) if x > ε else (κ * x + 16) / 116
-    f1 = cbrt(y) if y > ε else (κ * y + 16) / 116
-    f2 = cbrt(z) if z > ε else (κ * z + 16) / 116
+    f0 = cbrt(x) if x > _ε else (_κ * x + 16) / 116
+    f1 = cbrt(y) if y > _ε else (_κ * y + 16) / 116
+    f2 = cbrt(z) if z > _ε else (_κ * z + 16) / 116
     L = (116 * f1) - 16
     a = 500 * (f0 - f1)
     b = 200 * (f1 - f2)
     return L, a, b
 
 
-def lab_to_xyz(L, a, b, d=(1, 1, 1)):
+def _lab_to_xyz(L, a, b, d):
     f1 = (L + 16) / 116
     f0 = a / 500 + f1
     f2 = f1 - b / 200
-    x = (f0 ** 3 if f0 ** 3 > ε else (116 * f0 - 16) / κ)
-    y = (((L + 16) / 116) ** 3 if L > κ * ε else L / κ)
-    z = (f2 ** 3 if f2 ** 3 > ε else (116 * f2 - 16) / κ)
+    x = (f0 ** 3 if f0 ** 3 > _ε else (116 * f0 - 16) / _κ)
+    y = (((L + 16) / 116) ** 3 if L > _κ * _ε else L / _κ)
+    z = (f2 ** 3 if f2 ** 3 > _ε else (116 * f2 - 16) / _κ)
     X = x * d[0]
     Y = y * d[1]
     Z = z * d[2]
@@ -62,38 +63,33 @@ def _oklab_to_xyz(L, a, b):
 class Color:
     """A specified color in a defined color space.
 
-    The color space is ``srgb``, ``srgb-linear``, ``display-p3``, ``a98-rgb``,
-    ``prophoto-rgb``, ``rec2020``, ``xyz-d50`` or ``xyz-d65``.
+    The color space is one of ``COLOR_SPACES``.
 
-    The alpha channel is clipped to [0, 1] but params have undefined range.
-
-    For example, ``rgb(-10%, 120%, 0%)`` is represented as
-    ``'srgb', (-0.1, 1.2, 0, 1), 1``.
-
-    Original values, used for interpolation, are stored in ``function_names``
-    and ``args``.
+    Coordinates are floats with undefined ranges, but alpha channel is clipped
+    to [0, 1]. Coordinates can also be set to ``None`` when undefined.
 
     """
-    def __init__(self, function_name, args, space, params, alpha):
-        self.function_name = function_name
-        self.args = args
+    def __init__(self, space, coordinates, alpha):
+        assert space in COLOR_SPACES, f"{space} is not a supported color space"
         self.space = space
-        self.params = tuple(float(param) for param in params)
-        self.alpha = float(alpha)
+        self.coordinates = tuple(
+            None if coordinate is None else float(coordinate)
+            for coordinate in coordinates)
+        self.alpha = max(0., min(1., float(alpha)))
 
     def __repr__(self):
-        params = ' '.join(str(param) for param in self.params)
-        return f'color({self.space} {params} / {self.alpha})'
+        coordinates = ' '.join(str(coordinate) for coordinate in self.coordinates)
+        return f'color({self.space} {coordinates} / {self.alpha})'
 
     def __iter__(self):
-        yield from self.params
+        yield from self.coordinates
         yield self.alpha
 
     def __getitem__(self, key):
-        return (*self.params, self.alpha)[key]
+        return (*self.coordinates, self.alpha)[key]
 
     def __hash__(self):
-        return hash(f'{self.space}{self.params}{self.alpha}')
+        return hash(str(self))
 
     def __eq__(self, other):
         if isinstance(other, str):
@@ -101,8 +97,81 @@ class Color:
         elif isinstance(other, tuple):
             return tuple(self) == other
         elif isinstance(other, Color):
-            return self.space == other.space and self.params == other.params
+            return self.space == other.space and self.coordinates == other.coordinates
         return super().__eq__(other)
+
+    def to(self, space):
+        """Return new instance with coordinates transformed to given ``space``.
+
+        The destination color space is one of ``SPACES``.
+
+        ``None`` coordinates are always transformed into ``0`` values.
+
+        Many space combinations are not supported.
+
+        """
+        coordinates = tuple(coordinate or 0 for coordinate in self.coordinates)
+        if space == 'xyz':
+            space = 'xyz-d65'
+        if space == self.space:
+            return Color(space, coordinates, self.alpha)
+        elif space == 'srgb':
+            if self.space == 'hsl':
+                rgb = hls_to_rgb(
+                    coordinates[0] / 360,
+                    coordinates[2] / 100,
+                    coordinates[1] / 100,
+                )
+                return Color(space, rgb, self.alpha)
+            elif self.space == 'hwb':
+                white, black = coordinates[1:]
+                if white + black >= 100:
+                    rgb = (white / (white + black),) * 3
+                else:
+                    rgb = (
+                        ((channel * (100 - white - black)) + white) / 100
+                        for channel in hls_to_rgb(coordinates[0] / 360, 0.5, 1))
+                return Color(space, rgb, self.alpha)
+        elif space == 'xyz-d50':
+            if self.space == 'lab':
+                xyz = _lab_to_xyz(*coordinates, D50)
+                return Color(space, xyz, self.alpha)
+            elif self.space == 'lch':
+                a = coordinates[1] * cos(coordinates[2] / 360 * tau)
+                b = coordinates[1] * sin(coordinates[2] / 360 * tau)
+                xyz = _lab_to_xyz(coordinates[0], a, b, D50)
+                return Color(space, xyz, self.alpha)
+        elif space == 'xyz-d65':
+            if self.space == 'oklab':
+                xyz = _oklab_to_xyz(*coordinates)
+                return Color(space, xyz, self.alpha)
+            elif self.space == 'oklch':
+                a = coordinates[1] * cos(coordinates[2] / 360 * tau)
+                b = coordinates[1] * sin(coordinates[2] / 360 * tau)
+                xyz = _oklab_to_xyz(coordinates[0], a, b)
+                return Color(space, xyz, self.alpha)
+        elif space == 'lab':
+            if self.space == 'xyz-d50':
+                lab = _xyz_to_lab(*coordinates, D50)
+                return Color(space, lab, self.alpha)
+            elif self.space == 'xyz-d65':
+                lab = _xyz_to_lab(*coordinates, D65)
+                return Color(space, lab, self.alpha)
+            elif self.space == 'lch':
+                a = coordinates[1] * cos(coordinates[2] / 360 * tau)
+                b = coordinates[1] * sin(coordinates[2] / 360 * tau)
+                return Color(space, (coordinates[0], a, b), self.alpha)
+            elif self.space == 'oklab':
+                xyz = _oklab_to_xyz(*coordinates)
+                lab = _xyz_to_lab(*xyz, D65)
+                return Color(space, lab, self.alpha)
+            elif self.space == 'oklch':
+                a = coordinates[1] * cos(coordinates[2] / 360 * tau)
+                b = coordinates[1] * sin(coordinates[2] / 360 * tau)
+                xyz = _oklab_to_xyz(coordinates[0], a, b)
+                lab = _xyz_to_lab(*xyz, D65)
+                return Color(space, lab, self.alpha)
+        raise NotImplementedError
 
 
 def parse_color(input):
@@ -127,10 +196,10 @@ def parse_color(input):
         if token.lower_value == 'currentcolor':
             return 'currentColor'
         elif token.lower_value == 'transparent':
-            return Color('rgb', (0, 0, 0), 'srgb', (0, 0, 0), 0)
+            return Color('srgb', (0, 0, 0), 0)
         elif color := _COLOR_KEYWORDS.get(token.lower_value):
             rgb = tuple(channel / 255 for channel in color)
-            return Color('rgb', rgb, 'srgb', rgb, 1)
+            return Color('srgb', rgb, 1)
     elif token.type == 'hash':
         for multiplier, regexp in _HASH_REGEXPS:
             match = regexp(token.value)
@@ -139,7 +208,7 @@ def parse_color(input):
                     int(group * multiplier, 16) / 255
                     for group in match.groups()]
                 alpha = channels.pop() if len(channels) == 4 else 1
-                return Color('rgb', channels, 'srgb', channels, alpha)
+                return Color('srgb', channels, alpha)
     elif token.type == 'function':
         tokens = [
             token for token in token.arguments
@@ -201,231 +270,194 @@ def _parse_rgb(args, alpha):
     If args is a list of 3 NUMBER tokens or 3 PERCENTAGE tokens, return
     sRGB :class:`Color`. Otherwise, return None.
 
+    Input R, G, B ranges are [0, 255], output are [0, 1].
+
     """
-    types = [arg.type for arg in args]
-    values = [arg.value for arg in args]
-    for i, arg in enumerate(args):
-        if arg.type == 'ident' and arg.lower_value == 'none':
-            types[i] = 'number' if 'number' in types else 'percentage'
-            values[i] = 0
-    if types == ['number', 'number', 'number']:
-        params = tuple(value / 255 for value in values)
-    elif types == ['percentage', 'percentage', 'percentage']:
-        params = tuple(value / 100 for value in values)
-    else:
+    if _types(args) not in ({'number'}, {'percentage'}):
         return
-    args = [None if arg.type == 'ident' else param for arg, param in zip(args, params)]
-    return Color('rgb', args, 'srgb', params, alpha)
+    coordinates = [
+        arg.value / 255 if arg.type == 'number' else
+        arg.value / 100 if arg.type == 'percentage' else None
+        for arg in args]
+    return Color('srgb', coordinates, alpha)
 
 
 def _parse_hsl(args, alpha):
     """Parse a list of HSL channels.
 
     If args is a list of 1 NUMBER or ANGLE token and 2 PERCENTAGE tokens,
-    return sRGB :class:`Color`. Otherwise, return None.
+    return HSL :class:`Color`. Otherwise, return None.
+
+    H range is [0, 360). S, L ranges are [0, 100].
 
     """
-    values = [arg.value for arg in args]
-    for i in (1, 2):
-        if args[i].type == 'ident' and args[i].lower_value == 'none':
-            values[i] = 0
-        elif args[i].type != 'percentage':
-            return
-    values[0] = _parse_hue(args[0])
-    if values[0] is None:
+    if _types(args[1:]) not in ({'number'}, {'percentage'}):
         return
-    values[1] /= 100
-    values[2] /= 100
-    args = [None if arg.type == 'ident' else value for arg, value in zip(args, values)]
-    params = hls_to_rgb(values[0], values[2], values[1])
-    return Color('hsl', args, 'srgb', params, alpha)
+    if (hue := _parse_hue(args[0])) is None:
+        return
+    coordinates = [
+        None if args[0].type == 'ident' else hue,
+        None if args[1].type == 'ident' else args[1].value,
+        None if args[2].type == 'ident' else args[2].value,
+    ]
+    return Color('hsl', coordinates, alpha)
 
 
 def _parse_hwb(args, alpha):
     """Parse a list of HWB channels.
 
     If args is a list of 1 NUMBER or ANGLE token and 2 PERCENTAGE tokens,
-    return sRGB :class:`Color`. Otherwise, return None.
+    return HWB :class:`Color`. Otherwise, return None.
+
+    H range is [0, 360). W, B ranges are [0, 100].
 
     """
-    values = [arg.value for arg in args]
-    for i in (1, 2):
-        if args[i].type == 'ident' and args[i].lower_value == 'none':
-            values[i] = 0
-        elif args[i].type != 'percentage':
-            return
-    values[0] = _parse_hue(args[0])
-    if values[0] is None:
+    if _types(args[1:]) > {'percentage'}:
         return
-    values[1:] = (value / 100 for value in values[1:])
-    args = [None if arg.type == 'ident' else value for arg, value in zip(args, values)]
-    white, black = values[1:]
-    if white + black >= 1:
-        params = (white / (white + black),) * 3
-    else:
-        rgb = hls_to_rgb(values[0], 0.5, 1)
-        params = ((channel * (1 - white - black)) + white for channel in rgb)
-    return Color('hwb', args, 'srgb', params, alpha)
+    if (hue := _parse_hue(args[0])) is None:
+        return
+    coordinates = [
+        None if args[0].type == 'ident' else hue,
+        None if args[1].type == 'ident' else args[1].value,
+        None if args[2].type == 'ident' else args[2].value,
+    ]
+    return Color('hwb', coordinates, alpha)
 
 
 def _parse_lab(args, alpha):
     """Parse a list of CIE Lab channels.
 
-    If args is a list of 3 NUMBER or PERCENTAGE tokens, return xyz-d50
+    If args is a list of 3 NUMBER or PERCENTAGE tokens, return Lab
     :class:`Color`. Otherwise, return None.
 
+    L range is [0, 100]. a, b ranges are [-125, 125].
+
     """
-    values = [arg.value for arg in args]
-    for i in range(3):
-        if args[i].type == 'ident':
-            if args[i].lower_value == 'none':
-                values[i] = 0
-            else:
-                return
-        elif args[i].type not in ('percentage', 'number'):
-            return
-    L = values[0]
-    a = values[1] * (1 if args[1].type == 'number' else 1.25)
-    b = values[2] * (1 if args[2].type == 'number' else 1.25)
-    args = [
-        None if args[0].type == 'ident' else L / 100,
-        None if args[1].type == 'ident' else a / 125,
-        None if args[2].type == 'ident' else b / 125,
+    if _types(args) > {'number', 'percentage'}:
+        return
+    coordinates = [
+        None if args[0].type == 'ident' else args[0].value,
+        None if args[1].type == 'ident' else (
+            args[1].value * (1 if args[1].type == 'number' else 1.25)),
+        None if args[2].type == 'ident' else (
+            args[2].value * (1 if args[2].type == 'number' else 1.25)),
     ]
-    xyz = lab_to_xyz(L, a, b, D50)
-    return Color('lab', args, 'xyz-d50', xyz, alpha)
+    return Color('lab', coordinates, alpha)
 
 
 def _parse_lch(args, alpha):
     """Parse a list of CIE LCH channels.
 
     If args is a list of 2 NUMBER or PERCENTAGE tokens and 1 NUMBER or ANGLE
-    token, return xyz-d50 :class:`Color`. Otherwise, return None.
+    token, return LCH :class:`Color`. Otherwise, return None.
+
+    L range is [0, 100]. C range is [0, 150]. H ranges is [0, 360).
 
     """
-    values = [arg.value for arg in args]
-    for i in range(2):
-        if args[i].type == 'ident':
-            if args[i].lower_value == 'none':
-                values[i] = 0
-            else:
-                return
-        elif args[i].type not in ('percentage', 'number'):
-            return
-    L = values[0]
-    C = values[1] * (1 if args[1].type == 'number' else 1.5)
-    H = _parse_hue(args[2])
-    if H is None:
+    if _types(args[:2]) > {'number', 'percentage'}:
         return
-    args = [
-        None if args[0].type == 'ident' else L / 100,
-        None if args[1].type == 'ident' else C / 150,
-        None if args[2].type == 'ident' else H,
+    if (hue := _parse_hue(args[2])) is None:
+        return
+    coordinates = [
+        None if args[0].type == 'ident' else args[0].value,
+        None if args[1].type == 'ident' else (
+            args[1].value * (1 if args[1].type == 'number' else 1.5)),
+        None if args[0].type == 'ident' else hue,
     ]
-    a = C * cos(H * tau)
-    b = C * sin(H * tau)
-    xyz = lab_to_xyz(L, a, b, D50)
-    return Color('lch', args, 'xyz-d50', xyz, alpha)
+    return Color('lch', coordinates, alpha)
 
 
 def _parse_oklab(args, alpha):
-    """Parse a list of OKLab channels.
+    """Parse a list of Oklab channels.
 
-    If args is a list of 3 NUMBER or PERCENTAGE tokens, return xyz-d65
+    If args is a list of 3 NUMBER or PERCENTAGE tokens, return Oklab
     :class:`Color`. Otherwise, return None.
 
+    L range is [0, 100]. a, b ranges are [-0.4, 0.4].
+
     """
-    values = [arg.value for arg in args]
-    for i in range(3):
-        if args[i].type == 'ident':
-            if args[i].lower_value == 'none':
-                values[i] = 0
-            else:
-                return
-        elif args[i].type not in ('percentage', 'number'):
-            return
-    L = values[0] * (1 if args[0].type == 'number' else (1 / 100))
-    a = values[1] * (1 if args[1].type == 'number' else (0.4 / 100))
-    b = values[2] * (1 if args[2].type == 'number' else (0.4 / 100))
-    args = [
-        None if args[0].type == 'ident' else L,
-        None if args[1].type == 'ident' else a / 0.4,
-        None if args[2].type == 'ident' else b / 0.4,
+    if _types(args) > {'number', 'percentage'}:
+        return
+    coordinates = [
+        None if args[0].type == 'ident' else (
+            args[0].value * (1 if args[0].type == 'number' else 0.01)),
+        None if args[1].type == 'ident' else (
+            args[1].value * (1 if args[1].type == 'number' else 0.004)),
+        None if args[2].type == 'ident' else (
+            args[2].value * (1 if args[2].type == 'number' else 0.004)),
     ]
-    xyz = _oklab_to_xyz(L, a, b)
-    return Color('oklab', args, 'xyz-d65', xyz, alpha)
+    return Color('oklab', coordinates, alpha)
 
 
 def _parse_oklch(args, alpha):
-    """Parse a list of OKLCH channels.
+    """Parse a list of Oklch channels.
 
     If args is a list of 2 NUMBER or PERCENTAGE tokens and 1 NUMBER or ANGLE
-    token, return xyz-d65 :class:`Color`. Otherwise, return None.
+    token, return Oklch :class:`Color`. Otherwise, return None.
+
+    L range is [0, 1]. C range is [0, 0.4]. H range is [0, 360).
 
     """
-    if {args[0].type, args[1].type} > {'number', 'percentage'}:
+    if _types(args[:2]) > {'number', 'percentage'}:
         return
-    values = [arg.value for arg in args]
-    for i in range(2):
-        if args[i].type == 'ident':
-            if args[i].lower_value == 'none':
-                values[i] = 0
-            else:
-                return
-        elif args[i].type not in ('percentage', 'number'):
-            return
-    L = values[0] * (1 if args[0].type == 'number' else (1 / 100))
-    C = values[1] * (1 if args[1].type == 'number' else (0.4 / 100))
-    H = _parse_hue(args[2])
-    if H is None:
+    if (hue := _parse_hue(args[2])) is None:
         return
-    args = [
-        None if args[0].type == 'ident' else L,
-        None if args[1].type == 'ident' else C / 0.4,
-        None if args[2].type == 'ident' else H,
+    coordinates = [
+        None if args[0].type == 'ident' else (
+            args[0].value * (1 if args[0].type == 'number' else 0.01)),
+        None if args[1].type == 'ident' else (
+            args[1].value * (1 if args[1].type == 'number' else 0.004)),
+        None if args[0].type == 'ident' else hue,
     ]
-    a = C * cos(H * tau)
-    b = C * sin(H * tau)
-    xyz = _oklab_to_xyz(L, a, b)
-    return Color('oklch', args, 'xyz-d65', xyz, alpha)
+    return Color('oklch', coordinates, alpha)
 
 
 def _parse_color(space, args, alpha):
-    """Parse a color space name list of channels."""
-    values = [arg.value for arg in args]
-    for i in range(3):
-        if args[i].type == 'ident':
-            if args[i].lower_value == 'none':
-                values[i] = 0
-            else:
-                return
-        elif args[i].type == 'percentage':
-            values[i] /= 100
-        elif args[i].type != 'number':
-            return
-    args = [
-        None if args[0].type == 'ident' else values[0],
-        None if args[1].type == 'ident' else values[1],
-        None if args[2].type == 'ident' else values[2],
-    ]
-    if space.type == 'ident' and (space := space.lower_value) in SPACES:
-        return Color('color', args, space, values, alpha)
+    """Parse a color space name list of coordinates.
+
+    Ranges are [0, 1].
+
+    """
+    if space.type != 'ident' or (space := space.lower_value) not in _FUNCTION_SPACES:
+        return
+    if space == 'xyz':
+        space = 'xyz-d65'
+    coordinates = [
+        arg.value if arg.type == 'number' else
+        arg.value / 100 if arg.type == 'percentage' else None
+        for arg in args]
+    return Color(space, coordinates, alpha)
 
 
 def _parse_hue(token):
+    """Parse hue token.
+
+    Range is [0, 360). ``none`` value is 0.
+
+    """
     if token.type == 'number':
-        return token.value / 360
+        return token.value % 360
     elif token.type == 'dimension':
         if token.unit == 'deg':
-            return token.value / 360
+            return token.value % 360
         elif token.unit == 'grad':
-            return token.value / 400
+            return token.value / 400 * 360 % 360
         elif token.unit == 'rad':
-            return token.value / tau
+            return token.value / tau * 360 % 360
         elif token.unit == 'turn':
-            return token.value
+            return token.value * 360 % 360
     elif token.type == 'ident' and token.lower_value == 'none':
         return 0
+
+
+def _types(tokens):
+    """Get a set of token types, ignoring ``none`` values."""
+    types = set()
+    for token in tokens:
+        if token.type == 'ident' and token.lower_value == 'none':
+            continue
+        types.add(token.type)
+    return types
 
 
 # (r, g, b) in 0..255

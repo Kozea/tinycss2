@@ -1,6 +1,7 @@
 import functools
 import json
 import pprint
+from colorsys import hls_to_rgb
 from pathlib import Path
 
 import pytest
@@ -164,8 +165,14 @@ def test_color_common_parse3(input):
 
 @json_test(filename='color.json')
 def test_color_common_parse4(input):
-    result = parse_color4(input)
-    return RGBA(*result) if (result and result != 'currentColor') else result
+    color = parse_color4(input)
+    if not color or color == 'currentColor':
+        return color
+    elif color.space == 'srgb':
+        return RGBA(*color)
+    elif color.space == 'hsl':
+        rgb = hls_to_rgb(color[0] / 360, color[2] / 100, color[1] / 100)
+        return RGBA(*rgb, color.alpha)
 
 
 @json_test()
@@ -173,16 +180,68 @@ def test_color3(input):
     return parse_color3(input)
 
 
+@json_test(filename='color_hsl.json')
+def test_color3_hsl(input):
+    return parse_color3(input)
+
+
+@json_test(filename='color_hsl.json')
+def test_color4_hsl(input):
+    color = parse_color4(input)
+    assert color.space == 'hsl'
+    rgb = hls_to_rgb(color[0] / 360, color[2] / 100, color[1] / 100)
+    return RGBA(*rgb, color.alpha) if (color and color != 'currentColor') else color
+
+
 @json_test()
-def test_color4(input):
-    return parse_color4(input)
+def test_color4_hwb(input):
+    color = parse_color4(input)
+    assert color.space == 'hwb'
+    white, black = color[1:3]
+    if white + black >= 100:
+        rgb = (255 * white / (white + black),) * 3
+    else:
+        rgb = hls_to_rgb(color[0] / 360, 0.5, 1)
+        rgb = (2.55 * ((channel * (100 - white - black)) + white) for channel in rgb)
+    rgb = (round(coordinate + 0.001) for coordinate in rgb)
+    coordinates = ', '.join(
+        str(int(coordinate) if coordinate.is_integer() else coordinate)
+        for coordinate in rgb)
+    if color.alpha == 0:
+        return f'rgba({coordinates}, 0)'
+    elif color.alpha == 1:
+        return f'rgb({coordinates})'
+    else:
+        return f'rgba({coordinates}, {color.alpha})'
+    return RGBA(*rgb, color.alpha) if (color and color != 'currentColor') else color
 
 
-# Do not use @json_test because parametrize is slow with that many values.
-@pytest.mark.parametrize(('parse_color'), (parse_color3, parse_color4))
-def test_color_hsl(parse_color):
-    for css, expected in load_json('color_hsl.json'):
-        assert to_json(RGBA(*parse_color(css))) == expected
+@json_test()
+def test_color4_color_function(input):
+    color = parse_color4(input)
+    coordinates = ' '.join(
+        str(int(coordinate) if coordinate.is_integer() else round(coordinate, 3))
+        for coordinate in color.coordinates)
+    if color.alpha == 0:
+        return f'color({color.space} {coordinates} / 0)'
+    elif color.alpha == 1:
+        return f'color({color.space} {coordinates})'
+    else:
+        return f'color({color.space} {coordinates} / {color.alpha})'
+
+
+@json_test()
+def test_color4_lab_lch_oklab_oklch(input):
+    color = parse_color4(input)
+    coordinates = ' '.join(
+        str(int(coordinate) if coordinate.is_integer() else round(coordinate, 3))
+        for coordinate in color.coordinates)
+    if color.alpha == 0:
+        return f'{color.space}({coordinates} / 0)'
+    elif color.alpha == 1:
+        return f'{color.space}({coordinates})'
+    else:
+        return f'{color.space}({coordinates} / {color.alpha})'
 
 
 @pytest.mark.parametrize(('filename', 'parse_color'), (
