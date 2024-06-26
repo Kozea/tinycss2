@@ -1,6 +1,7 @@
 import functools
 import json
 import pprint
+from colorsys import hls_to_rgb
 from pathlib import Path
 
 import pytest
@@ -8,15 +9,19 @@ from webencodings import Encoding, lookup
 
 from tinycss2 import (  # isort:skip
     parse_blocks_contents, parse_component_value_list, parse_declaration_list,
-    parse_one_component_value, parse_one_declaration, parse_one_rule, parse_rule_list,
-    parse_stylesheet, parse_stylesheet_bytes, serialize)
+    parse_one_component_value, parse_one_declaration, parse_one_rule,
+    parse_rule_list, parse_stylesheet, parse_stylesheet_bytes, serialize)
 from tinycss2.ast import (  # isort:skip
-    AtKeywordToken, AtRule, Comment, CurlyBracketsBlock, Declaration, DimensionToken,
-    FunctionBlock, HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
-    ParseError, PercentageToken, QualifiedRule, SquareBracketsBlock, StringToken,
-    UnicodeRangeToken, URLToken, WhitespaceToken)
-from tinycss2.color3 import RGBA, parse_color
-from tinycss2.nth import parse_nth
+    AtKeywordToken, AtRule, Comment, CurlyBracketsBlock, Declaration,
+    DimensionToken, FunctionBlock, HashToken, IdentToken, LiteralToken,
+    NumberToken, ParenthesesBlock, ParseError, PercentageToken, QualifiedRule,
+    SquareBracketsBlock, StringToken, UnicodeRangeToken, URLToken,
+    WhitespaceToken)
+from tinycss2.color3 import RGBA  # isort:skip
+from tinycss2.color3 import parse_color as parse_color3  # isort:skip
+from tinycss2.color4 import Color  # isort:skip
+from tinycss2.color4 import parse_color as parse_color4  # isort:skip
+from tinycss2.nth import parse_nth  # isort:skip
 
 
 def generic(func):
@@ -69,7 +74,14 @@ def to_json():
         QualifiedRule: lambda r: [
             'qualified rule', to_json(r.prelude), to_json(r.content)],
 
-        RGBA: lambda v: [round(c, 10) for c in v],
+        RGBA: lambda v: [round(c, 6) for c in v],
+        Color: lambda v: [
+            v.space,
+            [round(c, 6) for c in v.params],
+            v.function_name,
+            [None if arg is None else round(arg, 6) for arg in v.args],
+            v.alpha,
+        ],
     }
 
 
@@ -136,24 +148,110 @@ def test_one_rule(input):
     return parse_one_rule(input, skip_comments=True)
 
 
-@json_test()
-def test_color3(input):
-    return parse_color(input)
-
-
 @json_test(filename='An+B.json')
 def test_nth(input):
     return parse_nth(input)
 
 
-# Do not use @pytest.mark.parametrize because it is slow with that many values.
-def test_color3_hsl():
-    for css, expected in load_json('color3_hsl.json'):
-        assert to_json(parse_color(css)) == expected
+@json_test(filename='color.json')
+def test_color_parse3(input):
+    return parse_color3(input)
 
 
-def test_color3_keywords():
-    for css, expected in load_json('color3_keywords.json'):
+@json_test(filename='color.json')
+def test_color_common_parse3(input):
+    return parse_color3(input)
+
+
+@json_test(filename='color.json')
+def test_color_common_parse4(input):
+    color = parse_color4(input)
+    if not color or color == 'currentColor':
+        return color
+    elif color.space == 'srgb':
+        return RGBA(*color)
+    elif color.space == 'hsl':
+        rgb = hls_to_rgb(color[0] / 360, color[2] / 100, color[1] / 100)
+        return RGBA(*rgb, color.alpha)
+
+
+@json_test()
+def test_color3(input):
+    return parse_color3(input)
+
+
+@json_test(filename='color_hsl.json')
+def test_color3_hsl(input):
+    return parse_color3(input)
+
+
+@json_test(filename='color_hsl.json')
+def test_color4_hsl(input):
+    color = parse_color4(input)
+    assert color.space == 'hsl'
+    rgb = hls_to_rgb(color[0] / 360, color[2] / 100, color[1] / 100)
+    return RGBA(*rgb, color.alpha) if (color and color != 'currentColor') else color
+
+
+@json_test()
+def test_color4_hwb(input):
+    color = parse_color4(input)
+    assert color.space == 'hwb'
+    white, black = color[1:3]
+    if white + black >= 100:
+        rgb = (255 * white / (white + black),) * 3
+    else:
+        rgb = hls_to_rgb(color[0] / 360, 0.5, 1)
+        rgb = (2.55 * ((channel * (100 - white - black)) + white) for channel in rgb)
+    rgb = (round(coordinate + 0.001) for coordinate in rgb)
+    coordinates = ', '.join(
+        str(int(coordinate) if coordinate.is_integer() else coordinate)
+        for coordinate in rgb)
+    if color.alpha == 0:
+        return f'rgba({coordinates}, 0)'
+    elif color.alpha == 1:
+        return f'rgb({coordinates})'
+    else:
+        return f'rgba({coordinates}, {color.alpha})'
+    return RGBA(*rgb, color.alpha) if (color and color != 'currentColor') else color
+
+
+@json_test()
+def test_color4_color_function(input):
+    color = parse_color4(input)
+    coordinates = ' '.join(
+        str(int(coordinate) if coordinate.is_integer() else round(coordinate, 3))
+        for coordinate in color.coordinates)
+    if color.alpha == 0:
+        return f'color({color.space} {coordinates} / 0)'
+    elif color.alpha == 1:
+        return f'color({color.space} {coordinates})'
+    else:
+        return f'color({color.space} {coordinates} / {color.alpha})'
+
+
+@json_test()
+def test_color4_lab_lch_oklab_oklch(input):
+    color = parse_color4(input)
+    coordinates = ' '.join(
+        str(int(coordinate) if coordinate.is_integer() else round(coordinate, 3))
+        for coordinate in color.coordinates)
+    if color.alpha == 0:
+        return f'{color.space}({coordinates} / 0)'
+    elif color.alpha == 1:
+        return f'{color.space}({coordinates})'
+    else:
+        return f'{color.space}({coordinates} / {color.alpha})'
+
+
+@pytest.mark.parametrize(('filename', 'parse_color'), (
+    ('color_keywords.json', parse_color3),
+    ('color_keywords.json', parse_color4),
+    ('color3_keywords.json', parse_color3),
+    ('color4_keywords.json', parse_color4),
+))
+def test_color_keywords(filename, parse_color):
+    for css, expected in load_json(filename):
         result = parse_color(css)
         if result is not None:
             r, g, b, a = result
@@ -205,7 +303,8 @@ def test_parse_declaration_value_color():
     source = 'color:#369'
     declaration = parse_one_declaration(source)
     (value_token,) = declaration.value
-    assert parse_color(value_token) == (.2, .4, .6, 1)
+    assert parse_color3(value_token) == (.2, .4, .6, 1)
+    assert parse_color4(value_token) == (.2, .4, .6, 1)
     assert declaration.serialize() == source
 
 

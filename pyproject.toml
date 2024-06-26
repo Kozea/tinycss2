@@ -62,4 +62,4 @@ extend-exclude = ['tests/css-parsing-tests']
 
 [tool.ruff.lint]
 select = ['E', 'W', 'F', 'I', 'N', 'RUF']
-ignore = ['RUF001', 'RUF002', 'RUF003']
+ignore = ['RUF001', 'RUF002', 'RUF003', 'N803', 'N806']
