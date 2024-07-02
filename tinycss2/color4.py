@@ -184,7 +184,7 @@ def parse_color(input):
     :returns:
         * :obj:`None` if the input is not a valid color value.
           (No exception is raised.)
-        * The string ``'currentColor'`` for the ``currentColor`` keyword
+        * The string ``'currentcolor'`` for the ``currentcolor`` keyword
         * A :class:`Color` object for every other values, including keywords.
 
     """
@@ -194,7 +194,7 @@ def parse_color(input):
         token = input
     if token.type == 'ident':
         if token.lower_value == 'currentcolor':
-            return 'currentColor'
+            return 'currentcolor'
         elif token.lower_value == 'transparent':
             return Color('srgb', (0, 0, 0), 0)
         elif color := _COLOR_KEYWORDS.get(token.lower_value):
@@ -273,7 +273,7 @@ def _parse_rgb(args, alpha):
     Input R, G, B ranges are [0, 255], output are [0, 1].
 
     """
-    if _types(args) not in ({'number'}, {'percentage'}):
+    if _types(args) not in (set(), {'number'}, {'percentage'}):
         return
     coordinates = [
         arg.value / 255 if arg.type == 'number' else
@@ -291,7 +291,7 @@ def _parse_hsl(args, alpha):
     H range is [0, 360). S, L ranges are [0, 100].
 
     """
-    if _types(args[1:]) not in ({'number'}, {'percentage'}):
+    if _types(args[1:]) not in (set(), {'number'}, {'percentage'}):
         return
     if (hue := _parse_hue(args[0])) is None:
         return
@@ -306,13 +306,13 @@ def _parse_hsl(args, alpha):
 def _parse_hwb(args, alpha):
     """Parse a list of HWB channels.
 
-    If args is a list of 1 NUMBER or ANGLE token and 2 PERCENTAGE tokens,
-    return HWB :class:`Color`. Otherwise, return None.
+    If args is a list of 1 NUMBER or ANGLE token and 2 NUMBER or PERCENTAGE
+    tokens, return HWB :class:`Color`. Otherwise, return None.
 
     H range is [0, 360). W, B ranges are [0, 100].
 
     """
-    if _types(args[1:]) > {'percentage'}:
+    if not _types(args[1:]) <= {'number', 'percentage'}:
         return
     if (hue := _parse_hue(args[0])) is None:
         return
@@ -333,7 +333,7 @@ def _parse_lab(args, alpha):
     L range is [0, 100]. a, b ranges are [-125, 125].
 
     """
-    if _types(args) > {'number', 'percentage'}:
+    if not _types(args) <= {'number', 'percentage'}:
         return
     coordinates = [
         None if args[0].type == 'ident' else args[0].value,
@@ -354,7 +354,7 @@ def _parse_lch(args, alpha):
     L range is [0, 100]. C range is [0, 150]. H ranges is [0, 360).
 
     """
-    if _types(args[:2]) > {'number', 'percentage'}:
+    if not _types(args[:2]) <= {'number', 'percentage'}:
         return
     if (hue := _parse_hue(args[2])) is None:
         return
@@ -376,7 +376,7 @@ def _parse_oklab(args, alpha):
     L range is [0, 100]. a, b ranges are [-0.4, 0.4].
 
     """
-    if _types(args) > {'number', 'percentage'}:
+    if not _types(args) <= {'number', 'percentage'}:
         return
     coordinates = [
         None if args[0].type == 'ident' else (
@@ -398,7 +398,7 @@ def _parse_oklch(args, alpha):
     L range is [0, 1]. C range is [0, 0.4]. H range is [0, 360).
 
     """
-    if _types(args[:2]) > {'number', 'percentage'}:
+    if not _types(args[:2]) <= {'number', 'percentage'}:
         return
     if (hue := _parse_hue(args[2])) is None:
         return
@@ -418,6 +418,8 @@ def _parse_color(space, args, alpha):
     Ranges are [0, 1].
 
     """
+    if not _types(args) <= {'number', 'percentage'}:
+        return
     if space.type != 'ident' or (space := space.lower_value) not in _FUNCTION_SPACES:
         return
     if space == 'xyz':
