@@ -1,5 +1,5 @@
 from colorsys import hls_to_rgb
-from math import cbrt, cos, sin, tau
+from math import cos, sin, tau
 
 from .color3 import _BASIC_COLOR_KEYWORDS, _EXTENDED_COLOR_KEYWORDS, _HASH_REGEXPS
 from .parser import parse_one_component_value
@@ -31,9 +31,9 @@ def _xyz_to_lab(X, Y, Z, d):
     x = X / d[0]
     y = Y / d[1]
     z = Z / d[2]
-    f0 = cbrt(x) if x > _ε else (_κ * x + 16) / 116
-    f1 = cbrt(y) if y > _ε else (_κ * y + 16) / 116
-    f2 = cbrt(z) if z > _ε else (_κ * z + 16) / 116
+    f0 = x ** (1 / 3) if x > _ε else (_κ * x + 16) / 116
+    f1 = y ** (1 / 3) if y > _ε else (_κ * y + 16) / 116
+    f2 = z ** (1 / 3) if z > _ε else (_κ * z + 16) / 116
     L = (116 * f1) - 16
     a = 500 * (f0 - f1)
     b = 200 * (f1 - f2)
