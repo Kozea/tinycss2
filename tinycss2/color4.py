@@ -1,5 +1,5 @@
 from colorsys import hls_to_rgb
-from math import cos, sin, tau
+from math import cos, degrees, radians, sin
 
 from .color3 import _BASIC_COLOR_KEYWORDS, _EXTENDED_COLOR_KEYWORDS, _HASH_REGEXPS
 from .parser import parse_one_component_value
@@ -137,8 +137,8 @@ class Color:
                 xyz = _lab_to_xyz(*coordinates, D50)
                 return Color(space, xyz, self.alpha)
             elif self.space == 'lch':
-                a = coordinates[1] * cos(coordinates[2] / 360 * tau)
-                b = coordinates[1] * sin(coordinates[2] / 360 * tau)
+                a = coordinates[1] * cos(radians(coordinates[2]))
+                b = coordinates[1] * sin(radians(coordinates[2]))
                 xyz = _lab_to_xyz(coordinates[0], a, b, D50)
                 return Color(space, xyz, self.alpha)
         elif space == 'xyz-d65':
@@ -146,8 +146,8 @@ class Color:
                 xyz = _oklab_to_xyz(*coordinates)
                 return Color(space, xyz, self.alpha)
             elif self.space == 'oklch':
-                a = coordinates[1] * cos(coordinates[2] / 360 * tau)
-                b = coordinates[1] * sin(coordinates[2] / 360 * tau)
+                a = coordinates[1] * cos(radians(coordinates[2]))
+                b = coordinates[1] * sin(radians(coordinates[2]))
                 xyz = _oklab_to_xyz(coordinates[0], a, b)
                 return Color(space, xyz, self.alpha)
         elif space == 'lab':
@@ -158,16 +158,16 @@ class Color:
                 lab = _xyz_to_lab(*coordinates, D65)
                 return Color(space, lab, self.alpha)
             elif self.space == 'lch':
-                a = coordinates[1] * cos(coordinates[2] / 360 * tau)
-                b = coordinates[1] * sin(coordinates[2] / 360 * tau)
+                a = coordinates[1] * cos(radians(coordinates[2]))
+                b = coordinates[1] * sin(radians(coordinates[2]))
                 return Color(space, (coordinates[0], a, b), self.alpha)
             elif self.space == 'oklab':
                 xyz = _oklab_to_xyz(*coordinates)
                 lab = _xyz_to_lab(*xyz, D65)
                 return Color(space, lab, self.alpha)
             elif self.space == 'oklch':
-                a = coordinates[1] * cos(coordinates[2] / 360 * tau)
-                b = coordinates[1] * sin(coordinates[2] / 360 * tau)
+                a = coordinates[1] * cos(radians(coordinates[2]))
+                b = coordinates[1] * sin(radians(coordinates[2]))
                 xyz = _oklab_to_xyz(coordinates[0], a, b)
                 lab = _xyz_to_lab(*xyz, D65)
                 return Color(space, lab, self.alpha)
@@ -445,7 +445,7 @@ def _parse_hue(token):
         elif token.unit == 'grad':
             return token.value / 400 * 360 % 360
         elif token.unit == 'rad':
-            return token.value / tau * 360 % 360
+            return degrees(token.value) % 360
         elif token.unit == 'turn':
             return token.value * 360 % 360
     elif token.type == 'ident' and token.lower_value == 'none':
