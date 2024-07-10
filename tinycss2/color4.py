@@ -61,7 +61,12 @@ class Color:
 
         ``None`` coordinates are always transformed into ``0`` values.
 
-        Many space combinations are not supported.
+        Here are the supported combinations:
+
+        - from hsl and hwb to srgb;
+        - from lab and lch to xyz-d50;
+        - from oklab and oklch to xyz-d65;
+        - from xyz-d50, xyz-d65, lch, oklab and oklch to lab.
 
         """
         coordinates = tuple(coordinate or 0 for coordinate in self.coordinates)
