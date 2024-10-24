@@ -8,15 +8,19 @@ from webencodings import Encoding, lookup
 
 from tinycss2 import (  # isort:skip
     parse_blocks_contents, parse_component_value_list, parse_declaration_list,
-    parse_one_component_value, parse_one_declaration, parse_one_rule, parse_rule_list,
-    parse_stylesheet, parse_stylesheet_bytes, serialize)
+    parse_one_component_value, parse_one_declaration, parse_one_rule,
+    parse_rule_list, parse_stylesheet, parse_stylesheet_bytes, serialize)
 from tinycss2.ast import (  # isort:skip
-    AtKeywordToken, AtRule, Comment, CurlyBracketsBlock, Declaration, DimensionToken,
-    FunctionBlock, HashToken, IdentToken, LiteralToken, NumberToken, ParenthesesBlock,
-    ParseError, PercentageToken, QualifiedRule, SquareBracketsBlock, StringToken,
-    UnicodeRangeToken, URLToken, WhitespaceToken)
-from tinycss2.color3 import RGBA, parse_color
-from tinycss2.nth import parse_nth
+    AtKeywordToken, AtRule, Comment, CurlyBracketsBlock, Declaration,
+    DimensionToken, FunctionBlock, HashToken, IdentToken, LiteralToken,
+    NumberToken, ParenthesesBlock, ParseError, PercentageToken, QualifiedRule,
+    SquareBracketsBlock, StringToken, UnicodeRangeToken, URLToken,
+    WhitespaceToken)
+from tinycss2.color3 import RGBA  # isort:skip
+from tinycss2.color3 import parse_color as parse_color3  # isort:skip
+from tinycss2.color4 import Color  # isort:skip
+from tinycss2.color4 import parse_color as parse_color4  # isort:skip
+from tinycss2.nth import parse_nth  # isort:skip
 
 
 def generic(func):
@@ -69,7 +73,14 @@ def to_json():
         QualifiedRule: lambda r: [
             'qualified rule', to_json(r.prelude), to_json(r.content)],
 
-        RGBA: lambda v: [round(c, 10) for c in v],
+        RGBA: lambda v: [round(c, 6) for c in v],
+        Color: lambda v: [
+            v.space,
+            [round(c, 6) for c in v.params],
+            v.function_name,
+            [None if arg is None else round(arg, 6) for arg in v.args],
+            v.alpha,
+        ],
     }
 
 
@@ -93,7 +104,7 @@ def json_test(filename=None):
     return decorator
 
 
-SKIP = dict(skip_comments=True, skip_whitespace=True)
+SKIP = {'skip_comments': True, 'skip_whitespace': True}
 
 
 @json_test()
@@ -136,29 +147,247 @@ def test_one_rule(input):
     return parse_one_rule(input, skip_comments=True)
 
 
-@json_test()
-def test_color3(input):
-    return parse_color(input)
-
-
 @json_test(filename='An+B.json')
 def test_nth(input):
     return parse_nth(input)
 
 
-# Do not use @pytest.mark.parametrize because it is slow with that many values.
-def test_color3_hsl():
-    for css, expected in load_json('color3_hsl.json'):
-        assert to_json(parse_color(css)) == expected
+def _number(value):
+    if value is None:
+        return 'none'
+    value = round(value + 0.0000001, 6)
+    return str(int(value) if value.is_integer() else value)
 
 
-def test_color3_keywords():
-    for css, expected in load_json('color3_keywords.json'):
-        result = parse_color(css)
-        if result is not None:
-            r, g, b, a = result
-            result = [r * 255, g * 255, b * 255, a]
-        assert result == expected
+def test_color_currentcolor_3():
+    for value in ('currentcolor', 'currentColor', 'CURRENTCOLOR'):
+        assert parse_color3(value) == 'currentColor'
+
+
+def test_color_currentcolor_4():
+    for value in ('currentcolor', 'currentColor', 'CURRENTCOLOR'):
+        assert parse_color4(value) == 'currentcolor'
+
+
+@json_test()
+def test_color_function_4(input):
+    if not (color := parse_color4(input)):
+        return None
+    (*coordinates, alpha) = color
+    result = f'color({color.space}'
+    for coordinate in coordinates:
+        result += f' {_number(coordinate)}'
+    if alpha != 1:
+        result += f' / {_number(alpha)}'
+    result += ')'
+    return result
+
+
+@json_test()
+def test_color_hexadecimal_3(input):
+    if not (color := parse_color3(input)):
+        return None
+    (*coordinates, alpha) = color
+    result = f'rgb{"a" if alpha != 1 else ""}('
+    result += f'{", ".join(_number(coordinate * 255) for coordinate in coordinates)}'
+    if alpha != 1:
+        result += f', {_number(alpha)}'
+    result += ')'
+    return result
+
+
+@json_test()
+def test_color_hexadecimal_4(input):
+    if not (color := parse_color4(input)):
+        return None
+    assert color.space == 'srgb'
+    (*coordinates, alpha) = color
+    result = f'rgb{"a" if alpha != 1 else ""}('
+    result += f'{", ".join(_number(coordinate * 255) for coordinate in coordinates)}'
+    if alpha != 1:
+        result += f', {_number(alpha)}'
+    result += ')'
+    return result
+
+
+@json_test(filename='color_hexadecimal_3.json')
+def test_color_hexadecimal_3_with_4(input):
+    if not (color := parse_color4(input)):
+        return None
+    assert color.space == 'srgb'
+    (*coordinates, alpha) = color
+    result = f'rgb{"a" if alpha != 1 else ""}('
+    result += f'{", ".join(_number(coordinate * 255) for coordinate in coordinates)}'
+    if alpha != 1:
+        result += f', {_number(alpha)}'
+    result += ')'
+    return result
+
+
+@json_test()
+def test_color_hsl_3(input):
+    if not (color := parse_color3(input)):
+        return None
+    (*coordinates, alpha) = color
+    result = f'rgb{"a" if alpha != 1 else ""}('
+    result += f'{", ".join(_number(coordinate * 255) for coordinate in coordinates)}'
+    if alpha != 1:
+        result += f', {_number(alpha)}'
+    result += ')'
+    return result
+
+
+@json_test(filename='color_hsl_3.json')
+def test_color_hsl_3_with_4(input):
+    if not (color := parse_color4(input)):
+        return None
+    assert color.space == 'hsl'
+    (*coordinates, alpha) = color.to('srgb')
+    result = f'rgb{"a" if alpha != 1 else ""}('
+    result += f'{", ".join(_number(coordinate * 255) for coordinate in coordinates)}'
+    if alpha != 1:
+        result += f', {_number(alpha)}'
+    result += ')'
+    return result
+
+
+@json_test()
+def test_color_hsl_4(input):
+    if not (color := parse_color4(input)):
+        return None
+    assert color.space == 'hsl'
+    (*coordinates, alpha) = color.to('srgb')
+    result = f'rgb{"a" if alpha != 1 else ""}('
+    result += f'{", ".join(_number(coordinate * 255) for coordinate in coordinates)}'
+    if alpha != 1:
+        result += f', {_number(alpha)}'
+    result += ')'
+    return result
+
+
+@json_test()
+def test_color_hwb_4(input):
+    if not (color := parse_color4(input)):
+        return None
+    assert color.space == 'hwb'
+    (*coordinates, alpha) = color.to('srgb')
+    result = f'rgb{"a" if alpha != 1 else ""}('
+    result += f'{", ".join(_number(coordinate * 255) for coordinate in coordinates)}'
+    if alpha != 1:
+        result += f', {_number(alpha)}'
+    result += ')'
+    return result
+
+
+@json_test()
+def test_color_keywords_3(input):
+    if not (color := parse_color3(input)):
+        return None
+    elif isinstance(color, str):
+        return color
+    (*coordinates, alpha) = color
+    result = f'rgb{"a" if alpha != 1 else ""}('
+    result += f'{", ".join(_number(coordinate * 255) for coordinate in coordinates)}'
+    if alpha != 1:
+        result += f', {_number(alpha)}'
+    result += ')'
+    return result
+
+
+@json_test(filename='color_keywords_3.json')
+def test_color_keywords_3_with_4(input):
+    if not (color := parse_color4(input)):
+        return None
+    elif isinstance(color, str):
+        return color
+    assert color.space == 'srgb'
+    (*coordinates, alpha) = color
+    result = f'rgb{"a" if alpha != 1 else ""}('
+    result += f'{", ".join(_number(coordinate * 255) for coordinate in coordinates)}'
+    if alpha != 1:
+        result += f', {_number(alpha)}'
+    result += ')'
+    return result
+
+
+@json_test()
+def test_color_keywords_4(input):
+    if not (color := parse_color4(input)):
+        return None
+    elif isinstance(color, str):
+        return color
+    assert color.space == 'srgb'
+    (*coordinates, alpha) = color
+    result = f'rgb{"a" if alpha != 1 else ""}('
+    result += f'{", ".join(_number(coordinate * 255) for coordinate in coordinates)}'
+    if alpha != 1:
+        result += f', {_number(alpha)}'
+    result += ')'
+    return result
+
+
+@json_test()
+def test_color_lab_4(input):
+    if not (color := parse_color4(input)):
+        return None
+    elif isinstance(color, str):
+        return color
+    assert color.space == 'lab'
+    (*coordinates, alpha) = color
+    result = f'{color.space}('
+    result += f'{" ".join(_number(coordinate) for coordinate in coordinates)}'
+    if alpha != 1:
+        result += f' / {_number(alpha)}'
+    result += ')'
+    return result
+
+
+@json_test()
+def test_color_oklab_4(input):
+    if not (color := parse_color4(input)):
+        return None
+    elif isinstance(color, str):
+        return color
+    assert color.space == 'oklab'
+    (*coordinates, alpha) = color
+    result = f'{color.space}('
+    result += f'{" ".join(_number(coordinate) for coordinate in coordinates)}'
+    if alpha != 1:
+        result += f' / {_number(alpha)}'
+    result += ')'
+    return result
+
+
+@json_test()
+def test_color_lch_4(input):
+    if not (color := parse_color4(input)):
+        return None
+    elif isinstance(color, str):
+        return color
+    assert color.space == 'lch'
+    (*coordinates, alpha) = color
+    result = f'{color.space}('
+    result += f'{" ".join(_number(coordinate) for coordinate in coordinates)}'
+    if alpha != 1:
+        result += f' / {_number(alpha)}'
+    result += ')'
+    return result
+
+
+@json_test()
+def test_color_oklch_4(input):
+    if not (color := parse_color4(input)):
+        return None
+    elif isinstance(color, str):
+        return color
+    assert color.space == 'oklch'
+    (*coordinates, alpha) = color
+    result = f'{color.space}('
+    result += f'{" ".join(_number(coordinate) for coordinate in coordinates)}'
+    if alpha != 1:
+        result += f' / {_number(alpha)}'
+    result += ')'
+    return result
 
 
 @json_test()
@@ -205,7 +434,8 @@ def test_parse_declaration_value_color():
     source = 'color:#369'
     declaration = parse_one_declaration(source)
     (value_token,) = declaration.value
-    assert parse_color(value_token) == (.2, .4, .6, 1)
+    assert parse_color3(value_token) == (.2, .4, .6, 1)
+    assert parse_color4(value_token) == (.2, .4, .6, 1)
     assert declaration.serialize() == source
 
 
