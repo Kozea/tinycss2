@@ -15,4 +15,4 @@ from .parser import (  # noqa
 from .serializer import serialize, serialize_identifier  # noqa
 from .tokenizer import parse_component_value_list  # noqa
 
-VERSION = __version__ = '1.3.0'
+VERSION = __version__ = '1.4.0'

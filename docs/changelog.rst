@@ -2,6 +2,14 @@ Changelog
 =========
 
 
+Version 1.4.0
+-------------
+
+Released on 2024-10-24
+
+* Support CSS Color Level 4
+
+
 Version 1.3.0
 -------------
 
