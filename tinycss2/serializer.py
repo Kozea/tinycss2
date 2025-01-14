@@ -79,27 +79,8 @@ _replacement_string_value = {
 _re_string_value = re.compile("["+"".join(re.escape(e) for e in _replacement_string_value.keys()) + "]",
                           re.MULTILINE )
 
-def fast_serialize_string_value(value):
-    return _re_string_value.sub(lambda match: _replacement_string_value[match.group(0)], value)
-
-
-def slow_serialize_string_value(value):
-    return ''.join(
-        r'\"' if c == '"' else
-        r'\\' if c == '\\' else
-        r'\A ' if c == '\n' else
-        r'\D ' if c == '\r' else
-        r'\C ' if c == '\f' else
-        c
-        for c in value
-    )
-
 def serialize_string_value(value):
-    assert isinstance(value, str),type(value)
-    ref = slow_serialize_string_value(value)
-    new = fast_serialize_string_value(value)
-    assert ref == new,(ref, new)
-    return new
+    return _re_string_value.sub(lambda match: _replacement_string_value[match.group(0)], value)
 
 
 def serialize_url(value):
