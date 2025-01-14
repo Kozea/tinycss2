@@ -76,11 +76,12 @@ _replacement_string_value = {
         "\r": r"\D ",
         "\f": r"\C ",
     }
-_re_string_value = re.compile("["+"".join(re.escape(e) for e in _replacement_string_value.keys()) + "]",
-                          re.MULTILINE )
-
+_re_string_value = "".join(re.escape(e) for e in _replacement_string_value.keys())
+_re_string_value = re.compile("["+ _re_string_value + "]", re.MULTILINE )
+def _serialize_string_value_match(match):
+    return _replacement_string_value[match.group(0)]
 def serialize_string_value(value):
-    return _re_string_value.sub(lambda match: _replacement_string_value[match.group(0)], value)
+    return _re_string_value.sub(_serialize_string_value_match, value)
 
 
 def serialize_url(value):
