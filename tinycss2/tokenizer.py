@@ -77,7 +77,7 @@ def parse_component_value_list(css, skip_comments=False):
                 if url_pos >= length or css[url_pos] not in ('"', "'"):
                     value, pos, error = _consume_url(css, pos)
                     if value is not None:
-                        repr = 'url({})'.format(serialize_url(value))
+                        repr = f'url({serialize_url(value)})'
                         if error is not None:
                             error_key = error[0]
                             if error_key == 'eof-in-string':
@@ -163,7 +163,7 @@ def parse_component_value_list(css, skip_comments=False):
         elif c in ('"', "'"):
             value, pos, error = _consume_quoted_string(css, pos)
             if value is not None:
-                repr = '"{}"'.format(serialize_string_value(value))
+                repr = f'"{serialize_string_value(value)}"'
                 if error is not None:
                     repr = repr[:-1]
                 tokens.append(StringToken(line, column, value, repr))
