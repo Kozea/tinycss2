@@ -1,3 +1,6 @@
+import re
+
+
 def serialize(nodes):
     """Serialize nodes to CSS syntax.
 
@@ -66,16 +69,19 @@ def serialize_name(value):
     )
 
 
+_replacement_string_value = {
+        '"': r"\"",
+        "\\": r"\\",
+        "\n": r"\A ",
+        "\r": r"\D ",
+        "\f": r"\C ",
+    }
+_re_string_value = "".join(re.escape(e) for e in _replacement_string_value.keys())
+_re_string_value = re.compile("["+ _re_string_value + "]", re.MULTILINE )
+def _serialize_string_value_match(match):
+    return _replacement_string_value[match.group(0)]
 def serialize_string_value(value):
-    return ''.join(
-        r'\"' if c == '"' else
-        r'\\' if c == '\\' else
-        r'\A ' if c == '\n' else
-        r'\D ' if c == '\r' else
-        r'\C ' if c == '\f' else
-        c
-        for c in value
-    )
+    return _re_string_value.sub(_serialize_string_value_match, value)
 
 
 def serialize_url(value):
