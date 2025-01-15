@@ -48,7 +48,7 @@ class Node:
     .. automethod:: serialize
 
     """
-    __slots__ = ['source_line', 'source_column']
+    __slots__ = ['source_column', 'source_line']
 
     def __init__(self, source_line, source_column):
         self.source_line = source_line
@@ -234,7 +234,7 @@ class IdentToken(Node):
         This is the value to use when comparing to a CSS keyword.
 
     """
-    __slots__ = ['value', 'lower_value']
+    __slots__ = ['lower_value', 'value']
     type = 'ident'
     repr_format = '<{self.__class__.__name__} {self.value}>'
 
@@ -274,7 +274,7 @@ class AtKeywordToken(Node):
             if node.type == 'at-keyword' and node.lower_value == 'import':
 
     """
-    __slots__ = ['value', 'lower_value']
+    __slots__ = ['lower_value', 'value']
     type = 'at-keyword'
     repr_format = '<{self.__class__.__name__} @{self.value}>'
 
@@ -311,7 +311,7 @@ class HashToken(Node):
         (Only such hash tokens are valid ID selectors.)
 
     """
-    __slots__ = ['value', 'is_identifier']
+    __slots__ = ['is_identifier', 'value']
     type = 'hash'
     repr_format = '<{self.__class__.__name__} #{self.value}>'
 
@@ -342,7 +342,7 @@ class StringToken(Node):
         The unescaped value, as a Unicode string, without the quotes.
 
     """
-    __slots__ = ['value', 'representation']
+    __slots__ = ['representation', 'value']
     type = 'string'
     repr_format = '<{self.__class__.__name__} {self.representation}>'
 
@@ -370,7 +370,7 @@ class URLToken(Node):
         markers.
 
     """
-    __slots__ = ['value', 'representation']
+    __slots__ = ['representation', 'value']
     type = 'url'
     repr_format = '<{self.__class__.__name__} {self.representation}>'
 
@@ -398,7 +398,7 @@ class UnicodeRangeToken(Node):
         Same as :attr:`start` if the source only specified one value.
 
     """
-    __slots__ = ['start', 'end']
+    __slots__ = ['end', 'start']
     type = 'unicode-range'
     repr_format = '<{self.__class__.__name__} {self.start} {self.end}>'
 
@@ -437,7 +437,7 @@ class NumberToken(Node):
         The CSS representation of the value, as a Unicode string.
 
     """
-    __slots__ = ['value', 'int_value', 'is_integer', 'representation']
+    __slots__ = ['int_value', 'is_integer', 'representation', 'value']
     type = 'number'
     repr_format = '<{self.__class__.__name__} {self.representation}>'
 
@@ -481,7 +481,7 @@ class PercentageToken(Node):
         as a Unicode string.
 
     """
-    __slots__ = ['value', 'int_value', 'is_integer', 'representation']
+    __slots__ = ['int_value', 'is_integer', 'representation', 'value']
     type = 'percentage'
     repr_format = '<{self.__class__.__name__} {self.representation}%>'
 
@@ -540,8 +540,14 @@ class DimensionToken(Node):
             if node.type == 'dimension' and node.lower_unit == 'px':
 
     """
-    __slots__ = ['value', 'int_value', 'is_integer', 'representation',
-                 'unit', 'lower_unit']
+    __slots__ = [
+        'int_value',
+        'is_integer',
+        'lower_unit',
+        'representation',
+        'unit',
+        'value',
+    ]
     type = 'dimension'
     repr_format = ('<{self.__class__.__name__} '
                    '{self.representation}{self.unit}>')
@@ -680,7 +686,7 @@ class FunctionBlock(Node):
         in the list.
 
     """
-    __slots__ = ['name', 'lower_name', 'arguments']
+    __slots__ = ['arguments', 'lower_name', 'name']
     type = 'function'
     repr_format = '<{self.__class__.__name__} {self.name}( … )>'
 
@@ -743,7 +749,7 @@ class Declaration(Node):
         this flag, such as non-property descriptor declarations.
 
     """
-    __slots__ = ['name', 'lower_name', 'value', 'important']
+    __slots__ = ['important', 'lower_name', 'name', 'value']
     type = 'declaration'
     repr_format = '<{self.__class__.__name__} {self.name}: …>'
 
@@ -788,7 +794,7 @@ class QualifiedRule(Node):
         as a list of :term:`component values`.
 
     """
-    __slots__ = ['prelude', 'content']
+    __slots__ = ['content', 'prelude']
     type = 'qualified-rule'
     repr_format = ('<{self.__class__.__name__} '
                    '… {{ … }}>')
@@ -849,7 +855,7 @@ class AtRule(Node):
         or :obj:`None` for at-rules ending with a semicolon.
 
     """
-    __slots__ = ['at_keyword', 'lower_at_keyword', 'prelude', 'content']
+    __slots__ = ['at_keyword', 'content', 'lower_at_keyword', 'prelude']
     type = 'at-rule'
     repr_format = ('<{self.__class__.__name__} '
                    '@{self.at_keyword} … {{ … }}>')
