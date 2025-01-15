@@ -70,14 +70,14 @@ def serialize_name(value):
 
 
 _replacement_string_value = {
-        '"': r"\"",
-        "\\": r"\\",
-        "\n": r"\A ",
-        "\r": r"\D ",
-        "\f": r"\C ",
-    }
-_re_string_value = "".join(re.escape(e) for e in _replacement_string_value.keys())
-_re_string_value = re.compile("["+ _re_string_value + "]", re.MULTILINE )
+    '"': r'\"',
+    '\\': r'\\',
+    '\n': r'\A ',
+    '\r': r'\D ',
+    '\f': r'\C ',
+}
+_re_string_value = ''.join(re.escape(char) for char in _replacement_string_value)
+_re_string_value = re.compile(f'[{_re_string_value}]', re.MULTILINE)
 def _serialize_string_value_match(match):
     return _replacement_string_value[match.group(0)]
 def serialize_string_value(value):
