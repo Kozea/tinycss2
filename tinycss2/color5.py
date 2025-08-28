@@ -6,7 +6,7 @@ D65 = color4.D65
 
 
 class Color(color4.Color):
-    COLOR_SPACES = COLOR_SPACES
+    COLOR_SPACES = None
 
 
 def parse_color(input):
@@ -25,12 +25,16 @@ def parse_color(input):
             token for token in token.arguments
             if token.type not in ('whitespace', 'comment')]
         name = token.lower_name
+
+        if name == 'color':
+            space, *tokens = tokens
+
         length = len(tokens)
 
         if length in (7, 9) and all(token == ',' for token in tokens[1::2]):
             old_syntax = True
             tokens = tokens[::2]
-        elif length == 4:
+        elif length in (3, 4):
             old_syntax = False
         elif length == 6 and tokens[4] == '/':
             tokens.pop(4)
@@ -41,6 +45,8 @@ def parse_color(input):
 
         if name == 'device-cmyk':
             return _parse_device_cmyk(args, alpha, old_syntax)
+        elif name == 'color' and not old_syntax:
+            return _parse_color(space, args, alpha)
 
 
 def _parse_device_cmyk(args, alpha, old_syntax):
@@ -63,3 +69,20 @@ def _parse_device_cmyk(args, alpha, old_syntax):
         arg.value / 100 if arg.type == 'percentage' else None
         for arg in args]
     return Color('device-cmyk', cmyk, alpha)
+
+
+def _parse_color(space, args, alpha):
+    """Parse a color space name list of coordinates.
+
+    Ranges are [0, 1].
+
+    """
+    if not color4._types(args) <= {'number', 'percentage'}:
+        return
+    if space.type != 'ident' or not space.value.startswith('--'):
+        return
+    coordinates = [
+        arg.value if arg.type == 'number' else
+        arg.value / 100 if arg.type == 'percentage' else None
+        for arg in args]
+    return Color(space.value, coordinates, alpha)

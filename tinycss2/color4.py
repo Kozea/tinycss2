@@ -26,7 +26,8 @@ class Color:
     COLOR_SPACES = COLOR_SPACES
 
     def __init__(self, space, coordinates, alpha):
-        assert space in self.COLOR_SPACES, f"{space} is not a supported color space"
+        if self.COLOR_SPACES:
+            assert space in self.COLOR_SPACES, f"{space} is not a supported color space"
         self.space = space
         self.coordinates = tuple(
             None if coordinate is None else float(coordinate)
