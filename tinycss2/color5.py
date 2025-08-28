@@ -56,7 +56,7 @@ def _parse_device_cmyk(args, alpha, old_syntax):
         if color4._types(args) != {'number'}:
             return
     else:
-        if color4._types(args) <= {'numbers', 'percentage'}:
+        if not color4._types(args) <= {'numbers', 'percentage'}:
             return
     cmyk = [
         arg.value if arg.type == 'number' else
