@@ -23,8 +23,10 @@ class Color:
     to [0, 1]. Coordinates can also be set to ``None`` when undefined.
 
     """
+    COLOR_SPACES = COLOR_SPACES
+
     def __init__(self, space, coordinates, alpha):
-        assert space in COLOR_SPACES, f"{space} is not a supported color space"
+        assert space in self.COLOR_SPACES, f"{space} is not a supported color space"
         self.space = space
         self.coordinates = tuple(
             None if coordinate is None else float(coordinate)
