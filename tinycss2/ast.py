@@ -559,7 +559,10 @@ class DimensionToken(Node):
         self.is_integer = int_value is not None
         self.representation = representation
         self.unit = unit
-        self.lower_unit = ascii_lower(unit)
+        try:
+            self.lower_unit = ascii_lower(unit)
+        except UnicodeEncodeError:
+            self.lower_unit = unit
 
     def _serialize_to(self, write):
         write(self.representation)
@@ -693,7 +696,10 @@ class FunctionBlock(Node):
     def __init__(self, line, column, name, arguments):
         Node.__init__(self, line, column)
         self.name = name
-        self.lower_name = ascii_lower(name)
+        try:
+            self.lower_name = ascii_lower(name)
+        except UnicodeEncodeError:
+            self.lower_name = name
         self.arguments = arguments
 
     def _serialize_to(self, write):

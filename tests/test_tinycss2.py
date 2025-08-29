@@ -474,6 +474,27 @@ def test_backslash_delim():
     assert serialize(tokens) == source
 
 
-def test_bad_unicode():
-    parse_one_declaration('background:\udca9')
-    parse_rule_list('@\udca9')
+def test_escape_in_at_rule():
+    at_rule, = parse_rule_list('@\udca9')
+    assert at_rule.type == 'at-rule'
+    assert at_rule.at_keyword == '\udca9'
+
+
+def test_escape_in_ident():
+    declaration = parse_one_declaration('background:\udca9')
+    assert declaration.type == 'declaration'
+    value, = declaration.value
+    assert value.value == '\udca9'
+
+
+def test_escape_in_dimension_token():
+    dimension, = parse_component_value_list('0\\dddf')
+    assert dimension.type == 'dimension'
+    assert dimension.int_value == 0
+    assert dimension.unit == '\udddf'
+
+
+def test_escape_in_function_name():
+    function, = parse_component_value_list('\\dddf()')
+    assert function.type == 'function'
+    assert function.name == '\udddf'
