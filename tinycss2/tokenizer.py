@@ -70,7 +70,11 @@ def parse_component_value_list(css, skip_comments=False):
                 tokens.append(IdentToken(line, column, value))
                 continue
             pos += 1  # Skip the '('
-            if ascii_lower(value) == 'url':
+            try:
+                is_url = ascii_lower(value) == 'url'
+            except UnicodeEncodeError:
+                is_url = value == 'url'
+            if is_url:
                 url_pos = pos
                 while css.startswith((' ', '\n', '\t'), url_pos):
                     url_pos += 1
