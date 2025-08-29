@@ -73,7 +73,7 @@ def parse_component_value_list(css, skip_comments=False):
             try:
                 is_url = ascii_lower(value) == 'url'
             except UnicodeEncodeError:
-                is_url = value == 'url'
+                is_url = False
             if is_url:
                 url_pos = pos
                 while css.startswith((' ', '\n', '\t'), url_pos):
