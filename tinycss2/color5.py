@@ -16,7 +16,7 @@ def parse_color(input):
         return color
 
     if isinstance(input, str):
-        token = parse_one_component_value(input, skip_comments=True)
+        token = color4.parse_one_component_value(input, skip_comments=True)
     else:
         token = input
 
