@@ -1,6 +1,7 @@
 from . import color4
 
 COLOR_SPACES = color4.COLOR_SPACES | {'device-cmyk'}
+COLOR_SCHEMES = {'light', 'dark'}
 D50 = color4.D50
 D65 = color4.D65
 
@@ -9,11 +10,20 @@ class Color(color4.Color):
     COLOR_SPACES = None
 
 
-def parse_color(input):
+def parse_color(input, color_schemes=None):
     color = color4.parse_color(input)
 
     if color:
         return color
+
+    if color_schemes is None or color_schemes == 'normal':
+        color_scheme = 'light'
+    else:
+        for color_scheme in color_schemes:
+            if color_scheme in COLOR_SCHEMES:
+                break
+        else:
+            color_scheme = 'light'
 
     if isinstance(input, str):
         token = color4.parse_one_component_value(input, skip_comments=True)
@@ -45,6 +55,8 @@ def parse_color(input):
 
         if name == 'device-cmyk':
             return _parse_device_cmyk(args, alpha, old_syntax)
+        elif name == 'light-dark':
+            return _parse_light_dark(args, color_scheme)
         elif name == 'color' and not old_syntax:
             return _parse_color(space, args, alpha)
 
@@ -69,6 +81,19 @@ def _parse_device_cmyk(args, alpha, old_syntax):
         arg.value / 100 if arg.type == 'percentage' else None
         for arg in args]
     return Color('device-cmyk', cmyk, alpha)
+
+
+def _parse_light_dark(args, color_scheme):
+    colors = []
+    for arg in args:
+        if color := parse_color(arg, color_scheme):
+            colors.append(color)
+    if len(colors) == 2:
+        if color_scheme == 'light':
+            return colors[0]
+        else:
+            return colors[1]
+    return
 
 
 def _parse_color(space, args, alpha):
