@@ -35,30 +35,31 @@ def parse_color(input, color_schemes=None):
             token for token in token.arguments
             if token.type not in ('whitespace', 'comment')]
         name = token.lower_name
+        alpha = []
 
         if name == 'color':
             space, *tokens = tokens
 
         length = len(tokens)
 
-        if length in (7, 9) and all(token == ',' for token in tokens[1::2]):
-            old_syntax = True
+        old_syntax = all(token == ',' for token in tokens[1::2])
+        if old_syntax:
             tokens = tokens[::2]
-        elif length in (3, 4):
-            old_syntax = False
-        elif length == 6 and tokens[4] == '/':
-            tokens.pop(4)
-            old_syntax = False
         else:
-            return
-        args, alpha = tokens[:4], color4._parse_alpha(tokens[4:])
+            for index, token in enumerate(tokens):
+                if token == '/':
+                    alpha = tokens[index + 1:]
+                    tokens = tokens[:index]
+                    break
 
         if name == 'device-cmyk':
-            return _parse_device_cmyk(args, alpha, old_syntax)
+            return _parse_device_cmyk(tokens, color4._parse_alpha(alpha), old_syntax)
+        elif name == 'color':
+            return _parse_color(space, tokens, color4._parse_alpha(alpha))
         elif name == 'light-dark':
-            return _parse_light_dark(args, color_scheme)
-        elif name == 'color' and not old_syntax:
-            return _parse_color(space, args, alpha)
+            return _parse_light_dark(tokens, color_scheme)
+        else:
+            return
 
 
 def _parse_device_cmyk(args, alpha, old_syntax):
@@ -74,7 +75,7 @@ def _parse_device_cmyk(args, alpha, old_syntax):
         if color4._types(args) != {'number'}:
             return
     else:
-        if not color4._types(args) <= {'numbers', 'percentage'}:
+        if not color4._types(args) <= {'number', 'percentage'}:
             return
     cmyk = [
         arg.value if arg.type == 'number' else
