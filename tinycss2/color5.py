@@ -40,8 +40,6 @@ def parse_color(input, color_schemes=None):
         if name == 'color':
             space, *tokens = tokens
 
-        length = len(tokens)
-
         old_syntax = all(token == ',' for token in tokens[1::2])
         if old_syntax:
             tokens = tokens[::2]
