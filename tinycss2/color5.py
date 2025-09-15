@@ -79,6 +79,7 @@ def _parse_device_cmyk(args, alpha, old_syntax):
         arg.value if arg.type == 'number' else
         arg.value / 100 if arg.type == 'percentage' else None
         for arg in args]
+    cmyk = [max(0., min(1., float(channel))) for channel in cmyk]
     return Color('device-cmyk', cmyk, alpha)
 
 
