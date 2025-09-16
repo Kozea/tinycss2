@@ -161,6 +161,17 @@ def _number(value):
     return str(int(value) if value.is_integer() else value)
 
 
+def _build_color(color):
+    (*coordinates, alpha) = color
+    result = f'color({color.space}'
+    for coordinate in coordinates:
+        result += f' {_number(coordinate)}'
+    if alpha != 1:
+        result += f' / {_number(alpha)}'
+    result += ')'
+    return result
+
+
 def test_color_currentcolor_3():
     for value in ('currentcolor', 'currentColor', 'CURRENTCOLOR'):
         assert parse_color3(value) == 'currentColor'
@@ -181,13 +192,7 @@ def test_color_function_4(input):
     if not (color := parse_color4(input)):
         return None
     (*coordinates, alpha) = color
-    result = f'color({color.space}'
-    for coordinate in coordinates:
-        result += f' {_number(coordinate)}'
-    if alpha != 1:
-        result += f' / {_number(alpha)}'
-    result += ')'
-    return result
+    return _build_color(color)
 
 
 @json_test(filename='color_function_4.json')
@@ -195,26 +200,25 @@ def test_color_function_4_with_5(input):
     if not (color := parse_color5(input)):
         return None
     (*coordinates, alpha) = color
-    result = f'color({color.space}'
-    for coordinate in coordinates:
-        result += f' {_number(coordinate)}'
-    if alpha != 1:
-        result += f' / {_number(alpha)}'
-    result += ')'
-    return result
+    return _build_color(color)
 
 
 @json_test()
 def test_color_functions_5(input):
-    if not (color := parse_color5(input)):
-        return None
-    (*coordinates, alpha) = color
-    result = f'color({color.space}'
-    for coordinate in coordinates:
-        result += f' {_number(coordinate)}'
-    if alpha != 1:
-        result += f' / {_number(alpha)}'
-    result += ')'
+    if input.startswith('light-dark'):
+        result = []
+        if not (light_color := parse_color5(input, ('light',))):
+            result.append(None)
+        else:
+            result.append(_build_color(light_color))
+        if not (dark_color := parse_color5(input, ('dark',))):
+            result.append(None)
+        else:
+            result.append(_build_color(dark_color))
+    else:
+        if not (color := parse_color5(input)):
+            return None
+        result = _build_color(color)
     return result
 
 
