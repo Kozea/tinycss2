@@ -20,7 +20,6 @@ from tinycss2.color3 import RGBA  # isort:skip
 from tinycss2.color3 import parse_color as parse_color3  # isort:skip
 from tinycss2.color4 import Color  # isort:skip
 from tinycss2.color4 import parse_color as parse_color4  # isort:skip
-from tinycss2.color5 import Color  # isort:skip
 from tinycss2.color5 import parse_color as parse_color5  # isort:skip
 from tinycss2.nth import parse_nth  # isort:skip
 
@@ -533,9 +532,9 @@ def test_color_lch_4(input):
     return result
 
 
-@json_test()
-def test_color_lch_4(input):
-    if not (color := parse_color4(input)):
+@json_test(filename='color_lch_4.json')
+def test_color_lch_4_with_5(input):
+    if not (color := parse_color5(input)):
         return None
     elif isinstance(color, str):
         return color
