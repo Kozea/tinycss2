@@ -190,7 +190,6 @@ def test_color_currentcolor_5():
 def test_color_function_4(input):
     if not (color := parse_color4(input)):
         return None
-    (*coordinates, alpha) = color
     return _build_color(color)
 
 
@@ -198,7 +197,6 @@ def test_color_function_4(input):
 def test_color_function_4_with_5(input):
     if not (color := parse_color5(input)):
         return None
-    (*coordinates, alpha) = color
     return _build_color(color)
 
 
