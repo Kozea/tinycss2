@@ -161,6 +161,8 @@ def _number(value):
 
 
 def _build_color(color):
+    if color is None:
+        return
     (*coordinates, alpha) = color
     result = f'color({color.space}'
     for coordinate in coordinates:
@@ -188,30 +190,20 @@ def test_color_currentcolor_5():
 
 @json_test()
 def test_color_function_4(input):
-    if not (color := parse_color4(input)):
-        return None
-    return _build_color(color)
+    return _build_color(parse_color4(input))
 
 
 @json_test(filename='color_function_4.json')
 def test_color_function_4_with_5(input):
-    if not (color := parse_color5(input)):
-        return None
-    return _build_color(color)
+    return _build_color(parse_color5(input))
 
 
 @json_test()
 def test_color_functions_5(input):
     if input.startswith('light-dark'):
         result = []
-        if not (light_color := parse_color5(input, ('light',))):
-            result.append(None)
-        else:
-            result.append(_build_color(light_color))
-        if not (dark_color := parse_color5(input, ('dark',))):
-            result.append(None)
-        else:
-            result.append(_build_color(dark_color))
+        result.append(_build_color(parse_color5(input, ('light',))))
+        result.append(_build_color(parse_color5(input, ('dark',))))
     else:
         if not (color := parse_color5(input)):
             return None
