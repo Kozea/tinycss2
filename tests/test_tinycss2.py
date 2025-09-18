@@ -205,9 +205,7 @@ def test_color_functions_5(input):
         result.append(_build_color(parse_color5(input, ('light',))))
         result.append(_build_color(parse_color5(input, ('dark',))))
     else:
-        if not (color := parse_color5(input)):
-            return None
-        result = _build_color(color)
+        result = _build_color(parse_color5(input))
     return result
 
 
