@@ -224,6 +224,19 @@ def test_color_hexadecimal_3(input):
     return result
 
 
+@json_test(filename='color_hexadecimal_3.json')
+def test_color_hexadecimal_3_with_4(input):
+    if not (color := parse_color4(input)):
+        return None
+    (*coordinates, alpha) = color
+    result = f'rgb{"a" if alpha != 1 else ""}('
+    result += f'{", ".join(_number(coordinate * 255) for coordinate in coordinates)}'
+    if alpha != 1:
+        result += f', {_number(alpha)}'
+    result += ')'
+    return result
+
+
 @json_test()
 def test_color_hexadecimal_4(input):
     if not (color := parse_color4(input)):
@@ -529,6 +542,22 @@ def test_color_lch_4_with_5(input):
     elif isinstance(color, str):
         return color
     assert color.space == 'lch'
+    (*coordinates, alpha) = color
+    result = f'{color.space}('
+    result += f'{" ".join(_number(coordinate) for coordinate in coordinates)}'
+    if alpha != 1:
+        result += f' / {_number(alpha)}'
+    result += ')'
+    return result
+
+
+@json_test()
+def test_color_oklch_4(input):
+    if not (color := parse_color4(input)):
+        return None
+    elif isinstance(color, str):
+        return color
+    assert color.space == 'oklch'
     (*coordinates, alpha) = color
     result = f'{color.space}('
     result += f'{" ".join(_number(coordinate) for coordinate in coordinates)}'
