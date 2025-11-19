@@ -2,10 +2,19 @@ Changelog
 =========
 
 
+Version 1.5.0
+-------------
+
+Released on 2025-11-19.
+
+* Support most of CSS Color Level 5
+* Fix tokenizer crash on escaped Dimension units and Function names
+
+
 Version 1.4.0
 -------------
 
-Released on 2024-10-24
+Released on 2024-10-24.
 
 * Support CSS Color Level 4
 
