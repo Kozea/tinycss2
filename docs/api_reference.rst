@@ -38,30 +38,48 @@ serialization-related functions are available:
 .. autofunction:: serialize_identifier
 
 
+Color Level 3
+-------------
+
 .. module:: tinycss2.color3
-
-
-Color
------
-
 .. autofunction:: parse_color
 .. autoclass:: RGBA
 
 
-.. module:: tinycss2.nth
+Color Level 4
+-------------
+
+.. module:: tinycss2.color4
+.. autofunction:: parse_color
+.. autoclass:: Color
+   :members:
+.. autodata:: COLOR_SPACES
+.. autodata:: D50
+.. autodata:: D65
+
+Color Level 5
+-------------
+
+.. module:: tinycss2.color5
+.. autofunction:: parse_color
+.. autoclass:: Color
+   :show-inheritance:
+.. autodata:: COLOR_SPACES
+.. autodata:: D50
+.. autodata:: D65
 
 
 <An+B>
 ------
 
+.. module:: tinycss2.nth
 .. autofunction:: parse_nth
-
-
-.. module:: tinycss2.ast
 
 
 AST nodes
 ---------
+
+.. module:: tinycss2.ast
 
 Various parsing functions return a **node** or a list of nodes. Some types of
 nodes contain nested nodes which may in turn contain more nodes, forming

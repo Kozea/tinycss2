@@ -4,13 +4,16 @@ from math import cos, degrees, radians, sin
 from .color3 import _BASIC_COLOR_KEYWORDS, _EXTENDED_COLOR_KEYWORDS, _HASH_REGEXPS
 from .parser import parse_one_component_value
 
+#: XYZ values of the D50 white point, normalized to Y=1.
 D50 = (0.3457 / 0.3585, 1, (1 - 0.3457 - 0.3585) / 0.3585)
+#: XYZ values of the D65 white point, normalized to Y=1.
 D65 = (0.3127 / 0.3290, 1, (1 - 0.3127 - 0.3290) / 0.3290)
 _FUNCTION_SPACES = {
     'srgb', 'srgb-linear',
     'display-p3', 'a98-rgb', 'prophoto-rgb', 'rec2020',
     'xyz', 'xyz-d50', 'xyz-d65'
 }
+#: Supported color spaces.
 COLOR_SPACES = _FUNCTION_SPACES | {'hsl', 'hwb', 'lab', 'lch', 'oklab', 'oklch'}
 
 
