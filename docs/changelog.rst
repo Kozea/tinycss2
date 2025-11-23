@@ -2,6 +2,14 @@ Changelog
 =========
 
 
+Version 1.5.1
+-------------
+
+Released on 2025-11-23.
+
+* Include parsing tests in source tarball
+
+
 Version 1.5.0
 -------------
 
