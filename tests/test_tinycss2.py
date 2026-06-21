@@ -153,6 +153,20 @@ def test_nth(input):
     return parse_nth(input)
 
 
+@pytest.mark.parametrize('invalid', ['+', '+/**/', 'n+', 'n +', '-n-', '2n +'])
+def test_nth_invalid_does_not_crash(invalid):
+    # Truncated/invalid An+B fragments must return None per parse_nth's
+    # documented contract, not raise StopIteration or AttributeError.
+    assert parse_nth(invalid) is None
+
+
+def test_nth_leading_plus_whitespace_still_invalid():
+    # The fix for the above must not make '+ n' (whitespace after a leading
+    # '+') accidentally valid: only '+n' is a valid nth expression.
+    assert parse_nth('+n') == (1, 0)
+    assert parse_nth('+ n') is None
+
+
 def _number(value):
     if value is None:
         return 'none'

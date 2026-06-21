@@ -59,8 +59,10 @@ def parse_nth(input):
             if match:
                 return parse_end(tokens, 1, int(match.group(1)))
     elif token == '+':
-        token = next(tokens)  # Whitespace after an initial '+' is invalid.
-        if token.type == 'ident':
+        # Whitespace after an initial '+' is invalid, so the next token is read
+        # without skipping it. ``None`` is used when the iterator is exhausted.
+        token = next(tokens, None)
+        if token is not None and token.type == 'ident':
             ident = token.lower_value
             if ident == 'n':
                 return parse_b(tokens, 1)
@@ -87,7 +89,7 @@ def parse_b(tokens, a):
 
 def parse_signless_b(tokens, a, b_sign):
     token = _next_significant(tokens)
-    if (token.type == 'number' and token.is_integer and
+    if (token is not None and token.type == 'number' and token.is_integer and
             token.representation[0] not in '-+'):
         return parse_end(tokens, a, b_sign * token.int_value)
 
