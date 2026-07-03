@@ -703,3 +703,28 @@ def test_escape_in_function_name():
     function, = parse_component_value_list('\\dddf()')
     assert function.type == 'function'
     assert function.name == '\udddf'
+
+
+@pytest.mark.parametrize('source', [
+    '1 %',       # number + '%'   would merge into a percentage
+    '1.5 %',     # (float) number + '%'
+    '+1 %',      # (signed) number + '%'
+    '1 -->',     # number + CDC    '--' would extend the number's unit
+    '# -',       # '#' + '-'       would merge into a hash token
+    '# -->',     # '#' + CDC
+    '- -',       # '-' + '-'       would merge into an ident '--'
+    '- -->',     # '-' + CDC
+    '@ -->',     # '@' + CDC       would merge into an at-keyword
+])
+def test_serialize_adjacent_tokens_do_not_merge(source):
+    # A pair of tokens separated only by whitespace must survive a round trip
+    # even once that whitespace is dropped (e.g. by a minifier): serialize()
+    # has to insert a separator, otherwise the two tokens re-parse as one.
+    # These pairs are listed in the CSS Syntax serialization table but were
+    # missing from BAD_PAIRS. See https://drafts.csswg.org/css-syntax/#serialization
+    tokens = parse_component_value_list(source)
+    del tokens[1]  # drop the whitespace token between the two component values
+    reparsed = parse_component_value_list(serialize(tokens))
+    reparsed = [t for t in reparsed if t.type not in ('whitespace', 'comment')]
+    assert [t.type for t in reparsed] == [t.type for t in tokens]
+    assert [t.serialize() for t in reparsed] == [t.serialize() for t in tokens]

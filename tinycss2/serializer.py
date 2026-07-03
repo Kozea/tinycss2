@@ -133,6 +133,15 @@ BAD_PAIRS = set(
     [(a, b)
         for a in ('ident', 'at-keyword', 'hash', 'dimension')
         for b in ('-', '-->')] +
+    # Per the CSS Syntax serialization table, a lone U+002D HYPHEN-MINUS
+    # delimiter also merges after '#'/'-' (forming a hash or ident), and a CDC
+    # ('-->') merges after '#'/'-'/number/'@' (its leading '--' is consumed as
+    # hash/ident/dimension-unit/at-keyword characters). A '%' delimiter merges
+    # into a preceding number to form a percentage.
+    # https://drafts.csswg.org/css-syntax/#serialization
+    [(a, '-') for a in ('#', '-')] +
+    [(a, '-->') for a in ('#', '-', 'number', '@')] +
+    [('number', '%')] +
     [(a, b)
         for a in ('#', '-', 'number', '@')
         for b in ('ident', 'function', 'url')] +
