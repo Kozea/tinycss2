@@ -566,10 +566,18 @@ class DimensionToken(Node):
 
     def _serialize_to(self, write):
         write(self.representation)
-        # Disambiguate with scientific notation
+        # Disambiguate with scientific notation.
+        # A unit starting with 'e' or 'E' followed by an optional sign and a
+        # digit would otherwise merge with the number into a single
+        # scientific-notation number-token when re-parsed
+        # (e.g. '1' + 'e3' -> '1e3', or '1' + 'E-3' -> '1E-3').
+        # Escaping the leading letter prevents this; the escape must use the
+        # letter's own code point so that its case is preserved.
         unit = self.unit
-        if unit in ('e', 'E') or unit.startswith(('e-', 'E-')):
-            write('\\65 ')
+        first = unit[0]
+        if first in ('e', 'E') and (
+                len(unit) == 1 or unit[1] in '+-0123456789'):
+            write('\\%X ' % ord(first))
             write(serialize_name(unit[1:]))
         else:
             write(serialize_identifier(unit))

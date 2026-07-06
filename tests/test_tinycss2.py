@@ -703,3 +703,37 @@ def test_escape_in_function_name():
     function, = parse_component_value_list('\\dddf()')
     assert function.type == 'function'
     assert function.name == '\udddf'
+
+
+def test_serialize_dimension_scientific_notation():
+    # A dimension whose unit begins with 'e'/'E' followed by an optional sign
+    # and a digit must not be serialized in a way that merges back into a
+    # scientific-notation number-token, and the unit's case must be preserved.
+    # e.g. the dimension "1" + unit "e3" must not serialize to "1e3" (== 1000),
+    # and the dimension "1" + unit "E" must not become unit "e".
+    cases = [
+        (r'1\65 ', 1, 'e'),      # unit 'e'
+        (r'1\45 ', 1, 'E'),      # unit 'E': case must survive round-trip
+        (r'1\65 3', 1, 'e3'),    # must not merge into number 1e3 == 1000
+        (r'1\45 3', 1, 'E3'),
+        (r'1\65 05', 1, 'e05'),  # must not merge into number 1e05 == 100000
+        (r'1\65 -3', 1, 'e-3'),  # must not merge into number 1e-3 == 0.001
+        (r'1\45 -3', 1, 'E-3'),
+    ]
+    for source, int_value, unit in cases:
+        token, = parse_component_value_list(source)
+        assert token.type == 'dimension'
+        assert token.int_value == int_value
+        assert token.unit == unit
+        reparsed, = parse_component_value_list(token.serialize())
+        assert reparsed.type == 'dimension', (
+            f'{source!r} serialized to {token.serialize()!r} which re-parsed '
+            f'as a {reparsed.type}-token')
+        assert reparsed.value == token.value
+        assert reparsed.int_value == int_value
+        assert reparsed.unit == unit
+
+    # Units that cannot form scientific notation stay unescaped (no over-escape).
+    assert parse_component_value_list('1em')[0].serialize() == '1em'
+    assert parse_component_value_list('1ex')[0].serialize() == '1ex'
+    assert parse_component_value_list('5EX')[0].serialize() == '5EX'
