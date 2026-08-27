@@ -51,7 +51,7 @@ html_theme = 'furo'
 html_theme_options = {
     'top_of_page_buttons': ['edit'],
     'source_edit_link':
-    'https://github.com/CourtBouillon/pydyf/edit/main/docs/{filename}',
+    'https://github.com/Kozea/tinycss2/edit/main/docs/{filename}',
 }
 
 # Favicon URL
