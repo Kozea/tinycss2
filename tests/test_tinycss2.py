@@ -669,6 +669,24 @@ def test_serialize_rules_with_functions():
     assert serialize(rules) == source
 
 
+@pytest.mark.parametrize('source', [
+    r'1\65 5',    # unit "e5"
+    r'1\45 5',    # unit "E5"
+    r'2\65 3px',  # unit "e3px"
+])
+def test_serialize_dimension_e_unit(source):
+    # A dimension whose unit starts with e/E followed by a digit must not be
+    # serialized as a bare "1e5": that re-parses as a number in scientific
+    # notation, changing the token type (and value). Serialization has to keep
+    # escaping the leading e so the token round-trips as the same dimension.
+    (dimension,) = parse_component_value_list(source)
+    assert dimension.type == 'dimension'
+    (reparsed,) = parse_component_value_list(serialize([dimension]))
+    assert reparsed.type == 'dimension'
+    assert reparsed.value == dimension.value
+    assert reparsed.lower_unit == dimension.lower_unit
+
+
 def test_backslash_delim():
     source = '\\\nfoo'
     tokens = parse_component_value_list(source)
