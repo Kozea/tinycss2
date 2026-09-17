@@ -74,6 +74,36 @@ def parse_nth(input):
                     return parse_end(tokens, 1, int(match.group(1)))
 
 
+
+def serialize_nth(a, b):
+    """Serialize integer coefficients as a CSS ``<An+B>`` expression.
+
+    Follow the `CSS Syntax serialization algorithm
+    <https://drafts.csswg.org/css-syntax/#serializing-anb>`_.
+    The result can be parsed by :func:`parse_nth` to recover ``(a, b)``.
+
+    :type a: :obj:`int`
+    :param a: The step coefficient.
+    :type b: :obj:`int`
+    :param b: The offset.
+    :returns: A :obj:`str`, for example ``'n+3'`` for ``(1, 3)``.
+
+    """
+    if a == 0:
+        return str(b)
+    if a == 1:
+        result = 'n'
+    elif a == -1:
+        result = '-n'
+    else:
+        result = f'{a}n'
+    if b > 0:
+        result += f'+{b}'
+    elif b < 0:
+        result += str(b)
+    return result
+
+
 def parse_b(tokens, a):
     token = _next_significant(tokens)
     if token is None:

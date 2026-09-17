@@ -74,6 +74,7 @@ Color Level 5
 
 .. module:: tinycss2.nth
 .. autofunction:: parse_nth
+.. autofunction:: serialize_nth
 
 
 AST nodes
