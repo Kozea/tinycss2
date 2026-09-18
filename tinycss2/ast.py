@@ -568,7 +568,7 @@ class DimensionToken(Node):
         write(self.representation)
         # Disambiguate with scientific notation
         unit = self.unit
-        if unit in ('e', 'E') or unit.startswith(('e-', 'E-')):
+        if unit[0] in 'eE' and (len(unit) == 1 or unit[1] in '+-0123456789'):
             write('\\65 ')
             write(serialize_name(unit[1:]))
         else:

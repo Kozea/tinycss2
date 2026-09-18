@@ -669,6 +669,12 @@ def test_serialize_rules_with_functions():
     assert serialize(rules) == source
 
 
+@pytest.mark.parametrize('source', ['1\\65 2', '34\\45 56a'])
+def test_serialize_e_in_unit(source):
+    rules = parse_component_value_list(source)
+    assert serialize(rules) == source.replace('\\45', '\\65')
+
+
 def test_backslash_delim():
     source = '\\\nfoo'
     tokens = parse_component_value_list(source)
