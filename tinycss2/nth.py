@@ -74,6 +74,20 @@ def parse_nth(input):
                     return parse_end(tokens, 1, int(match.group(1)))
 
 
+
+def serialize_nth(a, b):
+    """Serialize `<An+B> <https://drafts.csswg.org/css-syntax/#serializing-anb>`_.
+
+    :param int a: The step coefficient.
+    :param int b: The offset.
+    :returns: An ``an+b`` string.
+
+    """
+    an = 'n' if a == 1 else '-n' if a == -1 else f'{a}n' if a else ''
+    b = f'{b}' if not a else f'{b:+}' if b else ''
+    return an + b
+
+
 def parse_b(tokens, a):
     token = _next_significant(tokens)
     if token is None:

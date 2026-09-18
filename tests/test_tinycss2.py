@@ -21,7 +21,7 @@ from tinycss2.color3 import parse_color as parse_color3  # isort:skip
 from tinycss2.color4 import Color  # isort:skip
 from tinycss2.color4 import parse_color as parse_color4  # isort:skip
 from tinycss2.color5 import parse_color as parse_color5  # isort:skip
-from tinycss2.nth import parse_nth  # isort:skip
+from tinycss2.nth import parse_nth, serialize_nth  # isort:skip
 
 
 def generic(func):
@@ -151,6 +151,22 @@ def test_one_rule(input):
 @json_test(filename='An+B.json')
 def test_nth(input):
     return parse_nth(input)
+
+
+@pytest.mark.parametrize(('a', 'b', 'expected'), [
+    (0, 0, '0'), (0, 1, '1'), (0, -2, '-2'), (1, 0, 'n'), (1, 3, 'n+3'), (1, -3, 'n-3'),
+    (-1, 0, '-n'), (-1, 3, '-n+3'), (-1, -3, '-n-3'), (2, 0, '2n'), (2, 1, '2n+1'),
+    (2, -4, '2n-4'), (-2, 0, '-2n'), (-2, 1, '-2n+1'), (-2, -4, '-2n-4'),
+])
+def test_serialize_nth(a, b, expected):
+    assert serialize_nth(a, b) == expected
+    assert parse_nth(expected) == (a, b)
+
+
+@json_test(filename='An+B.json')
+def test_round_trip_nth(input):
+    if numbers := parse_nth(input):
+        return parse_nth(serialize_nth(*numbers))
 
 
 @pytest.mark.parametrize('invalid', ['+', '+/**/', 'n+', 'n +', '-n-', '2n +'])
