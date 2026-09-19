@@ -691,6 +691,14 @@ def test_serialize_e_in_unit(source):
     assert serialize(rules) == source.replace('\\45', '\\65')
 
 
+@pytest.mark.parametrize('source', ['url(\\1)', 'url(a\\b c)', 'url(\\7f)'])
+def test_serialize_control_in_url(source):
+    url_token, = parse_component_value_list(source)
+    reparsed, = parse_component_value_list(serialize([url_token]))
+    assert reparsed.type == 'url'
+    assert reparsed.value == url_token.value
+
+
 def test_backslash_delim():
     source = '\\\nfoo'
     tokens = parse_component_value_list(source)

@@ -96,6 +96,7 @@ def serialize_url(value):
         r'\C ' if c == '\f' else
         r'\(' if c == '(' else
         r'\)' if c == ')' else
+        '\\%X ' % ord(c) if c <= '\x1f' or c == '\x7f' else
         c
         for c in value
     )
