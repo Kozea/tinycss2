@@ -547,6 +547,19 @@ def test_color_oklab_4_with_5(input):
     return result
 
 
+def test_lch_none_lightness_keeps_hue():
+    color = parse_color4("lch(none 50 180)")
+    assert color.coordinates == (None, 50.0, 180.0)
+    color = parse_color4("oklch(none 0.1 180)")
+    assert color.coordinates == (None, 0.1, 180.0)
+    color = parse_color4("lch(50 20 none)")
+    assert color.coordinates == (50.0, 20.0, None)
+    color = parse_color4("lch(40 20 180)")
+    assert color.coordinates == (40.0, 20.0, 180.0)
+    color = parse_color4("lab(none 10 20)")
+    assert color.coordinates == (None, 10.0, 20.0)
+
+
 @json_test()
 def test_color_lch_4(input):
     if not (color := parse_color4(input)):

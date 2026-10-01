@@ -2,6 +2,15 @@ Changelog
 =========
 
 
+Version 1.5.2
+-------------
+
+Unreleased.
+
+* Keep the hue of ``lch()`` and ``oklch()`` when lightness is ``none``.
+  https://github.com/Kozea/tinycss2/issues/80
+
+
 Version 1.5.1
 -------------
 

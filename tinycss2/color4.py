@@ -327,7 +327,7 @@ def _parse_lch(args, alpha):
         None if args[0].type == 'ident' else args[0].value,
         None if args[1].type == 'ident' else (
             args[1].value * (1 if args[1].type == 'number' else 1.5)),
-        None if args[0].type == 'ident' else hue,
+        None if args[2].type == 'ident' else hue,
     ]
     return Color('lch', coordinates, alpha)
 
@@ -372,7 +372,7 @@ def _parse_oklch(args, alpha):
             args[0].value * (1 if args[0].type == 'number' else 0.01)),
         None if args[1].type == 'ident' else (
             args[1].value * (1 if args[1].type == 'number' else 0.004)),
-        None if args[0].type == 'ident' else hue,
+        None if args[2].type == 'ident' else hue,
     ]
     return Color('oklch', coordinates, alpha)
 
