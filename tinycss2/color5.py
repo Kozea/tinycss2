@@ -70,10 +70,12 @@ def parse_color(input, color_schemes=None):
                     tokens = tokens[:index]
                     break
 
+        if (alpha := color4._parse_alpha(alpha)) is None:
+            return
         if name == 'device-cmyk':
-            return _parse_device_cmyk(tokens, color4._parse_alpha(alpha), old_syntax)
+            return _parse_device_cmyk(tokens, alpha, old_syntax)
         elif name == 'color':
-            return _parse_color(space, tokens, color4._parse_alpha(alpha))
+            return _parse_color(space, tokens, alpha)
         elif name == 'light-dark':
             return _parse_light_dark(tokens, color_scheme)
         else:

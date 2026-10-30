@@ -218,6 +218,15 @@ def test_color_currentcolor_5():
         assert parse_color5(value) == 'currentcolor'
 
 
+@pytest.mark.parametrize('input', [
+    'device-cmyk(0 0 0 0 / foo)',
+    'device-cmyk(0 0 0 0 / 1 2)',
+    'color(--custom 1 0 0 / foo)',
+])
+def test_color_invalid_alpha_5(input):
+    assert parse_color5(input) is None
+
+
 @json_test()
 def test_color_function_4(input):
     return _build_color(parse_color4(input))
